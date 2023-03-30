@@ -6,6 +6,7 @@ import Admin from "../abis/Admin.json";
 import { Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import GenererateQR from "./GenererateQR";
+import Logo from "./../images/logo.png";
 
 class Navbar extends Component {
   state = { activeItem: "home", role: -1, account: "", showQr: false };
@@ -61,12 +62,11 @@ class Navbar extends Component {
           style={{
             borderRadius: "0",
             background: "#1e2022ea",
-
             boxShadow: "0 0 5px 0px white",
           }}
         >
           <Menu
-            style={{ marginLeft: "80px", border: "none" }}
+            style={{ marginLeft: "40px", border: "none" }}
             inverted
             pointing
             secondary
@@ -76,21 +76,8 @@ class Navbar extends Component {
               to="/"
               style={{ marginRight: "25px", padding: "0px" }}
             >
-              <div
-                style={{
-                  background: "white",
-                  display: "grid",
-                  justifyItems: "center",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "50px",
-                  width: "50px",
-                  borderRadius: "100%",
-                  padding: "10px",
-                  marginBottom: "-5px",
-                }}
-              >
-                <Image src="https://static.thenounproject.com/png/3293529-200.png" />
+              <div >
+                <Image style={{height:"70%",width:"70%",bottom:"8px"}}  src={Logo} />
               </div>
             </Menu.Item>
             <Menu.Item

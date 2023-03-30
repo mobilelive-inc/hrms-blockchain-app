@@ -17,7 +17,7 @@ export default class LineChart extends Component {
             label: "Endorse Rating Spread",
             data: this.props.overallEndorsement,
             fill: false,
-            backgroundColor: "white",
+            backgroundColor: "black",
             borderColor: "rgba(255,255,255,0.3)",
           },
         ],
