@@ -79,9 +79,12 @@ class Navbar extends Component {
               <div >
                 <Image style={{height:"70%",width:"70%",bottom:"8px"}}  src={Logo} />
               </div>
+              <div>
+                <h2 style={{fontStyle:"Italic",fontSize:"30px"}}>HRMS SYSTEM</h2>
+              </div>
             </Menu.Item>
             <Menu.Item
-              style={{ marginRight: "25px", padding: "0px" }}
+              style={{ marginRight: "10px", padding: "0px" }}
               position="left"
             >
               <SearchBar />
