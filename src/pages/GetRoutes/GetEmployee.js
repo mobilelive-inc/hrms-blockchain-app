@@ -178,7 +178,7 @@ export default class GetEmployee extends Component {
                   <Card.Header>
                     {this.state.employeedata?.name}
                     <small
-                      style={{ wordBreak: "break-word", color: "#c5c6c7" }}
+                      style={{ wordBreak: "break-word", color: "black" }}
                     >
                       {this.state.employeedata?.ethAddress}
                     </small>
@@ -187,7 +187,7 @@ export default class GetEmployee extends Component {
                   <div>
                     <p>
                       <em>Location: </em>
-                      <span style={{ color: "#c5c6c7" }}>
+                      <span style={{ color: "black" }}>
                         {this.state.employeedata?.location}
                       </span>
                     </p>
@@ -223,7 +223,7 @@ export default class GetEmployee extends Component {
                       {this.state.educations?.map((education, index) => (
                         <div className="education-design" key={index}>
                           <div
-                            style={{ paddingRight: "50px", color: "#c5c6c7" }}
+                            style={{ paddingRight: "50px", color: "black" }}
                           >
                             <p>{education.description}</p>
                             <small
@@ -236,7 +236,7 @@ export default class GetEmployee extends Component {
                             </small>
                           </div>
                           <div>
-                            <small style={{ color: "#c5c6c7" }}>
+                            <small style={{ color: "black" }}>
                               <em>
                                 {education.startdate} - {education.enddate}
                               </em>
@@ -277,7 +277,7 @@ export default class GetEmployee extends Component {
                       (certi, index) =>
                         certi.visible && (
                           <div key={index} className="certification-container">
-                            <div style={{ color: "#c5c6c7" }}>
+                            <div style={{ color: "black" }}>
                               <p>{certi.name}</p>
                               <small style={{ wordBreak: "break-word" }}>
                                 {certi.organization}
@@ -306,9 +306,9 @@ export default class GetEmployee extends Component {
                                     pathColor: `rgba(255,255,255, ${
                                       certi.score / 100
                                     })`,
-                                    textColor: "#c5c6c7",
+                                    textColor: "black",
                                     trailColor: "#393b3fa6",
-                                    backgroundColor: "#c5c6c7",
+                                    backgroundColor: "white",
                                   })}
                                 />
                               </div>
