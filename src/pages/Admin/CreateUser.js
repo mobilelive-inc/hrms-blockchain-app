@@ -41,6 +41,11 @@ class CreateUser extends Component {
       text: "OrganizationEndorser",
       value: "2",
     },
+    {
+      key: "3",
+      text: "Payroll Admin",
+      value: "3",
+    },
   ];
 
   handleDropdownSelect = (e, data) => {
@@ -56,6 +61,8 @@ class CreateUser extends Component {
 
   handleSubmit = async (e) => {
     e.preventDefault();
+    /* console.log(this.state);
+    return; */
     const { ethAddress, name, location, role, description } = this.state;
     if (!name || !location || !description || !role || !ethAddress) {
       toast.error("Please fill all the fields!!");
@@ -82,8 +89,17 @@ class CreateUser extends Component {
           .registerUser(ethAddress, name, location, description, role)
           .send({ from: accounts[0] });
         toast.success("New user registered succressfully!!!!");
+        let route;
+        if(role === '1'){
+          route = '/';
+        }else if(role === '2'){
+          route = '/all-organization-endorser'
+        }else {
+          route = '/all-payroll-admins'
+        }
         this.props.history.push(
-          `${role === "1" ? "/" : "/all-organization-endorser"}`
+          // `${role === "1" ? "/" : "/all-organization-endorser"}`
+          route
         );
         this.setState({
           name: "",
