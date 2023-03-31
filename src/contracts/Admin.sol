@@ -39,7 +39,7 @@ contract Admin {
       registeredOrganization.push(EthAddress);
     }
     else if(Role == 3) {
-      PayrollAdmin newPayrollAdmin = new PayrollAdmin(owner,EthAddress,Name,Location);
+      PayrollAdmin newPayrollAdmin = new PayrollAdmin(owner,EthAddress,Name);
       registeredPayrollAdminmap[EthAddress] = address(newPayrollAdmin);
       registeredPayrollAdmin.push(EthAddress);
     }

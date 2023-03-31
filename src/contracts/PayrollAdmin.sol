@@ -5,20 +5,20 @@ contract PayrollAdmin {
   string name;
   address payroll_admin_address;
   // string description;
-  string location;
+  // string location;
 
   constructor(
     address _admin,
     address _payroll_admin_address,
-    string memory _name,
+    string memory _name
     // string memory _description,
-    string memory _location
+    // string memory _location
   ) public {
     admin = _admin;
     name = _name;
     payroll_admin_address = _payroll_admin_address;
     // description = _description;
-    location = _location;
+    // location = _location;
   }
 
   function getPayrollAdminInfo()
@@ -26,12 +26,12 @@ contract PayrollAdmin {
     view
     returns (
       string memory,
-      address,
+      address
       // string memory,
-      string memory
+      // string memory
     )
   {
-    return (name, payroll_admin_address, location);
+    return (name, payroll_admin_address);
   }
 
   address[] allEmployees;
