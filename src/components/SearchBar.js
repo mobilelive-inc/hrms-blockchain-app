@@ -92,7 +92,7 @@ export default class SearchBar extends Component {
           results={results}
           value={value}
           style={{
-            minWidth: "300px",
+            minWidth: "150px",
           }}
           className="searchbar"
         />
