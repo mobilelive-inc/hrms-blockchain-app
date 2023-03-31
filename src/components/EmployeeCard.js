@@ -164,7 +164,7 @@ class EmployeeCard extends Component {
           <div>
             <p>
               <em>Location : </em>
-              <span style={{ color: "#c5c6c7" }}>
+              <span style={{ color: "black" }}>
                 {this.state.employeedata?.location}
               </span>
             </p>
