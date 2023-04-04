@@ -2,8 +2,9 @@ require("babel-register");
 require("babel-polyfill");
 
 const HDWalletProvider = require("@truffle/hdwallet-provider");
-const appKey = 'https://eth-goerli.g.alchemy.com/v2/ubhHYjWW77IsGhE-psgdzdNvOHuyZR5G';
-const seedPhrase = 'b1dd05c60abc058af36165b6576fab6b96ac3cbe709cdb3d1cacbed51a07c712';
+const appKey = 'https://eth-goerli.g.alchemy.com/v2/MqnpdqPAQguvOp_t6OjUCLd9msANy1Jj';
+// const appKey = 'https://eth-sepolia.g.alchemy.com/v2/kkI3vJjo67qjvSr9mae7LMwNzbnM0BTs';
+const seedPhrase = '815f68611d3d3902add014edd0d2efb9b638aedfbfb3088a3c8945f924967202';
 
 module.exports = {
   networks: {
@@ -17,13 +18,14 @@ module.exports = {
       network_id: 11155111,
       gas: 5500000,
       confirmations: 2,
-      timeoutBlocks: 900000000000000,
+      timeoutBlocks: 9999999999999,
       skipDryRun: true,
+      networkCheckTimeout: 999999
     },
     goerli: {
       provider: () => new HDWalletProvider(seedPhrase, appKey),
       network_id: 5,
-      gas: 550000,
+      gas: 8000000,
       confirmations: 2,
       timeoutBlocks: 900000000000000,
       skipDryRun: true,

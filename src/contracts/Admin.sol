@@ -1,105 +1,90 @@
 pragma solidity >=0.5.0 <0.9.0;
-import "./Employee.sol";
-import "./OrganizationEndorser.sol";
-import "./PayrollAdmin.sol";
+
+import "./Registry/EmployeeRegistry.sol";
+import "./Registry/OrganizationRegistry.sol";
+import "./Registry/PayrollAdminRegistry.sol";
 
 contract Admin {
-  address public owner;
+    address public owner;
+    EmployeeRegistry public employeeRegistry;
+    OrganizationRegistry public organizationRegistry;
+    PayrollAdminRegistry public payrollAdminRegistry;
 
-  constructor() public {
-    owner = msg.sender;
-  }
-
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
-
-  mapping(address => address) registeredEmployeesmap;
-  mapping(address => address) registeredOrganizationmap;
-  mapping(address => address) registeredPayrollAdminmap;
-  address[] registeredEmployees;
-  address[] registeredOrganization;
-  address[] registeredPayrollAdmin;
-
-  function registerUser(
-    address EthAddress,
-    string memory Name,
-    string memory Location,
-    string memory Description,
-    uint256 Role
-  ) public onlyOwner {
-    if (Role == 1) {
-      Employee newEmployee = new Employee(owner, EthAddress, Name, Location, Description);
-      registeredEmployeesmap[EthAddress] = address(newEmployee);
-      registeredEmployees.push(EthAddress);
-    } else if(Role == 2) {
-      OrganizationEndorser newOrganizationEndorser = new OrganizationEndorser(owner, EthAddress, Name, Location, Description);
-      registeredOrganizationmap[EthAddress] = address(newOrganizationEndorser);
-      registeredOrganization.push(EthAddress);
+    constructor() public {
+        owner = msg.sender;
+        employeeRegistry = new EmployeeRegistry();
+        organizationRegistry = new OrganizationRegistry();
+        payrollAdminRegistry = new PayrollAdminRegistry();
     }
-    else if(Role == 3) {
-      PayrollAdmin newPayrollAdmin = new PayrollAdmin(owner,EthAddress,Name);
-      registeredPayrollAdminmap[EthAddress] = address(newPayrollAdmin);
-      registeredPayrollAdmin.push(EthAddress);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can perform this action");
+        _;
     }
-  }
 
-  /****************************************************************USER SECTION**************************************************/
+    function registerUser(
+        address ethAddress,
+        string memory name,
+        string memory location,
+        string memory description,
+        uint256 role
+    ) public onlyOwner {
+        if (role == 1) {
+            employeeRegistry.registerEmployee(ethAddress, name, location, description);
+        } else if (role == 2) {
+            organizationRegistry.registerOrganizationEndorser(ethAddress, name, location, description);
+        } else if (role == 3) {
+            payrollAdminRegistry.registerPayrollAdmin(ethAddress, name);
+        }
+    }
 
-  function isEmployee(address _employeeAddress) public view returns (bool) {
-    return registeredEmployeesmap[_employeeAddress] != address(0x0);
-  }
+    /****************************************************************USER SECTION**************************************************/
 
-  function isOrganizationEndorser(address _organizationEndorser) public view returns (bool) {
-    return registeredOrganizationmap[_organizationEndorser] != address(0x0);
-  }
+    function isEmployee(address employeeAddress) public view returns (bool) {
+        return employeeRegistry.isEmployee(employeeAddress);
+    }
 
-  function employeeCount() public view returns (uint256) {
-    return registeredEmployees.length;
-  }
+    function isOrganizationEndorser(address organizationEndorser) public view returns (bool) {
+        return organizationRegistry.isOrganizationEndorser(organizationEndorser);
+    }
 
-  function getEmployeeContractByAddress(address _employee) public view returns (address)
-  {
-    return registeredEmployeesmap[_employee];
-  }
+    function employeeCount() public view returns (uint256) {
+        return employeeRegistry.employeeCount();
+    }
 
-  function getEmployeeContractByIndex(uint256 index) public view returns (address)
-  {
-    return getEmployeeContractByAddress(registeredEmployees[index]);
-  }
+    function getEmployeeContractByAddress(address employee) public view returns (address) {
+        return employeeRegistry.getEmployeeContractByAddress(employee);
+    }
 
-  function OrganizationEndorserCount() public view returns (uint256) {
-    return registeredOrganization.length;
-  }
+    function getEmployeeContractByIndex(uint256 index) public view returns (address) {
+        return employeeRegistry.getEmployeeContractByIndex(index);
+    }
 
-  function getOrganizationContractByAddress(address _organization) public view returns (address)
-  {
-    return registeredOrganizationmap[_organization];
-  }
+    function organizationEndorserCount() public view returns (uint256) {
+        return organizationRegistry.organizationEndorserCount();
+    }
 
-  function getOrganizationContractByIndex(uint256 index) public view returns (address)
-  {
-    return getOrganizationContractByAddress(registeredOrganization[index]);
-  }
+    function getOrganizationContractByAddress(address organization) public view returns (address) {
+        return organizationRegistry.getOrganizationEndorserContractByAddress(organization);
+    }
 
-  //  Payroll Admin methods added by Junaid
-  function isPayrollAdmin(address _payrollAdmin) public view returns (bool)
-  {
-    return registeredPayrollAdminmap[_payrollAdmin] != address(0x0);
-  }
+    function getOrganizationContractByIndex(uint256 index) public view returns (address) {
+        return organizationRegistry.getOrganizationEndorserContractByIndex(index);
+    }
 
-  function PayrollAdminCount() public view returns (uint256) {
-    return registeredPayrollAdmin.length;
-  }
+    function isPayrollAdmin(address payrollAdmin) public view returns (bool) {
+        return payrollAdminRegistry.isPayrollAdmin(payrollAdmin);
+    }
 
-  function getPayrollAdminContractByAddress(address _payroll_admin) public view returns (address)
-  {
-    return registeredPayrollAdminmap[_payroll_admin];
-  }
+    function payrollAdminCount() public view returns (uint256) {
+        return payrollAdminRegistry.payrollAdminCount();
+    }
 
-  function getPayrollAdminContractByIndex(uint256 index) public view returns (address)
-  {
-    return getPayrollAdminContractByAddress(registeredPayrollAdmin[index]);
-  }
+    function getPayrollAdminContractByAddress(address payrollAdmin) public view returns (address) {
+        return payrollAdminRegistry.getPayrollAdminContractByAddress(payrollAdmin);
+    }
+
+    function getPayrollAdminContractByIndex(uint256 index) public view returns (address) {
+        return payrollAdminRegistry.getPayrollAdminContractByIndex(index);
+    }
 }

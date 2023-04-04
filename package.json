@@ -33,7 +33,7 @@
     "redux-thunk": "^2.3.0",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
-    "truffle": "^5.1.39",
+    "truffle": "^5.8.1",
     "truffle-contract-size": "^2.0.1",
     "web-vitals": "^1.0.1",
     "web3": "^1.2.11"

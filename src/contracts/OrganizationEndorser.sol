@@ -37,7 +37,7 @@ contract OrganizationEndorser {
   address[] allEmployees;
 
   function addEmployees(address employee_address) public {
-    require(msg.sender == organization_address);
+    require(msg.sender == organization_address, "Only owner can perform this action");
     allEmployees.push(employee_address);
   }
 

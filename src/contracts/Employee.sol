@@ -25,7 +25,7 @@ contract Employee {
   }
 
   modifier OnlyEmployee() {
-    require(msg.sender == employee_address);
+    require(msg.sender == employee_address, "Only owner can perform this action");
     _;
   }
 
@@ -88,7 +88,7 @@ contract Employee {
     uint256 _overall_percentage,
     string memory _review
   ) public {
-    require(skillmap[_name].visible);
+    require(skillmap[_name].visible, "Only owner can perform this action");
     skillmap[_name].overall_percentage = _overall_percentage;
     overallEndorsement.push(_overall_percentage);
     endorsecount = endorsecount + 1;
@@ -174,7 +174,7 @@ contract Employee {
   }
 
   function endorseCertification(string memory _name) public {
-    require(msg.sender == certificationmap[_name].organization);
+    require(msg.sender == certificationmap[_name].organization, "Only owner can perform this action");
     certificationmap[_name].endorsed = true;
   }
 
@@ -255,7 +255,7 @@ contract Employee {
   }
 
   function endorseWorkExp() public {
-    require(workexpmap[msg.sender].organization != address(0x0));
+    require(workexpmap[msg.sender].organization != address(0x0), "Only owner can perform this action");
     workexpmap[msg.sender].endorsed = true;
   }
 
@@ -337,7 +337,7 @@ contract Employee {
   }
 
   function endorseEducation() public {
-    require(educationmap[msg.sender].institute != address(0x0));
+    require(educationmap[msg.sender].institute != address(0x0), "Only owner can perform this action");
     educationmap[msg.sender].endorsed = true;
   }
 

@@ -4,21 +4,15 @@ contract PayrollAdmin {
   address admin;
   string name;
   address payroll_admin_address;
-  // string description;
-  // string location;
 
   constructor(
     address _admin,
     address _payroll_admin_address,
     string memory _name
-    // string memory _description,
-    // string memory _location
   ) public {
     admin = _admin;
     name = _name;
     payroll_admin_address = _payroll_admin_address;
-    // description = _description;
-    // location = _location;
   }
 
   function getPayrollAdminInfo()
@@ -27,8 +21,6 @@ contract PayrollAdmin {
     returns (
       string memory,
       address
-      // string memory,
-      // string memory
     )
   {
     return (name, payroll_admin_address);
@@ -37,7 +29,7 @@ contract PayrollAdmin {
   address[] allEmployees;
 
   function addEmployees(address employee_address) public {
-    require(msg.sender == payroll_admin_address);
+    require(msg.sender == payroll_admin_address, "Only owner can perform this action");
     allEmployees.push(employee_address);
   }
 
