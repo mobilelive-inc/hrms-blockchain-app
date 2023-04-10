@@ -11,6 +11,7 @@ module.exports = {
       host: "127.0.0.1", // Localhost (default: none)
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "*", // Any network (default: none,
+      gas: 99999999
     },
     sepolia: {
       provider: () => new HDWalletProvider(seedPhrase, appKey),
@@ -25,6 +26,7 @@ module.exports = {
   contracts_build_directory: "./src/abis/",
   compilers: {
     solc: {
+      version: "^0.8.0",
       optimizer: {
         enabled: true,
         runs: 200,

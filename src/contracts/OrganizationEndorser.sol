@@ -1,11 +1,20 @@
+//SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0 <0.9.0;
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract OrganizationEndorser {
-  address admin;
+contract OrganizationEndorser is AccessControl {
+  bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
+
+  // address admin;
   string name;
   address organization_address;
   string description;
   string location;
+
+  modifier onlyOrganization() {
+    require(hasRole(ORGANIZATION_ROLE, organization_address), "Caller is not an organization");
+    _;
+  }
 
   constructor(
     address _admin,
@@ -14,7 +23,9 @@ contract OrganizationEndorser {
     string memory _description,
     string memory _location
   ) public {
-    admin = _admin;
+    // admin = _admin;
+    _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+    _setupRole(ORGANIZATION_ROLE, _organization_address);
     name = _name;
     organization_address = _organization_address;
     description = _description;
@@ -36,8 +47,8 @@ contract OrganizationEndorser {
 
   address[] allEmployees;
 
-  function addEmployees(address employee_address) public {
-    require(msg.sender == organization_address);
+  function addEmployees(address employee_address) public onlyOrganization {
+    // require(msg.sender == organization_address);
     allEmployees.push(employee_address);
   }
 

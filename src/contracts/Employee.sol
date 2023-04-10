@@ -1,7 +1,11 @@
+//SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0 <0.9.0;
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract Employee {
-  address admin;
+contract Employee is AccessControl {
+  bytes32 public constant EMPLOYEE_ROLE = keccak256("EMPLOYEE_ROLE");
+
+  // address admin;
   address employee_address;
   string description;
   string location;
@@ -16,7 +20,9 @@ contract Employee {
     string memory _description,
     string memory _location
   ) public {
-    admin = _admin;
+    // admin = _admin;
+    _setupRole(DEFAULT_ADMIN_ROLE,_admin);
+    _setupRole(EMPLOYEE_ROLE,_employee_address);
     name = _name;
     employee_address = _employee_address;
     description = _description;
@@ -25,7 +31,8 @@ contract Employee {
   }
 
   modifier OnlyEmployee() {
-    require(msg.sender == employee_address);
+    // require(msg.sender == employee_address);
+    require(hasRole(EMPLOYEE_ROLE, employee_address), "Caller is not an employee");
     _;
   }
 
@@ -88,7 +95,7 @@ contract Employee {
     uint256 _overall_percentage,
     string memory _review
   ) public {
-    require(skillmap[_name].visible);
+    require(skillmap[_name].visible, 'Skill is not visible!');
     skillmap[_name].overall_percentage = _overall_percentage;
     overallEndorsement.push(_overall_percentage);
     endorsecount = endorsecount + 1;
@@ -174,7 +181,7 @@ contract Employee {
   }
 
   function endorseCertification(string memory _name) public {
-    require(msg.sender == certificationmap[_name].organization);
+    require(msg.sender == certificationmap[_name].organization, 'Caller is not organization');
     certificationmap[_name].endorsed = true;
   }
 
@@ -255,7 +262,7 @@ contract Employee {
   }
 
   function endorseWorkExp() public {
-    require(workexpmap[msg.sender].organization != address(0x0));
+    require(workexpmap[msg.sender].organization != address(0x0), 'Organization does not exist!');
     workexpmap[msg.sender].endorsed = true;
   }
 
@@ -337,7 +344,7 @@ contract Employee {
   }
 
   function endorseEducation() public {
-    require(educationmap[msg.sender].institute != address(0x0));
+    require(educationmap[msg.sender].institute != address(0x0), 'institute does not exist!');
     educationmap[msg.sender].endorsed = true;
   }
 

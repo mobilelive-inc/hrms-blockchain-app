@@ -1,17 +1,24 @@
+//SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0 <0.9.0;
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Employee.sol";
 import "./OrganizationEndorser.sol";
 
-contract Admin {
-  address public owner;
+contract Admin is AccessControl, Ownable {
+address public admin;
+bytes32 public constant EMPLOYEE_ROLE = keccak256("EMPLOYEE_ROLE");
+bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
 
   constructor() public {
-    owner = msg.sender;
+    admin = msg.sender;
+    _setupRole(DEFAULT_ADMIN_ROLE, admin);
+    // _setupRole(ADMIN_ROLE, _admin);
   }
 
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
+  function transferOwnership(address newOwner) public override onlyOwner {
+    require(newOwner != address(0), "Invalid address");
+    _transferOwnership(newOwner);
   }
 
   mapping(address => address) registeredEmployeesmap;
@@ -28,7 +35,7 @@ contract Admin {
   ) public onlyOwner {
     if (Role == 1) {
       Employee newEmployee = new Employee(
-        owner,
+        admin,
         EthAddress,
         Name,
         Location,
@@ -36,9 +43,10 @@ contract Admin {
       );
       registeredEmployeesmap[EthAddress] = address(newEmployee);
       registeredEmployees.push(EthAddress);
+      grantRole(EMPLOYEE_ROLE, address(newEmployee));
     } else {
       OrganizationEndorser newOrganizationEndorser = new OrganizationEndorser(
-        owner,
+        admin,
         EthAddress,
         Name,
         Location,
@@ -46,13 +54,15 @@ contract Admin {
       );
       registeredOrganizationmap[EthAddress] = address(newOrganizationEndorser);
       registeredOrganization.push(EthAddress);
+      grantRole(ORGANIZATION_ROLE, address(newOrganizationEndorser));
     }
   }
 
   /****************************************************************USER SECTION**************************************************/
 
   function isEmployee(address _employeeAddress) public view returns (bool) {
-    return registeredEmployeesmap[_employeeAddress] != address(0x0);
+    // return registeredEmployeesmap[_employeeAddress] != address(0x0);
+    return hasRole(EMPLOYEE_ROLE, registeredEmployeesmap[_employeeAddress]);
   }
 
   function isOrganizationEndorser(address _organizationEndorser)
@@ -60,7 +70,8 @@ contract Admin {
     view
     returns (bool)
   {
-    return registeredOrganizationmap[_organizationEndorser] != address(0x0);
+    // return registeredOrganizationmap[_organizationEndorser] != address(0x0);
+      return hasRole(ORGANIZATION_ROLE, registeredOrganizationmap[_organizationEndorser]);
   }
 
   function employeeCount() public view returns (uint256) {
