@@ -23,6 +23,7 @@ class Navbar extends Component {
     if (AdminData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
       const isEmployee = await admin?.methods?.isEmployee(accounts[0]).call();
+      const isPayrollAdmin = await admin?.methods?.isPayrollAdmin(accounts[0]).call();
       const isOrganizationEndorser = await admin?.methods
         ?.isOrganizationEndorser(accounts[0])
         .call();
@@ -34,6 +35,8 @@ class Navbar extends Component {
         role = 1;
       } else if (isOrganizationEndorser) {
         role = 2;
+      }else if (isPayrollAdmin) {
+        role = 3;
       }
       this.setState({ role });
     } else {
@@ -49,7 +52,7 @@ class Navbar extends Component {
 
   render() {
     const { activeItem } = this.state;
-    const roles = ["Admin", "Employee", "Organization"];
+    const roles = ["Admin", "Employee", "Organization", "Payroll Admin"];
 
     return (
       <>
@@ -96,6 +99,13 @@ class Navbar extends Component {
                   to="/"
                   name="Employees"
                   active={activeItem === "Employees"}
+                  onClick={this.handleItemClick}
+                />
+                 <Menu.Item
+                  as={Link}
+                  to="/all-payroll-admins"
+                  name="Payroll Admins"
+                  active={activeItem === "Payroll Admins"}
                   onClick={this.handleItemClick}
                 />
                 <Menu.Item
@@ -168,6 +178,25 @@ class Navbar extends Component {
                   to="/endorse-section"
                   name="Endorse Section"
                   active={activeItem === "Endorse Section"}
+                  onClick={this.handleItemClick}
+                />
+                <Menu.Item
+                  as={Link}
+                  to="/notifications"
+                  name="Notifications"
+                  active={activeItem === "Notifications"}
+                  onClick={this.handleItemClick}
+                />
+              </>
+            )}
+
+            {this.state.role === 3 && (
+              <>
+                <Menu.Item
+                  as={Link}
+                  to="/"
+                  name="Create Department"
+                  active={activeItem === "Create Department"}
                   onClick={this.handleItemClick}
                 />
                 <Menu.Item

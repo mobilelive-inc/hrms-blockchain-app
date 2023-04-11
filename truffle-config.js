@@ -18,7 +18,7 @@ module.exports = {
       network_id: 11155111,
       gas: 5500000,
       confirmations: 2,
-      timeoutBlocks: 900000000000000,
+      timeoutBlocks: 99999999999999,
       skipDryRun: true,
     },
   },
@@ -26,7 +26,6 @@ module.exports = {
   contracts_build_directory: "./src/abis/",
   compilers: {
     solc: {
-      version: "^0.8.0",
       optimizer: {
         enabled: true,
         runs: 200,

@@ -9,6 +9,7 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 import AdminPageCreate from "./pages/Admin/CreateUser";
 import AllEmployees from "./pages/Admin/AllEmployees";
 import AllOrganizationEndorser from "./pages/Admin/AllOrganizationEndorser";
+import AllPayrollAdmins from "./pages/Admin/AllPayrollAdmins";
 import EmployeePage from "./pages/Employee/Employee";
 import UpdateProfile from "./pages/Employee/UpdateProfile";
 import Organization from "./pages/OrganizationEndorser/Organization";
@@ -23,10 +24,12 @@ import NotificationsAdmin from "./pages/Admin/Notifications";
 import NotificationsEmployee from "./pages/Employee/Notifications";
 import NotificationsOrg from "./pages/OrganizationEndorser/Notifications";
 import LoadComp from "./components/LoadComp";
+import CreateDepartment from "./pages/PayrollAdmin/CreateDepartment";
 
 function App() {
   const [isMeta, setisMeta] = useState(false);
   const [isEmployee, setisEmployee] = useState(false);
+  const [isPayrollAdmin, setisPayrollAdmin] = useState(false);
   const [account, setaccount] = useState("");
   const [isOrganizationEndorser, setisOrganizationEndorser] = useState(false);
   const [isOwner, setisOwner] = useState(false);
@@ -47,7 +50,9 @@ function App() {
         ?.isOrganizationEndorser(accounts[0])
         .call();
       const owner = await admin?.methods?.owner().call();
+      const isPayrollAdmin = await admin?.methods?.isPayrollAdmin(accounts[0]).call();
       setisEmployee(isEmployee);
+      setisPayrollAdmin(isPayrollAdmin);
       setisOrganizationEndorser(isOrganizationEndorser);
       setisOwner(owner === accounts[0]);
     } else {
@@ -83,6 +88,11 @@ function App() {
     return (
       <Switch>
         <Route path="/" exact component={AllEmployees} />
+        <Route
+          path="/all-payroll-admins"
+          exact
+          component={AllPayrollAdmins}
+        />
         <Route
           path="/all-organization-endorser"
           exact
@@ -124,10 +134,19 @@ function App() {
     );
   };
 
+  const payrollAdminRoutes = () => {
+    return (
+      <Switch>
+        <Route path="/" exact component={CreateDepartment} />
+      </Switch>
+    );
+  };
+
   const renderRoutes = () => {
     if (isOwner) return adminRoutes();
     else if (isEmployee) return employeeRoutes();
     else if (isOrganizationEndorser) return isOrganizationEndorserRoutes();
+    else if (isPayrollAdmin) return payrollAdminRoutes();
     else return noRoleRoutes();
   };
 

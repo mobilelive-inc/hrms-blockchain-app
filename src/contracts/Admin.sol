@@ -4,11 +4,13 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Employee.sol";
 import "./OrganizationEndorser.sol";
+import "./PayrollAdmin.sol";
 
 contract Admin is AccessControl, Ownable {
 address public admin;
 bytes32 public constant EMPLOYEE_ROLE = keccak256("EMPLOYEE_ROLE");
 bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
+bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
 
   constructor() public {
     admin = msg.sender;
@@ -23,8 +25,10 @@ bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
 
   mapping(address => address) registeredEmployeesmap;
   mapping(address => address) registeredOrganizationmap;
+  mapping(address => address) registeredPayrollAdminmap;
   address[] registeredEmployees;
   address[] registeredOrganization;
+  address[] registeredPayrollAdmin;
 
   function registerUser(
     address EthAddress,
@@ -44,7 +48,7 @@ bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
       registeredEmployeesmap[EthAddress] = address(newEmployee);
       registeredEmployees.push(EthAddress);
       grantRole(EMPLOYEE_ROLE, address(newEmployee));
-    } else {
+    } else if(Role == 2) {
       OrganizationEndorser newOrganizationEndorser = new OrganizationEndorser(
         admin,
         EthAddress,
@@ -55,6 +59,15 @@ bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
       registeredOrganizationmap[EthAddress] = address(newOrganizationEndorser);
       registeredOrganization.push(EthAddress);
       grantRole(ORGANIZATION_ROLE, address(newOrganizationEndorser));
+    }else if(Role == 3){
+      PayrollAdmin newPayrollAdmin = new PayrollAdmin(
+        admin,
+        EthAddress,
+        Name
+      );
+      registeredPayrollAdminmap[EthAddress] = address(newPayrollAdmin);
+      registeredPayrollAdmin.push(EthAddress);
+      grantRole(PAYROLL_ADMIN_ROLE, address(newPayrollAdmin));
     }
   }
 
@@ -113,4 +126,30 @@ bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
   {
     return getOrganizationContractByAddress(registeredOrganization[index]);
   }
+
+  function isPayrollAdmin(address _payrollAddress) public view returns (bool) {
+    // return registeredEmployeesmap[_employeeAddress] != address(0x0);
+    return hasRole(PAYROLL_ADMIN_ROLE, registeredPayrollAdminmap[_payrollAddress]);
+  }
+
+  function payrollAdminCount() public view returns (uint256) {
+    return registeredPayrollAdmin.length;
+  }
+
+  function getPayrollContractByAddress(address _payrollAdmin)
+    public
+    view
+    returns (address)
+  {
+    return registeredPayrollAdminmap[_payrollAdmin];
+  }
+
+  function getPayrollContractByIndex(uint256 index)
+    public
+    view
+    returns (address)
+  {
+    return getPayrollContractByAddress(registeredPayrollAdmin[index]);
+  }
+  
 }
