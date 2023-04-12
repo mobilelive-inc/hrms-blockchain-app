@@ -15,7 +15,6 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
   constructor() public {
     admin = msg.sender;
     _setupRole(DEFAULT_ADMIN_ROLE, admin);
-    // _setupRole(ADMIN_ROLE, _admin);
   }
 
   function transferOwnership(address newOwner) public override onlyOwner {
@@ -74,7 +73,6 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
   /****************************************************************USER SECTION**************************************************/
 
   function isEmployee(address _employeeAddress) public view returns (bool) {
-    // return registeredEmployeesmap[_employeeAddress] != address(0x0);
     return hasRole(EMPLOYEE_ROLE, registeredEmployeesmap[_employeeAddress]);
   }
 
@@ -83,7 +81,6 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (bool)
   {
-    // return registeredOrganizationmap[_organizationEndorser] != address(0x0);
       return hasRole(ORGANIZATION_ROLE, registeredOrganizationmap[_organizationEndorser]);
   }
 
@@ -128,7 +125,6 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
   }
 
   function isPayrollAdmin(address _payrollAddress) public view returns (bool) {
-    // return registeredEmployeesmap[_employeeAddress] != address(0x0);
     return hasRole(PAYROLL_ADMIN_ROLE, registeredPayrollAdminmap[_payrollAddress]);
   }
 

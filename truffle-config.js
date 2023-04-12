@@ -3,7 +3,7 @@ require("babel-polyfill");
 
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const appKey = 'https://eth-sepolia.g.alchemy.com/v2/kkI3vJjo67qjvSr9mae7LMwNzbnM0BTs';
-const seedPhrase = '815f68611d3d3902add014edd0d2efb9b638aedfbfb3088a3c8945f924967202';
+const seedPhrase = 'bf3ecf767dd75f51cecdc96f164ed771f53944c997bfc9c78d00748159b909ae';
 
 module.exports = {
   networks: {
@@ -18,6 +18,7 @@ module.exports = {
       network_id: 11155111,
       gas: 5500000,
       confirmations: 2,
+      // from: '0xDF4dd2160d93051FE5bdf8b60c61802E1A426Dbb',
       timeoutBlocks: 99999999999999,
       skipDryRun: true,
     },
@@ -26,6 +27,7 @@ module.exports = {
   contracts_build_directory: "./src/abis/",
   compilers: {
     solc: {
+      // version: "^0.8.0",
       optimizer: {
         enabled: true,
         runs: 200,
