@@ -437,7 +437,7 @@ export default class EmployeePage extends Component {
                     return (
                       <>
                       <div style={{fontSize:"20px", display: "flex", alignItems: "center"}}>
-                      <a href={this.IPFS_Link+file} target="_blank" style={{marginRight: "10px"}}>{this.state?.names[index]}</a>
+                      <a href={this.IPFS_Link+file} target="_blank" rel="noopener noreferrer"style={{marginRight: "10px"}}>{this.state?.names[index]}</a>
                       <Icon name={extension} />
                     </div>
                     <br/>
