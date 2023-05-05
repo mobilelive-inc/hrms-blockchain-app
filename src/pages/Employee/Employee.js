@@ -11,12 +11,15 @@ import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
 import axios from "axios";
 
+const formData=new FormData();
 export default class EmployeePage extends Component {
   state = {
     employeedata: {},
     overallEndorsement: [],
     skills: [],
-    files:{},
+    files:[],
+    names:[],
+    extensions:[],
     certifications: [],
     workExps: [],
     educations: [],
@@ -27,13 +30,14 @@ export default class EmployeePage extends Component {
   };
   IPFS_Link="https://ipfs.moralis.io:2053/ipfs/";
   getFiles=async(userAddress)=>{
-    axios.post("https://dahoi8vjqm9s9.cloudfront.net/api/getfiles",{
-      userAddress:"0xeA6E421065fc7C641e04e83a7F589A0B871EBDD2"
-    }).then((response)=>{
-      if (response.data.response){
-        console.log(response.data.response);
-        this.setState({files:response.data.userFiles})
-        console.log(response.data.userFiles[0])
+    formData.append("userAddress",userAddress);
+    axios.post("https://dahoi8vjqm9s9.cloudfront.net/api/getfiles",
+      formData
+    ).then((response)=>{
+      if (response?.data?.userFiles){
+        this.setState({files:response?.data?.userFiles[2]})
+        this.setState({names:response?.data?.userFiles[0]})
+        this.setState({extensions:response?.data?.userFiles[1]})
       }
       else{
         console.log(response);
@@ -427,15 +431,17 @@ export default class EmployeePage extends Component {
                 <Card.Content>
                   <Card.Header>Files</Card.Header>
                   <br/>
-                  {this.state.files[2]&&this.state.files[2].map((file,index)=>{
-                    var extension=this.getIcons(this.state.files[1][index]);
+                  {this.state?.files?.length&&(this.state?.files || []).map((file,index)=>{
+                    var extension=this.getIcons(this.state?.extensions[index]);
 
                     return (
-                    <div>
-                    <a href={this.IPFS_Link+file} target="blank">{this.state.files[0][index]}</a>
-
-                    <Icon name={extension} />
+                      <>
+                      <div style={{fontSize:"20px", display: "flex", alignItems: "center"}}>
+                      <a href={this.IPFS_Link+file} target="_blank" style={{marginRight: "10px"}}>{this.state?.names[index]}</a>
+                      <Icon name={extension} />
                     </div>
+                    <br/>
+                    </>
                   )}
                   )}
                 </Card.Content>
