@@ -11,6 +11,7 @@ import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import GetCertificationModal from "../../components/GetCertificationModal";
 import GetWorkExpModal from "../../components/GetWorkExpModal";
 import GetSkillsModal from "../../components/GetSkillsModals";
+import GetFilesModal from "../../components/GetFilesModal";
 import GetEducationModal from "../../components/GetEducationModal";
 import GetEditFieldModal from "../../components/GetEditFieldModal";
 import LoadComp from "../../components/LoadComp";
@@ -34,6 +35,7 @@ export default class UpdateProfile extends Component {
     certificationModal: false,
     workexpModal: false,
     skillmodal: false,
+    filemodal:false,
     educationmodal: false,
     editFieldModal: false,
     isDescription: false,
@@ -208,7 +210,9 @@ export default class UpdateProfile extends Component {
     this.setState({ skillmodal: false });
     this.getSkills(this.state.EmployeeContract);
   };
-
+  closeFileModal=()=>{
+    this.setState({filemodal:false});
+  }
   closeEducationModal = () => {
     this.setState({ educationmodal: false });
     this.getEducation(this.state.EmployeeContract);
@@ -294,6 +298,10 @@ export default class UpdateProfile extends Component {
         <GetSkillsModal
           isOpen={this.state.skillmodal}
           closeCertificationModal={this.closeSkillModal}
+        />
+        <GetFilesModal
+          isOpen={this.state.filemodal}
+          closeCertificationModal={this.closeFileModal}
         />
         <GetEducationModal
           isOpen={this.state.educationmodal}
@@ -622,6 +630,24 @@ export default class UpdateProfile extends Component {
                   </div>
                 </Card.Content>
               </Card>
+              
+              <Card className="employee-des">
+              <Card.Content>
+              <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        filemodal: !this.state.filemodal,
+                      })
+                    }
+                  >
+                    <i class="fas fa-plus"></i>
+                  </span>
+              <Card.Header>Files</Card.Header>
+
+                </Card.Content>
+              </Card>
+
             </Grid.Column>
           </Grid.Row>
         </Grid>

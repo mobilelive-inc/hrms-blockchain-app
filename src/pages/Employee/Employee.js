@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { toast } from "react-toastify";
-import { Card, Grid } from "semantic-ui-react";
+import { Card, Grid,Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
 import LineChart from "../../components/LineChart";
@@ -9,12 +9,14 @@ import "./Employee.css";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
+import axios from "axios";
 
 export default class EmployeePage extends Component {
   state = {
     employeedata: {},
     overallEndorsement: [],
     skills: [],
+    files:{},
     certifications: [],
     workExps: [],
     educations: [],
@@ -23,6 +25,37 @@ export default class EmployeePage extends Component {
     codeforces_res: [],
     loadcomp: false,
   };
+  IPFS_Link="https://ipfs.moralis.io:2053/ipfs/";
+  getFiles=async(userAddress)=>{
+    axios.post("https://dahoi8vjqm9s9.cloudfront.net/api/getfiles",{
+      userAddress:"0xeA6E421065fc7C641e04e83a7F589A0B871EBDD2"
+    }).then((response)=>{
+      if (response.data.response){
+        console.log(response.data.response);
+        this.setState({files:response.data.userFiles})
+        console.log(response.data.userFiles[0])
+      }
+      else{
+        console.log(response);
+      }
+    })
+  }
+
+  getIcons(extension){
+
+    switch(extension){
+
+      case "png":
+        return "file image";
+      case "doc":
+        return "file word"
+      case "pdf":
+        return "file pdf"
+      default:
+        return "file"
+    }
+
+  }
 
   componentDidMount = async () => {
     this.setState({ loadcomp: true });
@@ -43,6 +76,7 @@ export default class EmployeePage extends Component {
       this.getCertifications(EmployeeContract);
       this.getWorkExp(EmployeeContract);
       this.getEducation(EmployeeContract);
+      this.getFiles(accounts[0]);
       const employeedata = await EmployeeContract.methods
         .getEmployeeInfo()
         .call();
@@ -370,6 +404,7 @@ export default class EmployeePage extends Component {
                   </div>
                 </Card.Content>
               </Card>
+
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Skills</Card.Header>
@@ -387,6 +422,25 @@ export default class EmployeePage extends Component {
                   </div>
                 </Card.Content>
               </Card>
+                        
+              <Card className="employee-des">
+                <Card.Content>
+                  <Card.Header>Files</Card.Header>
+                  <br/>
+                  {this.state.files[2]&&this.state.files[2].map((file,index)=>{
+                    var extension=this.getIcons(this.state.files[1][index]);
+
+                    return (
+                    <div>
+                    <a href={this.IPFS_Link+file} target="blank">{this.state.files[0][index]}</a>
+
+                    <Icon name={extension} />
+                    </div>
+                  )}
+                  )}
+                </Card.Content>
+              </Card>
+
             </Grid.Column>
           </Grid.Row>
         </Grid>
