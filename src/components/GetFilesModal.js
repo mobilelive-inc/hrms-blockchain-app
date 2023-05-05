@@ -3,8 +3,6 @@ import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import axios from "axios";
 import Web3 from "web3";
-import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
 import "./Modals.css";
 const formData = new FormData();
 export default class GetFilesModal extends Component {
