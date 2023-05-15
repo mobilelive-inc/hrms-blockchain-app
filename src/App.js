@@ -23,6 +23,7 @@ import NotificationsAdmin from "./pages/Admin/Notifications";
 import NotificationsEmployee from "./pages/Employee/Notifications";
 import NotificationsOrg from "./pages/OrganizationEndorser/Notifications";
 import LoadComp from "./components/LoadComp";
+import DisplayFiles from "./pages/Employee/displayFiles";
 
 function App() {
   const [isMeta, setisMeta] = useState(false);
@@ -90,6 +91,7 @@ function App() {
         />
         <Route path="/create-user" exact component={AdminPageCreate} />
         <Route path="/notifications" exact component={NotificationsAdmin} />
+        <Route path="/file/:id" exact component={DisplayFiles} />
       </Switch>
     );
   };
@@ -100,6 +102,7 @@ function App() {
         <Route path="/" exact component={EmployeePage} />
         <Route path="/update-profile" exact component={UpdateProfile} />
         <Route path="/notifications" exact component={NotificationsEmployee} />
+        <Route path="/file/:id" exact component={DisplayFiles} />
       </Switch>
     );
   };
