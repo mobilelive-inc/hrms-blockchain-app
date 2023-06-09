@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { toast } from "react-toastify";
-import { Card, Grid,Icon } from "semantic-ui-react";
+import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
 import LineChart from "../../components/LineChart";
@@ -10,16 +10,28 @@ import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
 import axios from "axios";
+import ModalComponent from "./jiraModal";
+import ModalComponentGit from "./GitModal";
+import CircularProgress from "@mui/material/CircularProgress";
 
-const formData=new FormData();
+const formData = new FormData();
+let accounts = null;
 export default class EmployeePage extends Component {
   state = {
     employeedata: {},
     overallEndorsement: [],
     skills: [],
-    files:[],
-    names:[],
-    extensions:[],
+    files: [],
+    assigneeName: [],
+    assigneeImg: [],
+    description: [],
+    key: [],
+    jiraKeys: [],
+    Response: [],
+    repoNames: [],
+    commits: [],
+    names: [],
+    extensions: [],
     certifications: [],
     workExps: [],
     educations: [],
@@ -27,38 +39,119 @@ export default class EmployeePage extends Component {
     readmore: false,
     codeforces_res: [],
     loadcomp: false,
+    showModal: false,
+    showCommitsModal: false,
+    selectedKey: null,
+    isLoading: false,
+    isDisplayButton: true,
+    isGitDisplayButton: true,
+    isGitLoading: false,
+    orgName:[]
   };
-  IPFS_Link="https://ipfs.moralis.io:2053/ipfs/";
-  getFiles=async(userAddress)=>{
-    formData.append("userAddress",userAddress);
-    axios.post("https://dahoi8vjqm9s9.cloudfront.net/api/getfiles",
-      formData
-    ).then((response)=>{
-      if (response?.data?.userFiles){
-        this.setState({files:response?.data?.userFiles[2]})
-        this.setState({names:response?.data?.userFiles[0]})
-        this.setState({extensions:response?.data?.userFiles[1]})
-      }
-      else{
-        console.log(response);
-      }
-    })
-  }
+  IPFS_Link = "https://ipfs.moralis.io:2053/ipfs/";
 
-  getIcons(extension){
+  getJiraTasks = async () => {
+    console.log("account: ", accounts[0]);
+    const name = this.state.employeedata?.name;
 
-    switch(extension){
+    try {
+      this.setState({ isLoading: true }); // Set isLoading to true
+      this.setState({ isDisplayButton: false });
+      const response = await axios.get(
+        "http://d1h99yrv311co6.cloudfront.net/api/jira/issues",
+        {
+          params: {
+            userName: name,
+          },
+        }
+      );
 
+      this.setState({ Response: response?.data?.response });
+      const keys = this.state.Response?.issues?.map((issue) => issue.key);
+      this.setState({ jiraKeys: keys });
+    } catch (error) {
+      throw error;
+    } finally {
+      this.setState({ isLoading: false }); // Set isLoading to false
+    }
+  };
+
+  openModal = (key) => {
+    this.setState({ selectedKey: key, showModal: true });
+  };
+
+  openCommitsModal = (key) => {
+    this.setState({ showCommitsModal: true });
+  };
+  closeCommitsModal = (key) => {
+    this.setState({ showCommitsModal: false });
+  };
+
+  closeModal = () => {
+    this.setState({ showModal: false });
+  };
+
+  getGithubCommits = async () => {
+    try {
+      this.setState({ isGitLoading: true }); // Set isLoading to true
+      this.setState({ isGitDisplayButton: false });
+      await axios
+        .get("http://d1h99yrv311co6.cloudfront.net/api/github/user/organizations")
+        .then((response) => {
+          this.setState({orgName:response?.data[0]?.login});
+        });
+      await axios
+      .get(`http://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`)
+
+        .then((response) => {
+          this.setState({ repoNames: response?.data });
+        });
+    } catch (error) {
+      throw error;
+    } finally {
+      this.setState({ isGitLoading: false }); 
+    }
+  };
+
+  handleClick = async (name) => {
+    axios
+      .get(
+        `http://d1h99yrv311co6.cloudfront.net/api/github/repo/commits?user=${this.state.orgName}&repoName=${name}`
+      )
+      .then((response) => {
+        this.setState({ commits: response?.data });
+        console.log("commits: ", response?.data);
+      });
+  
+    this.openCommitsModal();
+  };
+  
+  getFiles = async (userAddress) => {
+    formData.append("userAddress", userAddress);
+    axios
+      .post("http://d1h99yrv311co6.cloudfront.net/api/getfiles", formData)
+      .then((response) => {
+        if (response?.data?.userFiles) {
+          this.setState({ files: response?.data?.userFiles[2] });
+          this.setState({ names: response?.data?.userFiles[0] });
+          this.setState({ extensions: response?.data?.userFiles[1] });
+        } else {
+          console.log("error");
+        }
+      });
+  };
+
+  getIcons(extension) {
+    switch (extension) {
       case "png":
         return "file image";
       case "doc":
-        return "file word"
+        return "file word";
       case "pdf":
-        return "file pdf"
+        return "file pdf";
       default:
-        return "file"
+        return "file";
     }
-
   }
 
   componentDidMount = async () => {
@@ -66,7 +159,7 @@ export default class EmployeePage extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
-    const accounts = await web3.eth.getAccounts();
+    accounts = await web3.eth.getAccounts();
     if (AdminData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
       const employeeContractAddress = await admin?.methods
@@ -226,9 +319,7 @@ export default class EmployeePage extends Component {
                 <Card.Content>
                   <Card.Header>
                     {this.state.employeedata?.name}
-                    <small
-                      style={{ wordBreak: "break-word", color: "black" }}
-                    >
+                    <small style={{ wordBreak: "break-word", color: "black" }}>
                       {this.state.employeedata?.ethAddress}
                     </small>
                   </Card.Header>
@@ -426,27 +517,130 @@ export default class EmployeePage extends Component {
                   </div>
                 </Card.Content>
               </Card>
-                        
+
               <Card className="employee-des">
                 <Card.Content>
-                  <Card.Header>Files</Card.Header>
-                  <br/>
-                  {this.state?.files?.length&&(this.state?.files || []).map((file,index)=>{
-                    var extension=this.getIcons(this.state?.extensions[index]);
-
-                    return (
-                      <>
-                      <div style={{fontSize:"20px", display: "flex", alignItems: "center"}}>
-                      <a href={this.IPFS_Link+file} target="_blank" rel="noopener noreferrer"style={{marginRight: "10px"}}>{this.state?.names[index]}</a>
-                      <Icon name={extension} />
-                    </div>
-                    <br/>
-                    </>
+                  <Card.Header>
+                    JIRA Tasks for {this.state.employeedata?.name}
+                  </Card.Header>
+                  <br />
+                  {this.state.isDisplayButton && (
+                    <button
+                      className="button"
+                      onClick={() => this.getJiraTasks()}
+                    >
+                      JIRA Tasks
+                    </button>
                   )}
+                  <br />
+                  <div className="content-list">
+                  {this.state.isLoading ? (
+                    <CircularProgress />
+                  ) : (
+                    this.state.jiraKeys &&
+                    this.state.jiraKeys.map((key) => (
+                      <p
+                        style={{ fontWeight: "bold" }}
+                        key={key}
+                        onClick={() => this.openModal(key)}
+                      >
+                        <Card className="list-items">
+                          <Card.Content className="info-style">
+                            {key}
+                            <Icon
+                              name="external alternate"
+                              style={{ marginLeft: "8px" }}
+                            />
+                          </Card.Content>
+                        </Card>
+                      </p>
+                    ))
                   )}
+                  </div>
                 </Card.Content>
               </Card>
 
+              <ModalComponent
+                showModal={this.state.showModal}
+                selectedKey={this.state.selectedKey}
+                onClose={this.closeModal}
+                Response={this.state.Response}
+              />
+
+              <Card className="employee-des">
+                <Card.Content>
+                  <Card.Header>Github Commits</Card.Header>
+                  <br />
+                  {this.state.isGitDisplayButton && (
+                    <button className="button" onClick={this.getGithubCommits}>
+                      Github Commits
+                    </button>
+                  )}
+                <div className="content-list">
+                  {this.state.isGitLoading ? (
+                    <CircularProgress />
+                  ) : (
+                    this.state?.repoNames?.map((n) => (
+                      <p onClick={() => this.handleClick(n.name)}>
+                        <Card className="list-items">
+                          <Card.Content className="info-style">
+                            {n.name}
+                            <Icon
+                              name="external alternate"
+                              style={{ marginLeft: "8px" }}
+                            />
+                          </Card.Content>
+                        </Card>
+                      </p>
+                    ))
+                  )}
+                  </div>
+                </Card.Content>
+              </Card>
+
+              <ModalComponentGit
+                showModal={this.state.showCommitsModal}
+                commits={this.state.commits}
+                onClose={this.closeCommitsModal}
+              />
+
+              <Card className="employee-des">
+                <Card.Content>
+                  <Card.Header>Files</Card.Header>
+                  <br />
+                  {this.state?.files?.length &&
+                    (this.state?.files || []).map((file, index) => {
+                      var extension = this.getIcons(
+                        this.state?.extensions[index]
+                      );
+
+                      return (
+                        <>
+                          <Card
+                            style={{
+                              display: "flex",
+                              flexDirection: "row",
+                              margin: "0 !important",
+                            }}
+                            className="list-items"
+                          >
+                            <Card.Content>
+                              <a
+                                href={this.IPFS_Link + file}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {this.state?.names[index]}
+                              </a>
+                              <Icon name={extension} />
+                            </Card.Content>
+                          </Card>
+                          <br />
+                        </>
+                      );
+                    })}
+                </Card.Content>
+              </Card>
             </Grid.Column>
           </Grid.Row>
         </Grid>

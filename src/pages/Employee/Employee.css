@@ -52,3 +52,36 @@
   max-height: 36rem !important;
   overflow: auto;
 }
+
+.button {
+  display: inline-block;
+  padding: 10px 20px;
+  margin-right: 5px;
+  background-color:white;
+  color: black;
+  border-color:orange;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.content-list{
+  display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+.button:hover {
+  background-color: orange;
+}
+
+.list-items{
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+    background-color: #fff6f09c !important;
+    margin-bottom: 15px !important;
+    border-left: 3px solid orange !important;
+    
+}
+.info-style{
+  font-weight: bold;
+}
