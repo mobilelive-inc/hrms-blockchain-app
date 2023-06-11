@@ -46,14 +46,14 @@ export default class EmployeePage extends Component {
     isDisplayButton: true,
     isGitDisplayButton: true,
     isGitLoading: false,
-    orgName:[]
+    orgName: [],
   };
   IPFS_Link = "https://ipfs.moralis.io:2053/ipfs/";
 
   getJiraTasks = async () => {
     console.log("account: ", accounts[0]);
     const name = this.state.employeedata?.name;
-
+    console.log("name: ", this.state.employeedata?.name);
     try {
       this.setState({ isLoading: true }); // Set isLoading to true
       this.setState({ isDisplayButton: false });
@@ -96,12 +96,16 @@ export default class EmployeePage extends Component {
       this.setState({ isGitLoading: true }); // Set isLoading to true
       this.setState({ isGitDisplayButton: false });
       await axios
-        .get("http://d1h99yrv311co6.cloudfront.net/api/github/user/organizations")
+        .get(
+          "http://d1h99yrv311co6.cloudfront.net/api/github/user/organizations"
+        )
         .then((response) => {
-          this.setState({orgName:response?.data[0]?.login});
+          this.setState({ orgName: response?.data[0]?.login });
         });
       await axios
-      .get(`http://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`)
+        .get(
+          `http://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`
+        )
 
         .then((response) => {
           this.setState({ repoNames: response?.data });
@@ -109,7 +113,7 @@ export default class EmployeePage extends Component {
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isGitLoading: false }); 
+      this.setState({ isGitLoading: false });
     }
   };
 
@@ -122,10 +126,10 @@ export default class EmployeePage extends Component {
         this.setState({ commits: response?.data });
         console.log("commits: ", response?.data);
       });
-  
+
     this.openCommitsModal();
   };
-  
+
   getFiles = async (userAddress) => {
     formData.append("userAddress", userAddress);
     axios
@@ -173,7 +177,9 @@ export default class EmployeePage extends Component {
       this.getCertifications(EmployeeContract);
       this.getWorkExp(EmployeeContract);
       this.getEducation(EmployeeContract);
+      this.getGithubCommits();
       this.getFiles(accounts[0]);
+
       const employeedata = await EmployeeContract.methods
         .getEmployeeInfo()
         .call();
@@ -185,6 +191,7 @@ export default class EmployeePage extends Component {
         overallEndorsement: employeedata[4],
         endorsecount: employeedata[5],
       };
+
       const endorseCount = newEmployedata.endorsecount;
       const overallEndorsement = await Promise.all(
         Array(parseInt(endorseCount))
@@ -195,6 +202,7 @@ export default class EmployeePage extends Component {
       );
 
       this.setState({ employeedata: newEmployedata, overallEndorsement });
+      this.getJiraTasks();
     } else {
       toast.error("The Admin Contract does not exist on this network!");
     }
@@ -534,28 +542,28 @@ export default class EmployeePage extends Component {
                   )}
                   <br />
                   <div className="content-list">
-                  {this.state.isLoading ? (
-                    <CircularProgress />
-                  ) : (
-                    this.state.jiraKeys &&
-                    this.state.jiraKeys.map((key) => (
-                      <p
-                        style={{ fontWeight: "bold" }}
-                        key={key}
-                        onClick={() => this.openModal(key)}
-                      >
-                        <Card className="list-items">
-                          <Card.Content className="info-style">
-                            {key}
-                            <Icon
-                              name="external alternate"
-                              style={{ marginLeft: "8px" }}
-                            />
-                          </Card.Content>
-                        </Card>
-                      </p>
-                    ))
-                  )}
+                    {this.state.isLoading ? (
+                      <CircularProgress />
+                    ) : (
+                      this.state.jiraKeys &&
+                      this.state.jiraKeys.map((key) => (
+                        <p
+                          style={{ fontWeight: "bold" }}
+                          key={key}
+                          onClick={() => this.openModal(key)}
+                        >
+                          <Card className="list-items">
+                            <Card.Content className="info-style">
+                              {key}
+                              <Icon
+                                name="external alternate"
+                                style={{ marginLeft: "8px" }}
+                              />
+                            </Card.Content>
+                          </Card>
+                        </p>
+                      ))
+                    )}
                   </div>
                 </Card.Content>
               </Card>
@@ -571,29 +579,29 @@ export default class EmployeePage extends Component {
                 <Card.Content>
                   <Card.Header>Github Commits</Card.Header>
                   <br />
-                  {this.state.isGitDisplayButton && (
+                  {/* {this.state.isGitDisplayButton && (
                     <button className="button" onClick={this.getGithubCommits}>
                       Github Commits
                     </button>
-                  )}
-                <div className="content-list">
-                  {this.state.isGitLoading ? (
-                    <CircularProgress />
-                  ) : (
-                    this.state?.repoNames?.map((n) => (
-                      <p onClick={() => this.handleClick(n.name)}>
-                        <Card className="list-items">
-                          <Card.Content className="info-style">
-                            {n.name}
-                            <Icon
-                              name="external alternate"
-                              style={{ marginLeft: "8px" }}
-                            />
-                          </Card.Content>
-                        </Card>
-                      </p>
-                    ))
-                  )}
+                  )} */}
+                  <div className="content-list">
+                    {this.state.isGitLoading ? (
+                      <CircularProgress />
+                    ) : (
+                      this.state?.repoNames?.map((n) => (
+                        <p onClick={() => this.handleClick(n.name)}>
+                          <Card className="list-items">
+                            <Card.Content className="info-style">
+                              {n.name}
+                              <Icon
+                                name="external alternate"
+                                style={{ marginLeft: "8px" }}
+                              />
+                            </Card.Content>
+                          </Card>
+                        </p>
+                      ))
+                    )}
                   </div>
                 </Card.Content>
               </Card>
