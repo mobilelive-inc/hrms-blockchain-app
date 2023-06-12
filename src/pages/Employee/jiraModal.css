@@ -10,6 +10,10 @@
   top: 50px;
   border-radius: 5px;
 }
+.commit-date-style{
+  font-size: 30px;
+  font-style: italic;
+}
 .divider {
   border-top: 1px dotted lightgray;
 }
@@ -34,6 +38,7 @@
 
 .inner-div {
   margin: 10px;
+  box-shadow: (0, 0, 0, 0.15) -0.05px -0.05px -0.4px !important
 }
 
 .assignee-box{

@@ -1,7 +1,7 @@
 import React from "react";
 import Modal from "@mui/material/Modal";
 import "./jiraModal.css";
-import { Icon, Card } from "semantic-ui-react";
+import { Icon } from "semantic-ui-react";
 import moment from "moment/moment";
 
 class ModalComponent extends React.Component {
@@ -32,8 +32,7 @@ class ModalComponent extends React.Component {
                               Updated at:{" "}
                               {moment(issue?.updatedAt).format("DD-MM-YYYY")}
                             </small>
-                          <h2>Description</h2>
-
+                            {issue?.description?.content[1]?.content[0]?.text? <h2>Description</h2>: <h2>There is no description for this issue!</h2>}
                           </div>
                           <div className="ticket-meta-right">
                             <div>
@@ -69,8 +68,7 @@ class ModalComponent extends React.Component {
                                   style={{
                                     display: "inline-block",
                                     marginLeft: "10px",
-                                    marginTop: "0"
-                                
+                                    marginTop: "0",
                                   }}
                                 >
                                   {issue?.reporter?.name}
@@ -78,10 +76,9 @@ class ModalComponent extends React.Component {
                               </div>
                             </div>
                           </div>
-
                         </div>
                         <hr className="divider" />
-                        
+
                         <p>
                           {issue?.description?.content[1]?.content[0]?.text}
                         </p>

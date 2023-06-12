@@ -55,7 +55,7 @@ export default class EmployeePage extends Component {
     const name = this.state.employeedata?.name;
     console.log("name: ", this.state.employeedata?.name);
     try {
-      this.setState({ isLoading: true }); // Set isLoading to true
+      this.setState({ isLoading: true }); 
       this.setState({ isDisplayButton: false });
       const response = await axios.get(
         "http://d1h99yrv311co6.cloudfront.net/api/jira/issues",
@@ -72,7 +72,7 @@ export default class EmployeePage extends Component {
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isLoading: false }); // Set isLoading to false
+      this.setState({ isLoading: false }); 
     }
   };
 
@@ -93,7 +93,7 @@ export default class EmployeePage extends Component {
 
   getGithubCommits = async () => {
     try {
-      this.setState({ isGitLoading: true }); // Set isLoading to true
+      this.setState({ isGitLoading: true }); 
       this.setState({ isGitDisplayButton: false });
       await axios
         .get(
@@ -124,11 +124,27 @@ export default class EmployeePage extends Component {
       )
       .then((response) => {
         this.setState({ commits: response?.data });
-        console.log("commits: ", response?.data);
+        const commitsByDate = {};
+  
+        this.state.commits.forEach((commit) => {
+          const date = commit.commit.author.date.split('T')[0];
+          if (!commitsByDate[date]) {
+            commitsByDate[date] = [];
+          }
+          commitsByDate[date].push(commit);
+        });
+  
+        const sortedCommits = Object.entries(commitsByDate)
+          .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+          .map(([date, commits]) => ({ date, commits }));
+  
+        this.setState({ commits: sortedCommits });
+        console.log("commits: ", sortedCommits);
       });
-
+  
     this.openCommitsModal();
   };
+  
 
   getFiles = async (userAddress) => {
     formData.append("userAddress", userAddress);
@@ -532,15 +548,6 @@ export default class EmployeePage extends Component {
                     JIRA Tasks for {this.state.employeedata?.name}
                   </Card.Header>
                   <br />
-                  {this.state.isDisplayButton && (
-                    <button
-                      className="button"
-                      onClick={() => this.getJiraTasks()}
-                    >
-                      JIRA Tasks
-                    </button>
-                  )}
-                  <br />
                   <div className="content-list">
                     {this.state.isLoading ? (
                       <CircularProgress />
@@ -579,11 +586,7 @@ export default class EmployeePage extends Component {
                 <Card.Content>
                   <Card.Header>Github Commits</Card.Header>
                   <br />
-                  {/* {this.state.isGitDisplayButton && (
-                    <button className="button" onClick={this.getGithubCommits}>
-                      Github Commits
-                    </button>
-                  )} */}
+                  
                   <div className="content-list">
                     {this.state.isGitLoading ? (
                       <CircularProgress />
