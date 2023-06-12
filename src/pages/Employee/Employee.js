@@ -58,7 +58,7 @@ export default class EmployeePage extends Component {
       this.setState({ isLoading: true }); 
       this.setState({ isDisplayButton: false });
       const response = await axios.get(
-        "http://d1h99yrv311co6.cloudfront.net/api/jira/issues",
+        "https://d1h99yrv311co6.cloudfront.net/api/jira/issues",
         {
           params: {
             userName: name,
@@ -97,14 +97,14 @@ export default class EmployeePage extends Component {
       this.setState({ isGitDisplayButton: false });
       await axios
         .get(
-          "http://d1h99yrv311co6.cloudfront.net/api/github/user/organizations"
+          "https://d1h99yrv311co6.cloudfront.net/api/github/user/organizations"
         )
         .then((response) => {
           this.setState({ orgName: response?.data[0]?.login });
         });
       await axios
         .get(
-          `http://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`
+          `https://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`
         )
 
         .then((response) => {
@@ -120,7 +120,7 @@ export default class EmployeePage extends Component {
   handleClick = async (name) => {
     axios
       .get(
-        `http://d1h99yrv311co6.cloudfront.net/api/github/repo/commits?user=${this.state.orgName}&repoName=${name}`
+        `https://d1h99yrv311co6.cloudfront.net/api/github/repo/commits?user=${this.state.orgName}&repoName=${name}`
       )
       .then((response) => {
         this.setState({ commits: response?.data });
