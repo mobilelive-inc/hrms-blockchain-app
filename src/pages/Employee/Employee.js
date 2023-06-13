@@ -13,8 +13,7 @@ import axios from "axios";
 import ModalComponent from "./jiraModal";
 import ModalComponentGit from "./GitModal";
 import CircularProgress from "@mui/material/CircularProgress";
-
-const formData = new FormData();
+import { saveAs } from "file-saver";
 let accounts = null;
 export default class EmployeePage extends Component {
   state = {
@@ -55,7 +54,7 @@ export default class EmployeePage extends Component {
     const name = this.state.employeedata?.name;
     console.log("name: ", this.state.employeedata?.name);
     try {
-      this.setState({ isLoading: true }); 
+      this.setState({ isLoading: true });
       this.setState({ isDisplayButton: false });
       const response = await axios.get(
         "https://d1h99yrv311co6.cloudfront.net/api/jira/issues",
@@ -72,7 +71,7 @@ export default class EmployeePage extends Component {
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isLoading: false }); 
+      this.setState({ isLoading: false });
     }
   };
 
@@ -93,7 +92,7 @@ export default class EmployeePage extends Component {
 
   getGithubCommits = async () => {
     try {
-      this.setState({ isGitLoading: true }); 
+      this.setState({ isGitLoading: true });
       this.setState({ isGitDisplayButton: false });
       await axios
         .get(
@@ -118,48 +117,64 @@ export default class EmployeePage extends Component {
   };
 
   handleClick = async (name) => {
-    axios
-      .get(
+    try {
+      const response = await axios.get(
         `https://d1h99yrv311co6.cloudfront.net/api/github/repo/commits?user=${this.state.orgName}&repoName=${name}`
-      )
-      .then((response) => {
-        this.setState({ commits: response?.data });
-        const commitsByDate = {};
-  
-        this.state.commits.forEach((commit) => {
-          const date = commit.commit.author.date.split('T')[0];
-          if (!commitsByDate[date]) {
-            commitsByDate[date] = [];
-          }
-          commitsByDate[date].push(commit);
-        });
-  
-        const sortedCommits = Object.entries(commitsByDate)
-          .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-          .map(([date, commits]) => ({ date, commits }));
-  
-        this.setState({ commits: sortedCommits });
-        console.log("commits: ", sortedCommits);
+      );
+      const commits = response?.data || [];
+
+      const commitsByDate = {};
+      commits.forEach((commit) => {
+        const date = commit.commit.author.date.split("T")[0];
+        if (!commitsByDate[date]) {
+          commitsByDate[date] = [];
+        }
+        commitsByDate[date].push(commit);
       });
-  
-    this.openCommitsModal();
+
+      const sortedCommits = Object.entries(commitsByDate)
+        .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+        .map(([date, commits]) => ({ date, commits }));
+
+      this.setState({ commits: sortedCommits });
+      this.openCommitsModal();
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
-  
 
   getFiles = async (userAddress) => {
-    formData.append("userAddress", userAddress);
+    const myHeaders = {
+      "Content-Type": "application/x-www-form-urlencoded",
+    };
+
+    const urlencoded = new URLSearchParams();
+    urlencoded.append("userAddress", userAddress);
+
     axios
-      .post("http://d1h99yrv311co6.cloudfront.net/api/getfiles", formData)
+      .post(
+        "https://d1h99yrv311co6.cloudfront.net/api/files/files",
+        urlencoded.toString(),
+        { headers: myHeaders }
+      )
       .then((response) => {
-        if (response?.data?.userFiles) {
-          this.setState({ files: response?.data?.userFiles[2] });
-          this.setState({ names: response?.data?.userFiles[0] });
-          this.setState({ extensions: response?.data?.userFiles[1] });
+        if (response?.data?.response?.files) {
+          const files = response.data.response.files["2"];
+          const names = response.data.response.files["0"];
+          const extensions = response.data.response.files["1"];
+
+          this.setState({ files: files });
+          this.setState({ names: names });
+          this.setState({ extensions: extensions });
         } else {
           console.log("error");
         }
       });
   };
+
+  handleDownloadClick(url, name) {
+    saveAs(url, name);
+  }
 
   getIcons(extension) {
     switch (extension) {
@@ -584,9 +599,9 @@ export default class EmployeePage extends Component {
 
               <Card className="employee-des">
                 <Card.Content>
-                  <Card.Header>Github Commits</Card.Header>
+                  <Card.Header>Github Repos</Card.Header>
                   <br />
-                  
+
                   <div className="content-list">
                     {this.state.isGitLoading ? (
                       <CircularProgress />
@@ -619,6 +634,7 @@ export default class EmployeePage extends Component {
                 <Card.Content>
                   <Card.Header>Files</Card.Header>
                   <br />
+                  <div className="content-list">
                   {this.state?.files?.length &&
                     (this.state?.files || []).map((file, index) => {
                       var extension = this.getIcons(
@@ -626,13 +642,8 @@ export default class EmployeePage extends Component {
                       );
 
                       return (
-                        <>
+                        <div>
                           <Card
-                            style={{
-                              display: "flex",
-                              flexDirection: "row",
-                              margin: "0 !important",
-                            }}
                             className="list-items"
                           >
                             <Card.Content>
@@ -640,16 +651,16 @@ export default class EmployeePage extends Component {
                                 href={this.IPFS_Link + file}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                              >
-                                {this.state?.names[index]}
+                                style={{color:"black",fontWeight:"bold"}}
+                                 >{this.state?.names[index]}
                               </a>
                               <Icon name={extension} />
                             </Card.Content>
                           </Card>
-                          <br />
-                        </>
+                        </div>
                       );
                     })}
+                    </div>
                 </Card.Content>
               </Card>
             </Grid.Column>

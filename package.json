@@ -21,6 +21,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^3.0.0",
     "chart.js": "^3.5.1",
+    "file-saver": "^2.0.5",
     "firebase": "^8.6.5",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",

@@ -80,6 +80,9 @@
     background-color: #fff6f09c !important;
     margin-bottom: 15px !important;
     border-left: 3px solid orange !important;
+    display: flex;
+    flex-direction: row;
+    
     
 }
 .info-style{
