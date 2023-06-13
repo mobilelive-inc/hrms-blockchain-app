@@ -11,8 +11,9 @@
   border-radius: 5px;
 }
 .commit-date-style{
-  font-size: 30px;
-  font-style: italic;
+  font-size: 20px;
+  color: black;
+  font-weight: bold;
 }
 .divider {
   border-top: 1px dotted lightgray;
@@ -38,9 +39,15 @@
 
 .inner-div {
   margin: 10px;
-  box-shadow: (0, 0, 0, 0.15) -0.05px -0.05px -0.4px !important
 }
-
+.message-style{
+  font-size:16px;
+  color: black; 
+  font-weight: lighter;
+}
+.message-style:hover{
+  text-decoration: underline;
+}
 .assignee-box{
   padding:4px !important;
 
@@ -53,4 +60,19 @@
 }
 .ticket-meta-right{
   min-width: 26%;
+}
+
+.author-info{
+  display: flex;
+  flex-wrap: wrap-reverse;
+}
+.user-icon{
+  position:relative !important;
+  right: 0 !important;
+  margin-right: 8px !important;
+    margin-bottom: 6px !important;
+}
+.commit-info{
+  box-shadow: 1px 1px gray;
+  margin-bottom: 10px;
 }
