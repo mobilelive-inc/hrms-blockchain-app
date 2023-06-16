@@ -9,11 +9,17 @@ import "./Employee.css";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
-import axios from "axios";
 import ModalComponent from "./jiraModal";
 import ModalComponentGit from "./GitModal";
 import CircularProgress from "@mui/material/CircularProgress";
 import { saveAs } from "file-saver";
+import getJiraApi from "../../Apis/JiraApi";
+import {getGitOrganizationApi} from "../../Apis/GitApi";
+import { getGitRepos } from "../../Apis/GitApi";
+import { getGitCommits } from "../../Apis/GitApi";
+import { getFilesApi } from "../../Apis/FileApi";
+import { IPFS_Link } from "../../utils/utils";
+
 let accounts = null;
 export default class EmployeePage extends Component {
   state = {
@@ -47,24 +53,13 @@ export default class EmployeePage extends Component {
     isGitLoading: false,
     orgName: [],
   };
-  IPFS_Link = "https://ipfs.moralis.io:2053/ipfs/";
-
   getJiraTasks = async () => {
     console.log("account: ", accounts[0]);
-    const name = this.state.employeedata?.name;
-    console.log("name: ", this.state.employeedata?.name);
+    const name = this.state.employeedata?.name; 
     try {
       this.setState({ isLoading: true });
       this.setState({ isDisplayButton: false });
-      const response = await axios.get(
-        "https://d1h99yrv311co6.cloudfront.net/api/jira/issues",
-        {
-          params: {
-            userName: name,
-          },
-        }
-      );
-
+      const response = await getJiraApi(name);
       this.setState({ Response: response?.data?.response });
       const keys = this.state.Response?.issues?.map((issue) => issue.key);
       this.setState({ jiraKeys: keys });
@@ -94,18 +89,11 @@ export default class EmployeePage extends Component {
     try {
       this.setState({ isGitLoading: true });
       this.setState({ isGitDisplayButton: false });
-      await axios
-        .get(
-          "https://d1h99yrv311co6.cloudfront.net/api/github/user/organizations"
-        )
+      await getGitOrganizationApi()
         .then((response) => {
           this.setState({ orgName: response?.data[0]?.login });
         });
-      await axios
-        .get(
-          `https://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`
-        )
-
+      await getGitRepos(this.state?.orgName)
         .then((response) => {
           this.setState({ repoNames: response?.data });
         });
@@ -118,14 +106,12 @@ export default class EmployeePage extends Component {
 
   handleClick = async (name) => {
     try {
-      const response = await axios.get(
-        `https://d1h99yrv311co6.cloudfront.net/api/github/repo/commits?user=${this.state.orgName}&repoName=${name}`
-      );
+      const response = await getGitCommits(this.state?.orgName,name) 
       const commits = response?.data || [];
 
       const commitsByDate = {};
       commits.forEach((commit) => {
-        const date = commit.commit.author.date.split("T")[0];
+        const date = commit?.commit?.author?.date.split("T")[0];
         if (!commitsByDate[date]) {
           commitsByDate[date] = [];
         }
@@ -147,21 +133,15 @@ export default class EmployeePage extends Component {
     const myHeaders = {
       "Content-Type": "application/x-www-form-urlencoded",
     };
-
     const urlencoded = new URLSearchParams();
     urlencoded.append("userAddress", userAddress);
 
-    axios
-      .post(
-        "https://d1h99yrv311co6.cloudfront.net/api/files/files",
-        urlencoded.toString(),
-        { headers: myHeaders }
-      )
+    await getFilesApi(urlencoded,myHeaders)
       .then((response) => {
         if (response?.data?.response?.files) {
-          const files = response.data.response.files["2"];
-          const names = response.data.response.files["0"];
-          const extensions = response.data.response.files["1"];
+          const files = response.data.response.files[2];
+          const names = response.data.response.files[0];
+          const extensions = response.data.response.files[1];
 
           this.setState({ files: files });
           this.setState({ names: names });
@@ -648,7 +628,7 @@ export default class EmployeePage extends Component {
                           >
                             <Card.Content>
                               <a
-                                href={this.IPFS_Link + file}
+                                href={IPFS_Link + file}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{color:"black",fontWeight:"bold"}}

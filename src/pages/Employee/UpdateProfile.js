@@ -334,7 +334,7 @@ export default class UpdateProfile extends Component {
                           })
                         }
                       >
-                        <i class="fas fa-pencil-alt"></i>
+                        <i className="fas fa-pencil-alt"></i>
                       </span>
                     </div>
                     <small
@@ -377,7 +377,7 @@ export default class UpdateProfile extends Component {
                           })
                         }
                       >
-                        <i class="fas fa-pencil-alt"></i>
+                        <i className="fas fa-pencil-alt"></i>
                       </span>
                     </div>
                   </Card.Header>
@@ -396,7 +396,7 @@ export default class UpdateProfile extends Component {
                         })
                       }
                     >
-                      <i class="fas fa-plus"></i>
+                      <i className="fas fa-plus"></i>
                     </span>
 
                     <Card.Header
@@ -468,7 +468,7 @@ export default class UpdateProfile extends Component {
                       })
                     }
                   >
-                    <i class="fas fa-plus"></i>
+                    <i className="fas fa-plus"></i>
                   </span>
                   <Card.Header>Certifications</Card.Header>
                   <br />
@@ -486,9 +486,9 @@ export default class UpdateProfile extends Component {
                               }
                             >
                               {!certi.visible ? (
-                                <i class="fas fa-eye-slash"></i>
+                                <i className="fas fa-eye-slash"></i>
                               ) : (
-                                <i class="fas fa-eye"></i>
+                                <i className="fas fa-eye"></i>
                               )}
                             </span>
                           </p>
@@ -548,7 +548,7 @@ export default class UpdateProfile extends Component {
                       })
                     }
                   >
-                    <i class="fas fa-plus"></i>
+                    <i className="fas fa-plus"></i>
                   </span>
                   <Card.Header>Work Experiences</Card.Header>
                   <br />
@@ -565,9 +565,9 @@ export default class UpdateProfile extends Component {
                               }
                             >
                               {!workExp.visible ? (
-                                <i class="fas fa-eye-slash"></i>
+                                <i className="fas fa-eye-slash"></i>
                               ) : (
-                                <i class="fas fa-eye"></i>
+                                <i className="fas fa-eye"></i>
                               )}
                             </span>
                           </p>
@@ -616,7 +616,7 @@ export default class UpdateProfile extends Component {
                       })
                     }
                   >
-                    <i class="fas fa-plus"></i>
+                    <i className="fas fa-plus"></i>
                   </span>
                   <Card.Header>Skills</Card.Header>
                   <br />
@@ -641,7 +641,7 @@ export default class UpdateProfile extends Component {
                       })
                     }
                   >
-                    <i class="fas fa-plus"></i>
+                    <i className="fas fa-plus"></i>
                   </span>
               <Card.Header>Files</Card.Header>
 
