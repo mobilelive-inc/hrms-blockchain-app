@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
 import { updateUserApi } from "../Apis/UsersApi";
 import "./Modals.css";
 
@@ -48,6 +47,7 @@ export default class GetEditFieldModal extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    console.log("adminData: ",AdminData)
     const accounts = await web3.eth.getAccounts();
     const messageToR = `0x${Buffer.from(
       'Please confirm to verify info update',

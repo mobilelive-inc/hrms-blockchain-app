@@ -7,7 +7,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
-import ReactDatePicker from "react-datepicker";
 
 export default class GetWorkExpModal extends Component {
   state = {
