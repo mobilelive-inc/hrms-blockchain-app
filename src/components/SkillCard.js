@@ -1,8 +1,6 @@
 import React, { Component } from "react";
-import { Card, CardContent } from "semantic-ui-react";
 import Employee from "../abis/Employee.json";
 import Admin from "../abis/Admin.json";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import { toast } from "react-toastify";
 import "./SkillCard.css";
 
@@ -10,6 +8,9 @@ export default class SkillCard extends Component {
   state = {
     colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
   };
+  checkExistence(value) {
+    return value ? value : "-------";
+  }
 
   removeSkill = async (name) => {
     const web3 = window.web3;
@@ -38,7 +39,7 @@ export default class SkillCard extends Component {
   render() {
     const skill = this.props.skill;
     return (
-      <Card className="skill-des">
+      <div className="skill-des">
         {this.props.update && (
           <span
             className="delete-button-skill"
@@ -51,65 +52,20 @@ export default class SkillCard extends Component {
             )}
           </span>
         )}
-        <CardContent>
-          <div className="skillcard_container">
+          <div>
             <div>
-              <Card.Header style={{ fontSize: "18px", fontWeight: "600" }}>
-                {skill.name}
-                <br />
-                <small style={{ color: "#c5c6c7" }}>{skill.experience}</small>
-              </Card.Header>
+                  <div key={skill?.title}>
+                    <p style={{ color: "black", fontWeight: "bold" }}>
+                      {this.checkExistence(skill?.title)}
+                    </p>
+                    <small style={{ color: "black", fontWeight: "bold" }}>
+                      {this.checkExistence(skill?.experience)}
+                    </small>
+                  </div>
+            </div>
 
-              <br />
-              {skill.endorsed ? (
-                <div>
-                  <div>
-                    <em>Endorsed By:</em>
-                    <p>
-                      <small
-                        style={{ wordBreak: "break-word", color: "#c5c6c7" }}
-                      >
-                        {skill.endorser_address}
-                      </small>
-                    </p>
-                  </div>
-                  <br />
-                  <div>
-                    <em>Review: </em>
-                    <p>
-                      <small style={{ color: "#c5c6c7" }}>{skill.review}</small>
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p style={{ color: "yellow" }}>Not Yet Endorsed</p>
-                </div>
-              )}
-            </div>
-            <div>
-              <div style={{ width: "100px" }}>
-                <CircularProgressbar
-                  value={skill.overall_percentage}
-                  text={`Acquired - ${skill.overall_percentage}%`}
-                  strokeWidth="5"
-                  styles={buildStyles({
-                    strokeLinecap: "round",
-                    textSize: "12px",
-                    pathTransitionDuration: 1,
-                    pathColor: `${
-                      this.state.colour[Math.floor(Math.random() * 5)]
-                    }`,
-                    textColor: "#c5c6c7",
-                    trailColor: "#393b3fa6",
-                    backgroundColor: "#c5c6c7",
-                  })}
-                />
-              </div>
-            </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
     );
   }
 }

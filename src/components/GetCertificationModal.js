@@ -1,23 +1,42 @@
 import React, { Component } from "react";
 import { toast } from "react-toastify";
-import { Button, Form, Header, Input, Modal } from "semantic-ui-react";
+import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
 import Employee from "../abis/Employee.json";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
 
 export default class GetCertificationModal extends Component {
   state = {
-    name: "",
-    organization: "",
-    score: "",
+    title: "",
+    issuing_organization: "",
+    issue_date: "",
+    expiry_date: "",
+    credential_id: "",
+    credential_url: "",
     loading: false,
     scanQR: false,
   };
 
   handleSubmit = async (e) => {
-    const { name, organization, score } = this.state;
-    if (!name || !organization || !(score >= 1 && score <= 100)) {
+    const {
+      title,
+      issuing_organization,
+      issue_date,
+      expiry_date,
+      credential_id,
+      credential_url,
+    } = this.state;
+    if (
+      !title ||
+      !issuing_organization ||
+      !issue_date ||
+      !expiry_date ||
+      !credential_id ||
+      !credential_url
+    ) {
       toast.error("Please enter all the fields.");
       return;
     }
@@ -37,11 +56,9 @@ export default class GetCertificationModal extends Component {
         employeeContractAddress
       );
       try {
-        await EmployeeContract.methods
-          .addCertification(name, organization, score)
-          .send({
-            from: accounts[0],
-          });
+        await EmployeeContract.methods.addCertification().send({
+          from: accounts[0],
+        });
         toast.success("Certification saved successfullyy!!");
       } catch (err) {
         toast.error(err.message);
@@ -54,10 +71,16 @@ export default class GetCertificationModal extends Component {
   };
 
   handleChange = (e) => {
-    e.preventDefault();
     this.setState({ [e.target.id]: e.target.value });
   };
-
+  handleChangeIssueDate = (date) => {
+    this.setState({ issue_date: date });
+  };
+  
+  handleChangeExpiryDate = (date) => {
+    this.setState({ expiry_date: date });
+  };
+  
   closeScanQRModal = () => {
     this.setState({ scanQR: false });
   };
@@ -91,45 +114,47 @@ export default class GetCertificationModal extends Component {
             <Form className="form-inputs">
               <Form.Field className="form-inputs">
                 <input
-                  id="name"
-                  placeholder="Name"
+                  id="title"
+                  placeholder="Title"
                   autoComplete="off"
                   autoCorrect="off"
-                  value={this.state.name}
+                  value={this.state.title}
                   onChange={this.handleChange}
                 />
-              </Form.Field>
-              <Form.Field className="form-inputs">
-                <Input action>
-                  <input
-                    id="organization"
-                    placeholder="0x0"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    value={this.state.organization}
-                    onChange={this.handleChange}
-                  />
-                  <Button
-                    type="button"
-                    content="QR"
-                    icon="qrcode"
-                    onClick={() => this.setState({ scanQR: true })}
-                  />
-                </Input>
               </Form.Field>
               <Form.Field className="form-inputs">
                 <input
-                  id="score"
-                  placeholder="Score"
+                  id="issuing_organization"
+                  placeholder="Issuing Organization"
                   autoComplete="off"
                   autoCorrect="off"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={this.state.score}
+                  value={this.state.issuing_organization}
                   onChange={this.handleChange}
                 />
               </Form.Field>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <Form.Field className="form-inputs">
+                  <DatePicker
+                    id="issue_date"
+                    placeholderText="Issue Date"
+                    autoComplete="off"
+                    selected={this.state.issue_date}
+                    onChange={this.handleChangeIssueDate} 
+                    className="datepicker-style"
+                    maxDate={this.state.expiry_date}
+                  />
+
+                  <DatePicker
+                    id="expiry_date"
+                    placeholderText="Expiry Date"
+                    autoComplete="off"
+                    selected={this.state.expiry_date}
+                    onChange={this.handleChangeExpiryDate} 
+                    className="datepicker-style"
+                    minDate={this.state.issue_date}
+                  />
+                </Form.Field>
+              </div>
             </Form>
           </Modal.Content>
           <Modal.Actions className="modal-actions">

@@ -1,25 +1,32 @@
 import React, { Component } from "react";
 import { toast } from "react-toastify";
-import { Button, Form, Header, Input, Modal } from "semantic-ui-react";
+import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
 import Employee from "../abis/Employee.json";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
+import ReactDatePicker from "react-datepicker";
 
 export default class GetWorkExpModal extends Component {
   state = {
-    role: "",
-    organization: "",
-    startdate: "",
-    enddate: "",
+    title:"",
+    employment_type:"",
+    company_name:"",
+    location:"",
+    location_type:"",
+    is_currently:"",
+    start_date:"",
+    end_date:"",
     description: "",
     loading: false,
     scanQR: false,
   };
 
   handleSubmit = async (e) => {
-    const { role, organization, startdate, enddate, description } = this.state;
-    if (!role | !organization || !startdate || !enddate || !description) {
+    const { title,employment_type,company_name,location,location_type,is_currently, start_date, end_date, description } = this.state;
+    if (!title | !employment_type || !company_name || !location || !location_type || !is_currently || !start_date || !end_date || !description) {
       toast.error("Please enter all the fields.");
       return;
     }
@@ -40,7 +47,7 @@ export default class GetWorkExpModal extends Component {
       );
       try {
         await EmployeeContract.methods
-          .addWorkExp(role, organization, startdate, enddate, description)
+          .addWorkExp(title, company_name, start_date, end_date, description)
           .send({
             from: accounts[0],
           });
@@ -58,6 +65,14 @@ export default class GetWorkExpModal extends Component {
   handleChange = (e) => {
     e.preventDefault();
     this.setState({ [e.target.id]: e.target.value });
+  };
+
+  handleChangeStartDate = (date) => {
+    this.setState({ start_date: date });
+  };
+  
+  handleChangeEndDate = (date) => {
+    this.setState({ end_date: date });
   };
 
   closeScanQRModal = () => {
@@ -93,52 +108,85 @@ export default class GetWorkExpModal extends Component {
             <Form className="form-inputs">
               <Form.Field className="form-inputs">
                 <input
-                  id="role"
+                  id="title"
                   placeholder="Job Title"
                   autoComplete="off"
                   autoCorrect="off"
-                  value={this.state.role}
+                  value={this.state.title}
                   onChange={this.handleChange}
                 />
               </Form.Field>
               <Form.Field className="form-inputs">
-                <Input action>
                   <input
-                    id="organization"
-                    placeholder="Organization"
+                    id="employment_type"
+                    placeholder="Employment Type"
                     autoComplete="off"
                     autoCorrect="off"
                     value={this.state.organization}
                     onChange={this.handleChange}
-                  />
-                  <Button
-                    type="button"
-                    content="QR"
-                    icon="qrcode"
-                    onClick={() => this.setState({ scanQR: true })}
-                  />
-                </Input>
+                  />                  
               </Form.Field>
               <Form.Field className="form-inputs">
                 <input
-                  id="startdate"
-                  placeholder="Start Date"
+                  id="company_name"
+                  placeholder="Company Name"
                   autoComplete="off"
                   autoCorrect="off"
-                  value={this.state.startdate}
+                  value={this.state.company_name}
                   onChange={this.handleChange}
                 />
               </Form.Field>
               <Form.Field className="form-inputs">
                 <input
-                  id="enddate"
-                  placeholder="End Date"
+                  id="location"
+                  placeholder="Location"
                   autoComplete="off"
                   autoCorrect="off"
-                  value={this.state.enddate}
+                  value={this.state.location}
                   onChange={this.handleChange}
                 />
               </Form.Field>
+              <Form.Field className="form-inputs">
+                <input
+                  id="location_type"
+                  placeholder="Location Type"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.location_type}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
+              <Form.Field className="form-inputs">
+                <input
+                  id="is_currently"
+                  placeholder="Currently Working?"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.is_currently}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
+              <Form.Field className="form-inputs">
+                  <DatePicker
+                    id="start_date"
+                    placeholderText="Start Date"
+                    autoComplete="off"
+                    selected={this.state.start_date}
+                    onChange={this.handleChangeStartDate} 
+                    className="datepicker-style"
+                    maxDate={this.state.end_date}
+                  />
+
+                  <DatePicker
+                    id="end_date"
+                    placeholderText="End Date"
+                    autoComplete="off"
+                    selected={this.state.end_date}
+                    onChange={this.handleChangeEndDate} 
+                    className="datepicker-style"
+                    minDate={this.state.start_date}
+                  />
+                </Form.Field>
               <Form.Field className="form-inputs">
                 <input
                   id="description"
@@ -149,6 +197,7 @@ export default class GetWorkExpModal extends Component {
                   onChange={this.handleChange}
                 />
               </Form.Field>
+              
             </Form>
           </Modal.Content>
           <Modal.Actions className="modal-actions">
