@@ -47,11 +47,11 @@ export default class UpdateProfile extends Component {
     EmployeeContract: {},
     userInfo: null,
     selectedEducation: null,
-    tokenId:null
+    tokenId: null,
   };
   getUserInfo = async (address) => {
     await getUserApi(address).then((response) => {
-      this.setState({tokenId:response?.data?.response?.userInfo?.tokenId})
+      this.setState({ tokenId: response?.data?.response?.userInfo?.tokenId });
       this.setState({ userInfo: response?.data?.response?.userInfo });
     });
   };
@@ -106,24 +106,20 @@ export default class UpdateProfile extends Component {
   };
 
   getEducation = async () => {
-    let transformedEducation = [];
-
-    const id = 1;
+    const id = this.state.tokenId;
     try {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
-
+      console.log("education: ", educationData);
+  
       if (Array.isArray(educationData)) {
-        educationData.forEach((element) => {
-          transformedEducation.push(Object.fromEntries(element));
-        });
+        this.setState({ educations: educationData });
       }
-      this.setState({ educations: transformedEducation });
     } catch (error) {
       console.error("Error retrieving education data:", error);
     }
   };
-
+  
   checkExistence(value) {
     return value ? value : "-------";
   }
@@ -134,7 +130,7 @@ export default class UpdateProfile extends Component {
       selectedEducation: education,
     });
   };
-  
+
   componentDidMount = async () => {
     this.setState({ loadcomp: true });
     const web3 = window.web3;
@@ -151,7 +147,7 @@ export default class UpdateProfile extends Component {
         employeeContractAddress
       );
       this.setState({ EmployeeContract });
-      this.getUserInfo(accounts[0]);
+      await this.getUserInfo(accounts[0]);
       this.getSkills();
       this.getCertifications();
       this.getWorkExp();
@@ -307,7 +303,7 @@ export default class UpdateProfile extends Component {
     this.setState({ filemodal: false });
   };
   closeEducationModal = () => {
-    this.setState({ educationmodal: false,selectedEducation: null });
+    this.setState({ educationmodal: false, selectedEducation: null });
     this.getEducation(this.state.EmployeeContract);
   };
 
@@ -418,30 +414,27 @@ export default class UpdateProfile extends Component {
           <Grid.Row>
             <Grid.Column width={6}>
               <Card className="personal-info">
-              <Card.Content>
+                <Card.Content>
+                  <Card.Header>About</Card.Header>
+                  <br />
 
-              <Card.Header>
-                About
-              </Card.Header>
-              <br/>
+                  <span style={{ fontWeight: "bold" }}>
+                    {this.checkExistence(this.state.userInfo?.first_name) +
+                      " " +
+                      this.checkExistence(this.state.userInfo?.last_name)}
+                  </span>
 
-                    <span style={{ fontWeight: "bold" }}>
-                      {this.checkExistence(this.state.userInfo?.first_name) +
-                        " " +
-                        this.checkExistence(this.state.userInfo?.last_name)}
-                    </span>
-
-                    <span
-                      className="add-button"
-                      onClick={(e) =>
-                        this.setState({
-                          editFieldModal: !this.state.editFieldModal,
-                          isDescription: false,
-                        })
-                      }
-                    >
-                      <i className="fas fa-pencil-alt"></i>
-                    </span>
+                  <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        editFieldModal: !this.state.editFieldModal,
+                        isDescription: false,
+                      })
+                    }
+                  >
+                    <i className="fas fa-pencil-alt"></i>
+                  </span>
                   <div>{this.checkExistence(this.state.userInfo?.email)}</div>
 
                   <div style={{ marginTop: "5px", marginBottom: "5px" }}>
@@ -484,44 +477,50 @@ export default class UpdateProfile extends Component {
                     </Card.Header>
                     <br />
                     <div className="education">
-                      {this.state.educations?.map((education, index) => (
-                        <div className="education-design" key={index}>
-                          <div
-                            style={{
-                              paddingRight: "50px",
-                              color: "black",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            <div style={{ display: "flex" }}>
-                              <Icon
-                                style={{ position: "relative" }}
-                                name="graduation cap"
-                              />
-                              <p>{this.checkExistence(education?.degree)}</p>
-                              <span
-                                onClick={() => this.handleEditEducation(education)}
-                              >
-                                <i
-                                  style={{
-                                    marginLeft: "200%",
-                                    marginRight: "0px",
-                                  }}
-                                  className="fas fa-pencil-alt"
-                                ></i>
-                              </span>
-                            </div>
-                            <small
+                      {this.state.educations?.length > 0 ? (
+                        this.state.educations.map((education, index) => (
+                          <div className="education-design" key={index}>
+                            <div
                               style={{
-                                wordBreak: "break-word",
-                                fontSize: "10px",
+                                paddingRight: "50px",
+                                color: "black",
+                                fontWeight: "bold",
                               }}
                             >
-                              {this.checkExistence(education?.institute)}
-                            </small>
+                              <div style={{ display: "flex" }}>
+                                <Icon
+                                  style={{ position: "relative" }}
+                                  name="graduation cap"
+                                />
+                                <p>{this.checkExistence(education?.degree)}</p>
+                                <span
+                                  onClick={() =>
+                                    this.handleEditEducation(education)
+                                  }
+                                >
+                                  <i
+                                    style={{
+                                      marginLeft: "200%",
+                                      marginRight: "0px",
+                                    }}
+                                    className="fas fa-pencil-alt"
+                                  ></i>
+                                </span>
+                              </div>
+                              <small
+                                style={{
+                                  wordBreak: "break-word",
+                                  fontSize: "10px",
+                                }}
+                              >
+                                {this.checkExistence(education?.school)}
+                              </small>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p>No education information available.</p>
+                      )}
                     </div>
                   </div>
                 </Card.Content>

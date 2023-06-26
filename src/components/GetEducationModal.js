@@ -46,33 +46,37 @@ export default class GetEducationModal extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
-    console.log("adminData: ",AdminData)
+    console.log("adminData: ", AdminData);
     const accounts = await web3.eth.getAccounts();
     const messageToR = `0x${Buffer.from(
-      'Please confirm to verify info update',
-      'utf8'
-    ).toString('hex')}`;
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     console.log("field: ", signature);
 
-    const tokenId=this.props.tokenId;
+    const tokenId = this.props.tokenId;
     if (!editing) {
       console.log("In add");
       const dataToSend = {
-      tokenId: tokenId,
-      signature: signature,
-      school:school,
-      degree:degree,
-      field_of_study:field_of_study,
-      start_date:start_date,
-      end_date:end_date,
-      description:description
-    };
+        tokenId: tokenId,
+        signature: signature,
+        school: school,
+        degree: degree,
+        field_of_study: field_of_study,
+        start_date: start_date,
+        end_date: end_date,
+        description: description,
+      };
+      dataToSend.userAddress = accounts[0];
       try {
-        await addEducation(
-          accounts[0],dataToSend
-        ).then((response) => {
+        await addEducation(dataToSend).then((response) => {
           console.log("education: ", response);
+          const transaction = response?.data?.response?.transactionData;
+          transaction.from = accounts[0];
+
+          const receipt = web3.eth.sendTransaction(transaction);
+          console.log("receipt > ", receipt);
         });
 
         toast.success("Education saved successfullyy!!");

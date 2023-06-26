@@ -82,7 +82,6 @@ export default class GetEditFieldModal extends Component {
       dataToSend.current_position = current_position1;
     }
 
-  console.log("data: ",dataToSend);
     await updateUserApi(accounts[0], dataToSend)
       .then((response) => {
         const transaction = response?.data?.response?.transactionData;

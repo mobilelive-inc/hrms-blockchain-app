@@ -10,12 +10,11 @@ export const getEducationApi = async (id)=>{
     }
 }
 
-export const addEducation =async(userAddress,data)=>{
-
+export const addEducation =async(data)=>{
     try{
         const response = await axios.post(
-            (`http://localhost:4000/api/registry/employee/education/${userAddress}`), data
-            
+            ("https://d1h99yrv311co6.cloudfront.net/api/registry/employee/education"),
+             data
           )
           return response;
     }   

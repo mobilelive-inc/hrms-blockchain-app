@@ -57,6 +57,7 @@ export default class EmployeePage extends Component {
     isGitLoading: false,
     orgName: [],
     userInfo: null,
+    tokenId:null
   };
   getJiraTasks = async () => {
     console.log("account: ", accounts[0]);
@@ -186,7 +187,7 @@ export default class EmployeePage extends Component {
         Employee.abi,
         employeeContractAddress
       );
-      this.getUserInfo(accounts[0]);
+      await this.getUserInfo(accounts[0]);
       this.getSkills();
       this.getCertifications();
       this.getWorkExp();
@@ -225,6 +226,7 @@ export default class EmployeePage extends Component {
 
   getUserInfo = async (address) => {
     await getUserApi(address).then((response) => {
+      this.setState({ tokenId: response?.data?.response?.userInfo?.tokenId });
       this.setState({ userInfo: response?.data?.response?.userInfo });
     });
   };
@@ -280,19 +282,15 @@ export default class EmployeePage extends Component {
   };
 
   getEducation = async () => {
-    let transformedEducation = [];
-
-    const id = 1;
+    const id = this.state.tokenId;
     try {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
-
+      console.log("education: ", educationData);
+  
       if (Array.isArray(educationData)) {
-        educationData.forEach((element) => {
-          transformedEducation.push(Object.fromEntries(element));
-        });
+        this.setState({ educations: educationData });
       }
-      this.setState({ educations: transformedEducation });
     } catch (error) {
       console.error("Error retrieving education data:", error);
     }
@@ -377,7 +375,7 @@ export default class EmployeePage extends Component {
                                 fontSize: "10px",
                               }}
                             >
-                              {this.checkExistence(education?.institute)}
+                              {this.checkExistence(education?.school)}
                             </small>
                           </div>
                         </div>
