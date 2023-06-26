@@ -1,13 +1,11 @@
 import React, { Component } from "react";
 import { toast } from "react-toastify";
-import { Card, Grid } from "semantic-ui-react";
+import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
-import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
 import "./UpdateProfile.css";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import GetCertificationModal from "../../components/GetCertificationModal";
 import GetWorkExpModal from "../../components/GetWorkExpModal";
 import GetSkillsModal from "../../components/GetSkillsModals";
@@ -16,6 +14,12 @@ import GetEducationModal from "../../components/GetEducationModal";
 import GetEditFieldModal from "../../components/GetEditFieldModal";
 import LoadComp from "../../components/LoadComp";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
+import { getUserApi } from "../../Apis/UsersApi";
+import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
+import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
+import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
+import { getEducationApi } from "../../Apis/EmployeeEducationApi";
+
 import {
   reqCertiEndorsementFunc,
   reqEducationEndorsementFunc,
@@ -35,12 +39,96 @@ export default class UpdateProfile extends Component {
     certificationModal: false,
     workexpModal: false,
     skillmodal: false,
-    filemodal:false,
+    filemodal: false,
     educationmodal: false,
     editFieldModal: false,
     isDescription: false,
     loadcomp: false,
     EmployeeContract: {},
+    userInfo: null,
+    selectedEducation: null,
+    tokenId: null,
+  };
+  getUserInfo = async (address) => {
+    await getUserApi(address).then((response) => {
+      this.setState({ tokenId: response?.data?.response?.userInfo?.tokenId });
+      this.setState({ userInfo: response?.data?.response?.userInfo });
+    });
+  };
+
+  getSkills = async () => {
+    const id = 0;
+    await getSkillsApi(id).then((response) => {
+      console.log("skills: ", response?.data?.response?.skills);
+      const skillsData = response?.data?.response?.skills;
+      if (Array.isArray(skillsData)) {
+        skillsData.forEach((element) => {
+          skillsData.push(Object.fromEntries(element));
+        });
+      }
+      console.log("skil ", skillsData);
+      this.setState({ skills: skillsData });
+    });
+  };
+
+  getCertifications = async () => {
+    const id = 0;
+    await getCertificatesApi(id).then((response) => {
+      console.log("certificates: ", response?.data?.response);
+      const certificationsData = response?.data?.response?.certifications;
+      if (Array.isArray(certificationsData)) {
+        certificationsData.forEach((element) => {
+          certificationsData.push(Object.fromEntries(element));
+        });
+      }
+      console.log("certi: ", certificationsData);
+      this.setState({
+        certifications: certificationsData,
+      });
+    });
+  };
+  getWorkExp = async () => {
+    const id = 1;
+    await getWorkExperienceApi(id).then((response) => {
+      console.log(
+        "Work Experience: ",
+        response?.data?.response?.workExperiences
+      );
+      const workExperienceData = response?.data?.response?.workExperiences;
+      if (Array.isArray(workExperienceData)) {
+        workExperienceData.forEach((element) => {
+          workExperienceData.push(Object.fromEntries(element));
+        });
+      }
+      console.log("work: ", workExperienceData);
+      this.setState({ workExps: workExperienceData });
+    });
+  };
+
+  getEducation = async () => {
+    const id = this.state.tokenId;
+    try {
+      const response = await getEducationApi(id);
+      const educationData = response?.data?.response?.education;
+      console.log("education: ", educationData);
+  
+      if (Array.isArray(educationData)) {
+        this.setState({ educations: educationData });
+      }
+    } catch (error) {
+      console.error("Error retrieving education data:", error);
+    }
+  };
+  
+  checkExistence(value) {
+    return value ? value : "-------";
+  }
+
+  handleEditEducation = (education) => {
+    this.setState({
+      educationmodal: true,
+      selectedEducation: education,
+    });
   };
 
   componentDidMount = async () => {
@@ -59,10 +147,11 @@ export default class UpdateProfile extends Component {
         employeeContractAddress
       );
       this.setState({ EmployeeContract });
-      this.getSkills(EmployeeContract);
-      this.getCertifications(EmployeeContract);
-      this.getWorkExp(EmployeeContract);
-      this.getEducation(EmployeeContract);
+      await this.getUserInfo(accounts[0]);
+      this.getSkills();
+      this.getCertifications();
+      this.getWorkExp();
+      this.getEducation();
       const employeedata = await EmployeeContract.methods
         .getEmployeeInfo()
         .call();
@@ -90,111 +179,111 @@ export default class UpdateProfile extends Component {
     this.setState({ loadcomp: false });
   };
 
-  getSkills = async (EmployeeContract) => {
-    const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-    const skills = await Promise.all(
-      Array(parseInt(skillCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getSkillByIndex(index).call()
-        )
-    );
+  // getSkills = async (EmployeeContract) => {
+  //   const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
+  //   const skills = await Promise.all(
+  //     Array(parseInt(skillCount))
+  //       .fill()
+  //       .map((ele, index) =>
+  //         EmployeeContract?.methods?.getSkillByIndex(index).call()
+  //       )
+  //   );
 
-    var newskills = [];
-    skills.forEach((certi) => {
-      newskills.push({
-        name: certi[0],
-        overall_percentage: certi[1],
-        experience: certi[2],
-        endorsed: certi[3],
-        endorser_address: certi[4],
-        review: certi[5],
-        visible: certi[6],
-      });
-      return;
-    });
+  //   var newskills = [];
+  //   skills.forEach((certi) => {
+  //     newskills.push({
+  //       name: certi[0],
+  //       overall_percentage: certi[1],
+  //       experience: certi[2],
+  //       endorsed: certi[3],
+  //       endorser_address: certi[4],
+  //       review: certi[5],
+  //       visible: certi[6],
+  //     });
+  //     return;
+  //   });
 
-    this.setState({ skills: newskills });
-  };
+  //   this.setState({ skills: newskills });
+  // };
 
-  getCertifications = async (EmployeeContract) => {
-    const certiCount = await EmployeeContract?.methods
-      ?.getCertificationCount()
-      .call();
-    const certifications = await Promise.all(
-      Array(parseInt(certiCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getCertificationByIndex(index).call()
-        )
-    );
-    var newcertifications = [];
-    certifications.forEach((certi) => {
-      newcertifications.push({
-        name: certi[0],
-        organization: certi[1],
-        score: certi[2],
-        endorsed: certi[3],
-        visible: certi[4],
-      });
-      return;
-    });
-    this.setState({ certifications: newcertifications });
-  };
+  // getCertifications = async (EmployeeContract) => {
+  //   const certiCount = await EmployeeContract?.methods
+  //     ?.getCertificationCount()
+  //     .call();
+  //   const certifications = await Promise.all(
+  //     Array(parseInt(certiCount))
+  //       .fill()
+  //       .map((ele, index) =>
+  //         EmployeeContract?.methods?.getCertificationByIndex(index).call()
+  //       )
+  //   );
+  //   var newcertifications = [];
+  //   certifications.forEach((certi) => {
+  //     newcertifications.push({
+  //       name: certi[0],
+  //       organization: certi[1],
+  //       score: certi[2],
+  //       endorsed: certi[3],
+  //       visible: certi[4],
+  //     });
+  //     return;
+  //   });
+  //   this.setState({ certifications: newcertifications });
+  // };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
-      ?.getWorkExpCount()
-      .call();
-    const workExps = await Promise.all(
-      Array(parseInt(workExpCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-        )
-    );
+  // getWorkExp = async (EmployeeContract) => {
+  //   const workExpCount = await EmployeeContract?.methods
+  //     ?.getWorkExpCount()
+  //     .call();
+  //   const workExps = await Promise.all(
+  //     Array(parseInt(workExpCount))
+  //       .fill()
+  //       .map((ele, index) =>
+  //         EmployeeContract?.methods?.getWorkExpByIndex(index).call()
+  //       )
+  //   );
 
-    var newworkExps = [];
-    workExps.forEach((work) => {
-      newworkExps.push({
-        role: work[0],
-        organization: work[1],
-        startdate: work[2],
-        enddate: work[3],
-        endorsed: work[4],
-        description: work[5],
-        visible: work[6],
-      });
-      return;
-    });
+  //   var newworkExps = [];
+  //   workExps.forEach((work) => {
+  //     newworkExps.push({
+  //       role: work[0],
+  //       organization: work[1],
+  //       startdate: work[2],
+  //       enddate: work[3],
+  //       endorsed: work[4],
+  //       description: work[5],
+  //       visible: work[6],
+  //     });
+  //     return;
+  //   });
 
-    this.setState({ workExps: newworkExps });
-  };
+  //   this.setState({ workExps: newworkExps });
+  // };
 
-  getEducation = async (EmployeeContract) => {
-    const educationCount = await EmployeeContract?.methods
-      ?.getEducationCount()
-      .call();
-    const educations = await Promise.all(
-      Array(parseInt(educationCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getEducationByIndex(index).call()
-        )
-    );
-    var neweducation = [];
-    educations.forEach((certi) => {
-      neweducation.push({
-        institute: certi[0],
-        startdate: certi[1],
-        enddate: certi[2],
-        endorsed: certi[3],
-        description: certi[4],
-      });
-      return;
-    });
-    this.setState({ educations: neweducation });
-  };
+  // getEducation = async (EmployeeContract) => {
+  //   const educationCount = await EmployeeContract?.methods
+  //     ?.getEducationCount()
+  //     .call();
+  //   const educations = await Promise.all(
+  //     Array(parseInt(educationCount))
+  //       .fill()
+  //       .map((ele, index) =>
+  //         EmployeeContract?.methods?.getEducationByIndex(index).call()
+  //       )
+  //   );
+  //   var neweducation = [];
+  //   educations.forEach((certi) => {
+  //     neweducation.push({
+  //       institute: certi[0],
+  //       startdate: certi[1],
+  //       enddate: certi[2],
+  //       endorsed: certi[3],
+  //       description: certi[4],
+  //     });
+  //     return;
+  //   });
+  //   this.setState({ educations: neweducation });
+  // };
 
   closeCertificationModal = () => {
     this.setState({ certificationModal: false });
@@ -210,11 +299,11 @@ export default class UpdateProfile extends Component {
     this.setState({ skillmodal: false });
     this.getSkills(this.state.EmployeeContract);
   };
-  closeFileModal=()=>{
-    this.setState({filemodal:false});
-  }
+  closeFileModal = () => {
+    this.setState({ filemodal: false });
+  };
   closeEducationModal = () => {
-    this.setState({ educationmodal: false });
+    this.setState({ educationmodal: false, selectedEducation: null });
     this.getEducation(this.state.EmployeeContract);
   };
 
@@ -306,15 +395,19 @@ export default class UpdateProfile extends Component {
         <GetEducationModal
           isOpen={this.state.educationmodal}
           closeCertificationModal={this.closeEducationModal}
+          education={this.state.selectedEducation}
+          tokenId={this.state.tokenId}
         />
 
         <GetEditFieldModal
           isOpen={this.state.editFieldModal}
           closeEditFieldModal={this.closeEditFieldModal}
-          name={this.state.employeedata?.name}
-          location={this.state.employeedata?.location}
-          description={this.state.employeedata?.description}
-          isDescription={this.state.isDescription}
+          tokenId={this.state.tokenId}
+
+          // name={this.state.employeedata?.name}
+          // location={this.state.employeedata?.location}
+          // description={this.state.employeedata?.description}
+          // isDescription={this.state.isDescription}
         />
 
         <Grid>
@@ -322,71 +415,49 @@ export default class UpdateProfile extends Component {
             <Grid.Column width={6}>
               <Card className="personal-info">
                 <Card.Content>
-                  <Card.Header>
-                    <div className="edit-heading">
-                      <span>{this.state.employeedata?.name}</span>
-                      <span
-                        className="add-button"
-                        onClick={(e) =>
-                          this.setState({
-                            editFieldModal: !this.state.editFieldModal,
-                            isDescription: false,
-                          })
-                        }
-                      >
-                        <i className="fas fa-pencil-alt"></i>
-                      </span>
-                    </div>
-                    <small
-                      style={{ wordBreak: "break-word", color: "black" }}
-                    >
-                      {this.state.employeedata?.ethAddress}
-                    </small>
-                  </Card.Header>
+                  <Card.Header>About</Card.Header>
                   <br />
+
+                  <span style={{ fontWeight: "bold" }}>
+                    {this.checkExistence(this.state.userInfo?.first_name) +
+                      " " +
+                      this.checkExistence(this.state.userInfo?.last_name)}
+                  </span>
+
+                  <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        editFieldModal: !this.state.editFieldModal,
+                        isDescription: false,
+                      })
+                    }
+                  >
+                    <i className="fas fa-pencil-alt"></i>
+                  </span>
+                  <div>{this.checkExistence(this.state.userInfo?.email)}</div>
+
+                  <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                    <span style={{ fontWeight: "bold" }}>
+                      {this.checkExistence(
+                        this.state.userInfo?.current_position
+                      )}
+                    </span>
+                  </div>
                   <div>
                     <p>
                       <em>Location: </em>
                       <span style={{ color: "black" }}>
-                        {this.state.employeedata?.location}
+                        {this.checkExistence(this.state.userInfo?.city) + ","}
+                        {this.checkExistence(this.state.userInfo?.country)}
                       </span>
                     </p>
                   </div>
                   <br />
-                  <div>
-                    <p>
-                      <em>Overall Endorsement Rating:</em>
-                    </p>
-                    <LineChart
-                      overallEndorsement={this.state.overallEndorsement}
-                    />
-                  </div>
                 </Card.Content>
               </Card>
               <Card className="employee-des">
                 <Card.Content>
-                  <Card.Header>
-                    <div className="edit-heading">
-                      <span>About</span>
-                      <span
-                        className="add-button"
-                        onClick={(e) =>
-                          this.setState({
-                            editFieldModal: !this.state.editFieldModal,
-                            isDescription: true,
-                          })
-                        }
-                      >
-                        <i className="fas fa-pencil-alt"></i>
-                      </span>
-                    </div>
-                  </Card.Header>
-                  <div>
-                    <p style={{ color: "black" }}>
-                      {this.state.employeedata?.description}
-                    </p>
-                  </div>
-                  <br />
                   <div>
                     <span
                       className="add-button"
@@ -406,46 +477,50 @@ export default class UpdateProfile extends Component {
                     </Card.Header>
                     <br />
                     <div className="education">
-                      {this.state.educations?.map((education, index) => (
-                        <div className="education-design" key={index}>
-                          <div
-                            style={{ paddingRight: "50px", color: "black" }}
-                          >
-                            <p>{education.description}</p>
-                            <small style={{ wordBreak: "break-word" }}>
-                              {education.institute}
-                            </small>
-                          </div>
-                          <div>
-                            <small style={{ color: "black" }}>
-                              <em>
-                                {education.startdate} - {education.enddate}
-                              </em>
-                            </small>
-                            <p
+                      {this.state.educations?.length > 0 ? (
+                        this.state.educations.map((education, index) => (
+                          <div className="education-design" key={index}>
+                            <div
                               style={{
-                                color: education.endorsed
-                                  ? "#00d1b2"
-                                  : "yellow",
-                                opacity: "0.7",
+                                paddingRight: "50px",
+                                color: "black",
+                                fontWeight: "bold",
                               }}
                             >
-                              {education.endorsed ? (
-                                "Endorsed"
-                              ) : (
-                                <div
-                                  className="endorsement-req-button"
+                              <div style={{ display: "flex" }}>
+                                <Icon
+                                  style={{ position: "relative" }}
+                                  name="graduation cap"
+                                />
+                                <p>{this.checkExistence(education?.degree)}</p>
+                                <span
                                   onClick={() =>
-                                    this.reqEducationEndorsement(education)
+                                    this.handleEditEducation(education)
                                   }
                                 >
-                                  Request Endorsement
-                                </div>
-                              )}
-                            </p>
+                                  <i
+                                    style={{
+                                      marginLeft: "200%",
+                                      marginRight: "0px",
+                                    }}
+                                    className="fas fa-pencil-alt"
+                                  ></i>
+                                </span>
+                              </div>
+                              <small
+                                style={{
+                                  wordBreak: "break-word",
+                                  fontSize: "10px",
+                                }}
+                              >
+                                {this.checkExistence(education?.school)}
+                              </small>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p>No education information available.</p>
+                      )}
                     </div>
                   </div>
                 </Card.Content>
@@ -473,68 +548,37 @@ export default class UpdateProfile extends Component {
                   <Card.Header>Certifications</Card.Header>
                   <br />
                   <br />
-                  <div>
-                    {this.state.certifications?.map((certi, index) => (
-                      <div key={index} className="certification-container">
-                        <div style={{ color: "#c5c6c7" }}>
-                          <p>
-                            {certi.name}
-                            <span
-                              className="delete-button-visiblility"
-                              onClick={(e) =>
-                                this.certificationVisibility(certi.name)
-                              }
-                            >
-                              {!certi.visible ? (
-                                <i className="fas fa-eye-slash"></i>
-                              ) : (
-                                <i className="fas fa-eye"></i>
-                              )}
-                            </span>
-                          </p>
-                          <small style={{ wordBreak: "break-word" }}>
-                            {certi.organization}
-                          </small>
-                          <p
-                            style={{
-                              color: certi.endorsed ? "#00d1b2" : "yellow",
-                              opacity: "0.7",
-                            }}
-                          >
-                            {certi.endorsed ? (
-                              "Endorsed"
-                            ) : (
-                              <div
-                                className="endorsement-req-button"
-                                onClick={() => this.reqCertiEndorsement(certi)}
-                              >
-                                Request Endorsement
-                              </div>
-                            )}
-                          </p>
-                        </div>
-                        <div>
-                          <div style={{ width: "100px" }}>
-                            <CircularProgressbar
-                              value={certi.score}
-                              text={`Score - ${certi.score}%`}
-                              strokeWidth="5"
-                              styles={buildStyles({
-                                strokeLinecap: "round",
-                                textSize: "12px",
-                                pathTransitionDuration: 1,
-                                pathColor: `rgba(255,255,255, ${
-                                  certi.score / 100
-                                })`,
-                                textColor: "#c5c6c7",
-                                trailColor: "#393b3fa6",
-                                backgroundColor: "#c5c6c7",
-                              })}
-                            />
+                  <div className="education">
+                    {this.state.certifications.length > 0 ? (
+                      this.state.certifications.map((certi, index) => (
+                        <div className="education-design">
+                          <div style={{ color: "black", fontWeight: "bold" }}>
+                            <i
+                              style={{ marginLeft: "200%", marginRight: "0px" }}
+                              className="fas fa-pencil-alt"
+                            ></i>
+                            <p>{this.checkExistence(certi?.title)}</p>
+                            <small>
+                              {this.checkExistence(certi?.issuing_organization)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>Issue Date</p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(certi?.issue_date)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>Credential ID</p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(certi?.credential_id)}
+                            </small>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p>No certifications to display!</p>
+                    )}
                   </div>
                 </Card.Content>
               </Card>
@@ -553,56 +597,44 @@ export default class UpdateProfile extends Component {
                   <Card.Header>Work Experiences</Card.Header>
                   <br />
                   <div className="education">
-                    {this.state.workExps?.map((workExp, index) => (
-                      <div className="education-design" key={index}>
-                        <div style={{ color: "#c5c6c7" }}>
-                          <p>
-                            {workExp.role}
-                            <span
-                              className="delete-button-visiblility"
-                              onClick={(e) =>
-                                this.workExpVisibility(workExp.organization)
-                              }
-                            >
-                              {!workExp.visible ? (
-                                <i className="fas fa-eye-slash"></i>
-                              ) : (
-                                <i className="fas fa-eye"></i>
-                              )}
-                            </span>
-                          </p>
-                          <small style={{ wordBreak: "break-word" }}>
-                            {workExp.organization}
-                          </small>
+                    {this.state.workExps?.length > 0 ? (
+                      this.state.workExps.map((workExp, index) => (
+                        <div className="education-design">
+                          <div style={{ color: "black", fontWeight: "bold" }}>
+                            <i
+                              style={{ marginRight: "0px" }}
+                              className="fas fa-pencil-alt"
+                            ></i>
+
+                            <p>{this.checkExistence(workExp?.title)}</p>
+                            <small>
+                              {this.checkExistence(workExp?.organization)}
+                            </small>
+                            <small>
+                              {", " + this.checkExistence(workExp?.location)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>
+                              Employment Type
+                            </p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(workExp?.employment_type)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>
+                              Date of Joining
+                            </p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(workExp?.start_date)}
+                            </small>
+                          </div>
                         </div>
-                        <div>
-                          <small style={{ color: "#c5c6c7" }}>
-                            <em>
-                              {workExp.startdate} - {workExp.enddate}
-                            </em>
-                          </small>
-                          <p
-                            style={{
-                              color: workExp.endorsed ? "#00d1b2" : "yellow",
-                              opacity: "0.7",
-                            }}
-                          >
-                            {workExp.endorsed ? (
-                              "Endorsed"
-                            ) : (
-                              <div
-                                className="endorsement-req-button"
-                                onClick={() =>
-                                  this.reqWorkexpEndorsement(workExp)
-                                }
-                              >
-                                Request Endorsement
-                              </div>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p>No work experiences found!</p>
+                    )}
                   </div>
                 </Card.Content>
               </Card>
@@ -621,19 +653,24 @@ export default class UpdateProfile extends Component {
                   <Card.Header>Skills</Card.Header>
                   <br />
                   <br />
-                  <div className="skill-height-container">
-                    {this.state.skills?.map((skill, index) => (
-                      <div>
-                        <SkillCard skill={skill} key={index} update />
-                      </div>
-                    ))}
+                  <div className="education">
+                    {this.state.skills?.length > 0 ? (
+                      this.state.skills.map((skill, index) => (
+                        <div key={index}>
+                          <i className="fas fa-pencil-alt"></i>
+                          <SkillCard skill={skill} key={index} update />
+                        </div>
+                      ))
+                    ) : (
+                      <p>No skills to display!</p>
+                    )}
                   </div>
                 </Card.Content>
               </Card>
-              
+
               <Card className="employee-des">
-              <Card.Content>
-              <span
+                <Card.Content>
+                  <span
                     className="add-button"
                     onClick={(e) =>
                       this.setState({
@@ -643,11 +680,9 @@ export default class UpdateProfile extends Component {
                   >
                     <i className="fas fa-plus"></i>
                   </span>
-              <Card.Header>Files</Card.Header>
-
+                  <Card.Header>Files</Card.Header>
                 </Card.Content>
               </Card>
-
             </Grid.Column>
           </Grid.Row>
         </Grid>

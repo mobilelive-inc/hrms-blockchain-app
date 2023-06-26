@@ -3,10 +3,9 @@ import { toast } from "react-toastify";
 import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
-import LineChart from "../../components/LineChart";
+//import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
 import ModalComponent from "./jiraModal";
@@ -14,10 +13,15 @@ import ModalComponentGit from "./GitModal";
 import CircularProgress from "@mui/material/CircularProgress";
 import { saveAs } from "file-saver";
 import getJiraApi from "../../Apis/JiraApi";
-import {getGitOrganizationApi} from "../../Apis/GitApi";
+import { getGitOrganizationApi } from "../../Apis/GitApi";
 import { getGitRepos } from "../../Apis/GitApi";
 import { getGitCommits } from "../../Apis/GitApi";
 import { getFilesApi } from "../../Apis/FileApi";
+import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
+import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
+import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
+import { getEducationApi } from "../../Apis/EmployeeEducationApi";
+import { getUserApi } from "../../Apis/UsersApi";
 import { IPFS_Link } from "../../utils/utils";
 
 let accounts = null;
@@ -52,10 +56,12 @@ export default class EmployeePage extends Component {
     isGitDisplayButton: true,
     isGitLoading: false,
     orgName: [],
+    userInfo: null,
+    tokenId:null
   };
   getJiraTasks = async () => {
     console.log("account: ", accounts[0]);
-    const name = this.state.employeedata?.name; 
+    const name = this.state.employeedata?.name;
     try {
       this.setState({ isLoading: true });
       this.setState({ isDisplayButton: false });
@@ -89,14 +95,12 @@ export default class EmployeePage extends Component {
     try {
       this.setState({ isGitLoading: true });
       this.setState({ isGitDisplayButton: false });
-      await getGitOrganizationApi()
-        .then((response) => {
-          this.setState({ orgName: response?.data[0]?.login });
-        });
-      await getGitRepos(this.state?.orgName)
-        .then((response) => {
-          this.setState({ repoNames: response?.data });
-        });
+      await getGitOrganizationApi().then((response) => {
+        this.setState({ orgName: response?.data[0]?.login });
+      });
+      await getGitRepos(this.state?.orgName).then((response) => {
+        this.setState({ repoNames: response?.data });
+      });
     } catch (error) {
       throw error;
     } finally {
@@ -106,7 +110,7 @@ export default class EmployeePage extends Component {
 
   handleClick = async (name) => {
     try {
-      const response = await getGitCommits(this.state?.orgName,name) 
+      const response = await getGitCommits(this.state?.orgName, name);
       const commits = response?.data || [];
 
       const commitsByDate = {};
@@ -136,20 +140,19 @@ export default class EmployeePage extends Component {
     const urlencoded = new URLSearchParams();
     urlencoded.append("userAddress", userAddress);
 
-    await getFilesApi(urlencoded,myHeaders)
-      .then((response) => {
-        if (response?.data?.response?.files) {
-          const files = response.data.response.files[2];
-          const names = response.data.response.files[0];
-          const extensions = response.data.response.files[1];
+    await getFilesApi(urlencoded, myHeaders).then((response) => {
+      if (response?.data?.response?.files) {
+        const files = response.data.response.files[2];
+        const names = response.data.response.files[0];
+        const extensions = response.data.response.files[1];
 
-          this.setState({ files: files });
-          this.setState({ names: names });
-          this.setState({ extensions: extensions });
-        } else {
-          console.log("error");
-        }
-      });
+        this.setState({ files: files });
+        this.setState({ names: names });
+        this.setState({ extensions: extensions });
+      } else {
+        console.log("error");
+      }
+    });
   };
 
   handleDownloadClick(url, name) {
@@ -184,10 +187,11 @@ export default class EmployeePage extends Component {
         Employee.abi,
         employeeContractAddress
       );
-      this.getSkills(EmployeeContract);
-      this.getCertifications(EmployeeContract);
-      this.getWorkExp(EmployeeContract);
-      this.getEducation(EmployeeContract);
+      await this.getUserInfo(accounts[0]);
+      this.getSkills();
+      this.getCertifications();
+      this.getWorkExp();
+      this.getEducation();
       this.getGithubCommits();
       this.getFiles(accounts[0]);
 
@@ -220,111 +224,81 @@ export default class EmployeePage extends Component {
     this.setState({ loadcomp: false });
   };
 
-  getSkills = async (EmployeeContract) => {
-    const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-    const skills = await Promise.all(
-      Array(parseInt(skillCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getSkillByIndex(index).call()
-        )
-    );
-
-    var newskills = [];
-    skills.forEach((certi) => {
-      newskills.push({
-        name: certi[0],
-        overall_percentage: certi[1],
-        experience: certi[2],
-        endorsed: certi[3],
-        endorser_address: certi[4],
-        review: certi[5],
-        visible: certi[6],
-      });
-      return;
+  getUserInfo = async (address) => {
+    await getUserApi(address).then((response) => {
+      this.setState({ tokenId: response?.data?.response?.userInfo?.tokenId });
+      this.setState({ userInfo: response?.data?.response?.userInfo });
     });
-
-    this.setState({ skills: newskills });
   };
 
-  getCertifications = async (EmployeeContract) => {
-    const certiCount = await EmployeeContract?.methods
-      ?.getCertificationCount()
-      .call();
-    const certifications = await Promise.all(
-      Array(parseInt(certiCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getCertificationByIndex(index).call()
-        )
-    );
-    var newcertifications = [];
-    certifications.forEach((certi) => {
-      newcertifications.push({
-        name: certi[0],
-        organization: certi[1],
-        score: certi[2],
-        endorsed: certi[3],
-        visible: certi[4],
-      });
-      return;
+  getSkills = async () => {
+    const id = 0;
+    await getSkillsApi(id).then((response) => {
+      console.log("skills: ", response?.data?.response?.skills);
+      const skillsData = response?.data?.response?.skills;
+      if (Array.isArray(skillsData)) {
+        skillsData.forEach((element) => {
+          skillsData.push(Object.fromEntries(element));
+        });
+      }
+      console.log("skil ", skillsData);
+      this.setState({ skills: skillsData });
     });
-    this.setState({ certifications: newcertifications });
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
-      ?.getWorkExpCount()
-      .call();
-    const workExps = await Promise.all(
-      Array(parseInt(workExpCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-        )
-    );
-
-    var newworkExps = [];
-    workExps.forEach((work) => {
-      newworkExps.push({
-        role: work[0],
-        organization: work[1],
-        startdate: work[2],
-        enddate: work[3],
-        endorsed: work[4],
-        description: work[5],
-        visible: work[6],
+  getCertifications = async () => {
+    const id = 0;
+    await getCertificatesApi(id).then((response) => {
+      console.log("certificates: ", response?.data?.response);
+      const certificationsData = response?.data?.response?.certifications;
+      if (Array.isArray(certificationsData)) {
+        certificationsData.forEach((element) => {
+          certificationsData.push(Object.fromEntries(element));
+        });
+      }
+      console.log("certi: ", certificationsData);
+      this.setState({
+        certifications: certificationsData,
       });
-      return;
     });
-
-    this.setState({ workExps: newworkExps });
   };
 
-  getEducation = async (EmployeeContract) => {
-    const educationCount = await EmployeeContract?.methods
-      ?.getEducationCount()
-      .call();
-    const educations = await Promise.all(
-      Array(parseInt(educationCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getEducationByIndex(index).call()
-        )
-    );
-    var neweducation = [];
-    educations.forEach((certi) => {
-      neweducation.push({
-        institute: certi[0],
-        startdate: certi[1],
-        enddate: certi[2],
-        endorsed: certi[3],
-        description: certi[4],
-      });
-      return;
+  getWorkExp = async () => {
+    const id = 1;
+    await getWorkExperienceApi(id).then((response) => {
+      console.log(
+        "Work Experience: ",
+        response?.data?.response?.workExperiences
+      );
+      const workExperienceData = response?.data?.response?.workExperiences;
+      if (Array.isArray(workExperienceData)) {
+        workExperienceData.forEach((element) => {
+          workExperienceData.push(Object.fromEntries(element));
+        });
+      }
+      console.log("work: ", workExperienceData);
+      this.setState({ workExps: workExperienceData });
     });
-    this.setState({ educations: neweducation });
   };
+
+  getEducation = async () => {
+    const id = this.state.tokenId;
+    try {
+      const response = await getEducationApi(id);
+      const educationData = response?.data?.response?.education;
+      console.log("education: ", educationData);
+  
+      if (Array.isArray(educationData)) {
+        this.setState({ educations: educationData });
+      }
+    } catch (error) {
+      console.error("Error retrieving education data:", error);
+    }
+  };
+
+  checkExistence(value) {
+    return value ? value : "-------";
+  }
 
   render() {
     return this.state.loadcomp ? (
@@ -336,41 +310,41 @@ export default class EmployeePage extends Component {
             <Grid.Column width={6}>
               <Card className="personal-info">
                 <Card.Content>
-                  <Card.Header>
-                    {this.state.employeedata?.name}
-                    <small style={{ wordBreak: "break-word", color: "black" }}>
-                      {this.state.employeedata?.ethAddress}
-                    </small>
-                  </Card.Header>
-                  <br />
+                  <Card.Header>About</Card.Header>
+                  <br/>
+                  <span style={{ fontWeight: "bold" }}>
+                    {this.checkExistence(this.state.userInfo?.first_name) +
+                      " " +
+                      this.checkExistence(this.state.userInfo?.last_name)}
+                  </span>
+
+                  <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                    <span>
+                      {this.checkExistence(this.state.userInfo?.email)}
+                    </span>
+                  </div>
+                  <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                    <span style={{ fontWeight: "bold" }}>
+                      {this.checkExistence(
+                        this.state.userInfo?.current_position
+                      )}
+                    </span>
+                  </div>
                   <div>
                     <p>
                       <em>Location: </em>
                       <span style={{ color: "black" }}>
-                        {this.state.employeedata?.location}
+                        {this.checkExistence(this.state.userInfo?.city) + ","}
+                        {this.checkExistence(this.state.userInfo?.country)}
                       </span>
                     </p>
                   </div>
                   <br />
-                  <div>
-                    <p>
-                      <em>Overall Endorsement Rating:</em>
-                    </p>
-                    <LineChart
-                      overallEndorsement={this.state.overallEndorsement}
-                    />
-                  </div>
                 </Card.Content>
               </Card>
+
               <Card className="employee-des">
                 <Card.Content>
-                  <Card.Header>About:</Card.Header>
-                  <div>
-                    <p style={{ color: "#c5c6c7" }}>
-                      {this.state.employeedata?.description}
-                    </p>
-                  </div>
-                  <br />
                   <div>
                     <Card.Header
                       style={{ fontSize: "19px", fontWeight: "600" }}
@@ -382,36 +356,27 @@ export default class EmployeePage extends Component {
                       {this.state.educations?.map((education, index) => (
                         <div className="education-design" key={index}>
                           <div
-                            style={{ paddingRight: "50px", color: "#c5c6c7" }}
+                            style={{
+                              paddingRight: "50px",
+                              color: "black",
+                              fontWeight: "bold",
+                            }}
                           >
-                            <p>{education.description}</p>
+                            <div style={{ display: "flex" }}>
+                              <Icon
+                                style={{ position: "relative" }}
+                                name="graduation cap"
+                              />
+                              <p>{this.checkExistence(education?.degree)}</p>
+                            </div>
                             <small
                               style={{
                                 wordBreak: "break-word",
                                 fontSize: "10px",
                               }}
                             >
-                              {education.institute}
+                              {this.checkExistence(education?.school)}
                             </small>
-                          </div>
-                          <div>
-                            <small style={{ color: "#c5c6c7" }}>
-                              <em>
-                                {education.startdate} - {education.enddate}
-                              </em>
-                            </small>
-                            <p
-                              style={{
-                                color: education.endorsed
-                                  ? "#00d1b2"
-                                  : "yellow",
-                                opacity: "0.7",
-                              }}
-                            >
-                              {education.endorsed
-                                ? "Endorsed"
-                                : "Not Yet Endorsed"}
-                            </p>
                           </div>
                         </div>
                       ))}
@@ -419,6 +384,7 @@ export default class EmployeePage extends Component {
                   </div>
                 </Card.Content>
               </Card>
+
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Competetive Platform Ratings</Card.Header>
@@ -426,54 +392,40 @@ export default class EmployeePage extends Component {
                 </Card.Content>
               </Card>
             </Grid.Column>
+
             <Grid.Column width={10}>
               <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Certifications</Card.Header>
+                <Card.Content className="content">
+                  <Card.Header style={{ display: "flex" }}>
+                    Certifications
+                  </Card.Header>
                   <br />
-                  <div>
-                    {this.state.certifications?.map(
-                      (certi, index) =>
-                        certi.visible && (
-                          <div key={index} className="certification-container">
-                            <div style={{ color: "#c5c6c7" }}>
-                              <p>{certi.name}</p>
-                              <small style={{ wordBreak: "break-word" }}>
-                                {certi.organization}
-                              </small>
-                              <p
-                                style={{
-                                  color: certi.endorsed ? "#00d1b2" : "yellow",
-                                  opacity: "0.7",
-                                }}
-                              >
-                                {certi.endorsed
-                                  ? "Endorsed"
-                                  : "Not Yet Endorsed"}
-                              </p>
-                            </div>
-                            <div>
-                              <div style={{ width: "100px" }}>
-                                <CircularProgressbar
-                                  value={certi.score}
-                                  text={`Score - ${certi.score}%`}
-                                  strokeWidth="5"
-                                  styles={buildStyles({
-                                    strokeLinecap: "round",
-                                    textSize: "12px",
-                                    pathTransitionDuration: 1,
-                                    pathColor: `rgba(255,255,255, ${
-                                      certi.score / 100
-                                    })`,
-                                    textColor: "#c5c6c7",
-                                    trailColor: "#393b3fa6",
-                                    backgroundColor: "#c5c6c7",
-                                  })}
-                                />
-                              </div>
-                            </div>
+                  <div className="education">
+                    {this.state.certifications.length > 0 ? (
+                      this.state.certifications.map((certi, index) => (
+                        <div className="education-design">
+                          <div style={{ color: "black", fontWeight: "bold" }}>
+                            <p>{this.checkExistence(certi?.title)}</p>
+                            <small>
+                              {this.checkExistence(certi?.issuing_organization)}
+                            </small>
                           </div>
-                        )
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>Issue Date</p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(certi?.issue_date)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>Credential ID</p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(certi?.credential_id)}
+                            </small>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No certifications to display!</p>
                     )}
                   </div>
                 </Card.Content>
@@ -483,55 +435,55 @@ export default class EmployeePage extends Component {
                   <Card.Header>Work Experiences</Card.Header>
                   <br />
                   <div className="education">
-                    {this.state.workExps?.map(
-                      (workExp, index) =>
-                        workExp.visible && (
-                          <div className="education-design" key={index}>
-                            <div style={{ color: "#c5c6c7" }}>
-                              <p>{workExp.role}</p>
-                              <small style={{ wordBreak: "break-word" }}>
-                                {workExp.organization}
-                              </small>
-                            </div>
-                            <div>
-                              <small>
-                                <em>
-                                  {workExp.startdate} - {workExp.enddate}
-                                </em>
-                              </small>
-                              <p
-                                style={{
-                                  color: workExp.endorsed
-                                    ? "#00d1b2"
-                                    : "yellow",
-                                  opacity: "0.7",
-                                }}
-                              >
-                                {workExp.endorsed
-                                  ? "Endorsed"
-                                  : "Not Yet Endorsed"}
-                              </p>
-                            </div>
+                    {this.state.workExps?.length > 0 ? (
+                      this.state.workExps.map((workExp, index) => (
+                        <div className="education-design">
+                          <div style={{ color: "black", fontWeight: "bold" }}>
+                            <p>{this.checkExistence(workExp?.title)}</p>
+                            <small>
+                              {this.checkExistence(workExp?.organization)}
+                            </small>
+                            <small>
+                              {", " + this.checkExistence(workExp?.location)}
+                            </small>
                           </div>
-                        )
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>
+                              Employment Type
+                            </p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(workExp?.employment_type)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>
+                              Date of Joining
+                            </p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(workExp?.start_date)}
+                            </small>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No work experiences found!</p>
                     )}
                   </div>
                 </Card.Content>
               </Card>
-
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Skills</Card.Header>
                   <br />
-                  <div className="skill-height-container">
-                    {this.state.skills?.map((skill, index) =>
-                      skill.visible ? (
-                        <div>
-                          <SkillCard skill={skill} key={index} />
+                  <div className="education">
+                    {this.state.skills?.length > 0 ? (
+                      this.state.skills.map((skill, index) => (
+                        <div key={index}>
+                          <SkillCard skill={skill} />
                         </div>
-                      ) : (
-                        <></>
-                      )
+                      ))
+                    ) : (
+                      <p>No skills to display!</p>
                     )}
                   </div>
                 </Card.Content>
@@ -615,32 +567,31 @@ export default class EmployeePage extends Component {
                   <Card.Header>Files</Card.Header>
                   <br />
                   <div className="content-list">
-                  {this.state?.files?.length &&
-                    (this.state?.files || []).map((file, index) => {
-                      var extension = this.getIcons(
-                        this.state?.extensions[index]
-                      );
+                    {this.state?.files?.length &&
+                      (this.state?.files || []).map((file, index) => {
+                        var extension = this.getIcons(
+                          this.state?.extensions[index]
+                        );
 
-                      return (
-                        <div>
-                          <Card
-                            className="list-items"
-                          >
-                            <Card.Content>
-                              <a
-                                href={IPFS_Link + file}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{color:"black",fontWeight:"bold"}}
-                                 >{this.state?.names[index]}
-                              </a>
-                              <Icon name={extension} />
-                            </Card.Content>
-                          </Card>
-                        </div>
-                      );
-                    })}
-                    </div>
+                        return (
+                          <div>
+                            <Card className="list-items">
+                              <Card.Content>
+                                <a
+                                  href={IPFS_Link + file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: "black", fontWeight: "bold" }}
+                                >
+                                  {this.state?.names[index]}
+                                </a>
+                                <Icon name={extension} />
+                              </Card.Content>
+                            </Card>
+                          </div>
+                        );
+                      })}
+                  </div>
                 </Card.Content>
               </Card>
             </Grid.Column>

@@ -1,24 +1,43 @@
 import React, { Component } from "react";
 import { toast } from "react-toastify";
-import { Button, Form, Header, Input, Modal } from "semantic-ui-react";
+import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { addEducation } from "../Apis/EmployeeEducationApi";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
 
 export default class GetEducationModal extends Component {
   state = {
-    institute: "",
-    startdate: "",
-    enddate: "",
+    school: "",
+    degree: "",
+    field_of_study: "",
+    start_date: "",
+    end_date: "",
+    grade: "",
     description: "",
-    loading: false,
-    scanQR: false,
+    editing: false,
   };
 
   handleSubmit = async (e) => {
-    const { institute, startdate, enddate, description } = this.state;
-    if (!institute || !startdate || !enddate || !description) {
+    const {
+      school,
+      degree,
+      field_of_study,
+      start_date,
+      end_date,
+      description,
+      editing,
+    } = this.state;
+    if (
+      !school ||
+      !degree ||
+      !field_of_study ||
+      !start_date ||
+      !end_date ||
+      !description
+    ) {
       toast.error("Please enter all the fields.");
       return;
     }
@@ -27,44 +46,95 @@ export default class GetEducationModal extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    console.log("adminData: ", AdminData);
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
+    const messageToR = `0x${Buffer.from(
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    console.log("field: ", signature);
+
+    const tokenId = this.props.tokenId;
+    if (!editing) {
+      console.log("In add");
+      const dataToSend = {
+        tokenId: tokenId,
+        signature: signature,
+        school: school,
+        degree: degree,
+        field_of_study: field_of_study,
+        start_date: start_date,
+        end_date: end_date,
+        description: description,
+      };
+      dataToSend.userAddress = accounts[0];
       try {
-        await EmployeeContract.methods
-          .addEducation(institute, startdate, enddate, description)
-          .send({
-            from: accounts[0],
-          });
+        await addEducation(dataToSend).then((response) => {
+          console.log("education: ", response);
+          const transaction = response?.data?.response?.transactionData;
+          transaction.from = accounts[0];
+
+          const receipt = web3.eth.sendTransaction(transaction);
+          console.log("receipt > ", receipt);
+        });
+
         toast.success("Education saved successfullyy!!");
       } catch (err) {
         toast.error(err.message);
       }
     } else {
-      toast.error("The Admin Contract does not exist on this network!");
+      //update logic
+      console.log("In update");
+      console.log(school, degree, field_of_study);
     }
+
     this.setState({ loading: false });
     this.props.closeCertificationModal();
   };
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.education !== this.props.education) {
+      const {
+        school = "",
+        degree = "",
+        field_of_study = "",
+        start_date = null,
+        end_date = null,
+        description = "",
+      } = this.props.education || {};
+
+      this.setState({
+        school,
+        degree,
+        field_of_study,
+        start_date,
+        end_date,
+        description,
+        editing: true,
+      });
+    }
+  }
 
   handleChange = (e) => {
     e.preventDefault();
     this.setState({ [e.target.id]: e.target.value });
   };
 
+  handleChangeStartDate = (date) => {
+    this.setState({ start_date: date });
+  };
+
+  handleChangeEndDate = (date) => {
+    this.setState({ end_date: date });
+  };
+
   closeScanQRModal = () => {
     this.setState({ scanQR: false });
   };
 
-  handleAddAddress = (res) => {
-    this.setState({ institute: res });
+  handleAddAddress = (education) => {
+    this.setState({ school: education });
   };
 
   render() {
@@ -85,53 +155,78 @@ export default class GetEducationModal extends Component {
           <Header
             className="modal-heading"
             icon="pencil"
-            content="Enter Education Details"
+            content={
+              this.state.editing
+                ? "Edit Education Details"
+                : "Enter Education Details"
+            }
             as="h2"
           />
           <Modal.Content className="modal-content">
             <Form className="form-inputs">
               <Form.Field className="form-inputs">
-                <Input action>
-                  <input
-                    id="institute"
-                    placeholder="Institute Address"
+                <input
+                  id="school"
+                  placeholder="School"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.school}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
+              <Form.Field className="form-inputs">
+                <input
+                  id="degree"
+                  placeholder="Degree"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.degree}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
+              <Form.Field className="form-inputs">
+                <input
+                  id="field_of_study"
+                  placeholder="Field of Study"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.field_of_study}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                }}
+              >
+                <Form.Field className="form-inputs">
+                  <DatePicker
+                    id="start_date"
+                    placeholderText="Start Date"
                     autoComplete="off"
-                    autoCorrect="off"
-                    value={this.state.institute}
-                    onChange={this.handleChange}
+                    selected={this.state.start_date}
+                    onChange={this.handleChangeStartDate}
+                    className="datepicker-style"
+                    maxDate={this.state.end_date}
                   />
-                  <Button
-                    type="button"
-                    content="QR"
-                    icon="qrcode"
-                    onClick={() => this.setState({ scanQR: true })}
+
+                  <DatePicker
+                    id="end_date"
+                    placeholderText="End Date"
+                    autoComplete="off"
+                    selected={this.state.end_date}
+                    onChange={this.handleChangeEndDate}
+                    className="datepicker-style"
+                    minDate={this.state.start_date}
                   />
-                </Input>
-              </Form.Field>
-              <Form.Field className="form-inputs">
-                <input
-                  id="startdate"
-                  placeholder="Start Date"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  value={this.state.startdate}
-                  onChange={this.handleChange}
-                />
-              </Form.Field>
-              <Form.Field className="form-inputs">
-                <input
-                  id="enddate"
-                  placeholder="End Date"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  value={this.state.enddate}
-                  onChange={this.handleChange}
-                />
-              </Form.Field>
+                </Form.Field>
+              </div>
               <Form.Field className="form-inputs">
                 <input
                   id="description"
-                  placeholder="Degree & Major"
+                  placeholder="Description"
                   autoComplete="off"
                   autoCorrect="off"
                   value={this.state.description}

@@ -7,15 +7,15 @@ import "./Modals.css";
 
 export default class GetSkillsModal extends Component {
   state = {
-    name: "",
+    title: "",
     experience: "",
     loading: false,
   };
 
   handleSubmit = async (e) => {
     this.setState({ loading: true });
-    const { name, experience } = this.state;
-    if (!name || !experience) {
+    const { title, experience } = this.state;
+    if (!title || !experience) {
       toast.error("Please enter all the fields.");
       return;
     }
@@ -34,7 +34,7 @@ export default class GetSkillsModal extends Component {
         employeeContractAddress
       );
       try {
-        await EmployeeContract.methods.addSkill(name, experience).send({
+        await EmployeeContract.methods.addSkill(title, experience).send({
           from: accounts[0],
         });
         toast.success("Skill saved successfully!!");
@@ -72,11 +72,11 @@ export default class GetSkillsModal extends Component {
           <Form className="form-inputs">
             <Form.Field className="form-inputs">
               <input
-                id="name"
-                placeholder="Skill Name"
+                id="title"
+                placeholder="Skill Title"
                 autoComplete="off"
                 autoCorrect="off"
-                value={this.state.name}
+                value={this.state.title}
                 onChange={this.handleChange}
               />
             </Form.Field>
