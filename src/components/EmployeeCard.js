@@ -1,7 +1,10 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { Card } from "semantic-ui-react";
-import Employee from "../abis/Employee.json";
+import { getSkillsApi } from "../Apis/EmployeeSkillsApi";
+import { getWorkExperienceApi } from "../Apis/EmployeeExperienceApi";
+import { getCertificatesApi } from "../Apis/EmployeeCertApi";
+import { getEducationApi } from "../Apis/EmployeeEducationApi";
 import "./EmployeeCard.css";
 import LoadComp from "./LoadComp";
 
@@ -18,135 +21,53 @@ class EmployeeCard extends Component {
   };
 
   componentDidMount = async () => {
-    const web3 = window.web3;
-    const EmployeeContract = await new web3.eth.Contract(
-      Employee.abi,
-      this.props.employeeContractAddress
-    );
-    this.getSkills(EmployeeContract);
-    this.getCertifications(EmployeeContract);
-    this.getWorkExp(EmployeeContract);
-    this.getEducation(EmployeeContract);
-    const employeedata = await EmployeeContract.methods
-      .getEmployeeInfo()
-      .call();
-    const newEmployedata = {
-      ethAddress: employeedata[0],
-      name: employeedata[1],
-      location: employeedata[2],
-      description: employeedata[3],
-      overallEndorsement: employeedata[4],
-      endorsecount: employeedata[5],
-    };
-    this.setState({ employeedata: newEmployedata });
+    this.getSkills(this.props.employee.tokenId);
+    this.getCertifications(this.props.employee.tokenId);
+    this.getWorkExp(this.props.employee.tokenId);
+    this.getEducation(this.props.employee.tokenId);
+    
+    this.setState({ employeedata: this.props.employee });
+  };
+  
+  getSkills = async (tokenId) => {
+    await getSkillsApi(tokenId).then((response) => {
+      console.log("skills: ", response?.data?.response?.skills);
+      const skillsData = response?.data?.response?.skills;
+      console.log("skil ", skillsData);
+      this.setState({ skills: skillsData });
+    });
   };
 
-  getSkills = async (EmployeeContract) => {
-    const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-    const skills = await Promise.all(
-      Array(parseInt(skillCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getSkillByIndex(index).call()
-        )
-    );
-
-    var newskills = [];
-    skills.forEach((certi) => {
-      newskills.push({
-        name: certi[0],
-        overall_percentage: certi[1],
-        experience: certi[2],
-        endorsed: certi[3],
-        endorser_address: certi[4],
-        review: certi[5],
+  getCertifications = async (tokenId) => {
+    await getCertificatesApi(tokenId).then((response) => {
+      const certificationsData = response?.data?.response?.certifications;
+      this.setState({
+        certifications: certificationsData,
       });
-      return;
     });
-
-    this.setState({ skills: newskills });
   };
 
-  getCertifications = async (EmployeeContract) => {
-    const certiCount = await EmployeeContract?.methods
-      ?.getCertificationCount()
-      .call();
-    const certifications = await Promise.all(
-      Array(parseInt(certiCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getCertificationByIndex(index).call()
-        )
-    );
-    var newcertifications = [];
-    certifications.forEach((certi) => {
-      newcertifications.push({
-        name: certi[0],
-        organization: certi[1],
-        score: certi[2],
-        endorsed: certi[3],
-      });
-      return;
+  getWorkExp = async (tokenId) => {
+    await getWorkExperienceApi(tokenId).then((response) => {
+      const workExperienceData = response?.data?.response?.workExperiences;
+      this.setState({ workExps: workExperienceData });
     });
-    this.setState({ certifications: newcertifications });
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
-      ?.getWorkExpCount()
-      .call();
-    const workExps = await Promise.all(
-      Array(parseInt(workExpCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-        )
-    );
-
-    var newworkExps = [];
-    workExps.forEach((work) => {
-      newworkExps.push({
-        role: work[0],
-        organization: work[1],
-        startdate: work[2],
-        enddate: work[3],
-        endorsed: work[4],
-        description: work[5],
-      });
-      return;
-    });
-
-    this.setState({ workExps: newworkExps });
-  };
-
-  getEducation = async (EmployeeContract) => {
-    const educationCount = await EmployeeContract?.methods
-      ?.getEducationCount()
-      .call();
-    const educations = await Promise.all(
-      Array(parseInt(educationCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getEducationByIndex(index).call()
-        )
-    );
-    var neweducation = [];
-    educations.forEach((certi) => {
-      neweducation.push({
-        institute: certi[0],
-        startdate: certi[1],
-        enddate: certi[2],
-        endorsed: certi[3],
-        description: certi[4],
-      });
-      return;
-    });
-    this.setState({ educations: neweducation });
+  getEducation = async (tokenId) => {
+      try {
+        const response = await getEducationApi(tokenId);
+        const educationData = response?.data?.response?.education;
+     this.setState({ educations: educationData });
+      
+      } catch (error) {
+        console.error("Error retrieving education data:", error);
+      }
   };
 
   toEmployee = () => {
     this.props.history.push(
-      `/getemployee/${this.props.employeeContractAddress}`
+      `/getemployee/${this.props.employee.proxyAddress}`
     );
   };
 
@@ -157,15 +78,15 @@ class EmployeeCard extends Component {
       <Card className="employee-card">
         <Card.Content>
           <Card.Header onClick={this.toEmployee} style={{ cursor: "pointer" }}>
-            <span>{this.state.employeedata?.name}</span>
-            <small>{this.state.employeedata.ethAddress}</small>
+            <span>{`${this.state.employeedata?.first_name} ${this.state.employeedata?.last_name} `}</span>
+            <small>{this.state.employeedata.proxyAddress}</small>
           </Card.Header>
           <br></br>
           <div>
             <p>
               <em>Location : </em>
               <span style={{ color: "black" }}>
-                {this.state.employeedata?.location}
+                {`${this.state.employeedata?.city}`}
               </span>
             </p>
           </div>
@@ -188,7 +109,8 @@ class EmployeeCard extends Component {
                     border: `1px solid ${this.state.colour[index % 5]}`,
                   }}
                 >
-                  <p>{skill.name}</p>
+                  <p>{skill.title}</p>
+                  <small>{skill.experience}</small>
                 </div>
               ))}
             </div>
@@ -205,22 +127,21 @@ class EmployeeCard extends Component {
                       style={{ color: "#c5c6c7" }}
                     >
                       <div>
-                        <p>{education.description}</p>
-                        <small>{education.institute}</small>
+                        <p>{education.degree} ({education.field_of_study})</p>
+                        <small>{education.school}</small>
                       </div>
                       <div>
                         <small>
                           <em>
-                            {education.startdate} - {education.enddate}
+                            {education.start_date} - {education.end_date}
                           </em>
                         </small>
                         <p
                           style={{
-                            color: education.endorsed ? "#00d1b2" : "yellow",
                             opacity: "0.7",
                           }}
                         >
-                          {education.endorsed ? "Endorsed" : "Not Yet Endorsed"}
+                          {education.grade}
                         </p>
                       </div>
                     </div>
@@ -237,25 +158,19 @@ class EmployeeCard extends Component {
                       style={{ color: "#c5c6c7" }}
                     >
                       <div>
-                        <p>{certification.name}</p>
-                        <small>{certification.organization}</small>
+                        <p>{certification.title}</p>
+                        <small>{certification.issuing_organization}</small>
                       </div>
                       <div>
-                        <p>
-                          <em>Score: {certification.score}</em>
-                        </p>
-                        <p
-                          style={{
-                            color: certification.endorsed
-                              ? "#00d1b2"
-                              : "yellow",
-                            opacity: "0.7",
-                          }}
+                      <small>
+                          <em>
+                            {certification.start_date} - {certification.end_date}
+                          </em>
+                        </small>
+                        <a href="{education.credential_url}" target="_blank"
                         >
-                          {certification.endorsed
-                            ? "Endorsed"
-                            : "Not Yet Endorsed"}
-                        </p>
+                          {certification.credential_id}
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -271,24 +186,23 @@ class EmployeeCard extends Component {
                       style={{ color: "#c5c6c7" }}
                     >
                       <div>
-                        <p>{work.role}</p>
-                        <small>{work.organization}</small>
+                        <p>{work.title}</p>
+                        <small>{work.company_name}</small>
                       </div>
                       <div>
                         <p>
                           <em>
                             <small>
-                              {work.startdate} - {work.enddate}
+                              {work.start_date} - {work.end_date}
                             </small>
                           </em>
                         </p>
                         <p
                           style={{
-                            color: work.endorsed ? "#00d1b2" : "yellow",
                             opacity: "0.7",
                           }}
                         >
-                          {work.endorsed ? "Endorsed" : "Not Yet Endorsed"}
+                          {work.employement_type}
                         </p>
                       </div>
                     </div>
