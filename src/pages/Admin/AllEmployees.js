@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import EmployeeCard from "../../components/EmployeeCard";
 import "./Admin.css";
 import Admin from "../../abis/Admin.json";
+import {getAllUsers} from "../../Apis/Admin"
 import LoadComp from "../../components/LoadComp";
 
 export default class AllEmployees extends Component {
@@ -17,17 +18,10 @@ export default class AllEmployees extends Component {
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
     if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeCount = await admin?.methods.employeeCount().call();
-
-      const employees = await Promise.all(
-        Array(parseInt(employeeCount))
-          .fill()
-          .map((ele, index) =>
-            admin.methods.getEmployeeContractByIndex(index).call()
-          )
-      );
-      this.setState({ employees });
+      const employees = await getAllUsers();
+      let usersData = employees.data.response.usersList;
+      console.log("all users", usersData);
+      this.setState({ employees: usersData });
     } else {
       toast.error("The Admin Contract does not exist on this network!");
     }
@@ -41,8 +35,8 @@ export default class AllEmployees extends Component {
       <div className="admin">
         <h2 className="card-heading">All Registered Employees</h2>
         <br />
-        {this.state.employees?.map((employee, index) => (
-          <EmployeeCard key={index} employeeContractAddress={employee} />
+        {this.state.employees.reverse()?.map((employee, index) => (
+          <EmployeeCard key={index} employee={employee} />
         ))}
         <br />
       </div>

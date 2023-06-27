@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
-import Employee from "../../abis/Employee.json";
 //import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import moment from "moment";
@@ -180,14 +179,6 @@ export default class EmployeePage extends Component {
     const AdminData = await Admin.networks[networkId];
     accounts = await web3.eth.getAccounts();
     if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
       await this.getUserInfo(accounts[0]);
       this.getSkills();
       this.getCertifications();
@@ -196,28 +187,7 @@ export default class EmployeePage extends Component {
       this.getGithubCommits();
       this.getFiles(accounts[0]);
 
-      const employeedata = await EmployeeContract.methods
-        .getEmployeeInfo()
-        .call();
-      const newEmployedata = {
-        ethAddress: employeedata[0],
-        name: employeedata[1],
-        location: employeedata[2],
-        description: employeedata[3],
-        overallEndorsement: employeedata[4],
-        endorsecount: employeedata[5],
-      };
-
-      const endorseCount = newEmployedata.endorsecount;
-      const overallEndorsement = await Promise.all(
-        Array(parseInt(endorseCount))
-          .fill()
-          .map((ele, index) =>
-            EmployeeContract?.methods?.overallEndorsement(index).call()
-          )
-      );
-
-      this.setState({ employeedata: newEmployedata, overallEndorsement });
+    
       this.getJiraTasks();
     } else {
       toast.error("The Admin Contract does not exist on this network!");
@@ -233,8 +203,7 @@ export default class EmployeePage extends Component {
   };
 
   getSkills = async () => {
-    const id = this.state.tokenId;
-    await getSkillsApi(id).then((response) => {
+    await getSkillsApi(this.state.tokenId).then((response) => {
       console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
       console.log("skil ", skillsData);
@@ -243,8 +212,7 @@ export default class EmployeePage extends Component {
   };
 
   getCertifications = async () => {
-    const id = this.state.tokenId;
-    await getCertificatesApi(id).then((response) => {
+    await getCertificatesApi(this.state.tokenId).then((response) => {
       console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
       
@@ -256,23 +224,20 @@ export default class EmployeePage extends Component {
   };
 
   getWorkExp = async () => {
-    const id = this.state.tokenId;
-    await getWorkExperienceApi(id).then((response) => {
+    await getWorkExperienceApi(this.state.tokenId).then((response) => {
       console.log(
         "Work Experience: ",
         response?.data?.response?.workExperiences
       );
       const workExperienceData = response?.data?.response?.workExperiences;
-      
       console.log("work: ", workExperienceData);
       this.setState({ workExps: workExperienceData });
     });
   };
 
   getEducation = async () => {
-    const id = this.state.tokenId;
     try {
-      const response = await getEducationApi(id);
+      const response = await getEducationApi(this.state.tokenId);
       const educationData = response?.data?.response?.education;
       console.log("education: ", educationData);
 
@@ -285,7 +250,7 @@ export default class EmployeePage extends Component {
   };
 
   checkExistence(value) {
-    return value ? value : "-------";
+    return value ? value : "N/A";
   }
 
   render() {

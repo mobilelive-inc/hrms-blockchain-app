@@ -1,12 +1,15 @@
 import React, { Component } from "react";
 import { Card, Grid } from "semantic-ui-react";
-import Employee from "../../abis/Employee.json";
-import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import LoadComp from "../../components/LoadComp";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
+import { getUserApi } from "../../Apis/UsersApi";
+import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
+import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
+import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
+import { getEducationApi } from "../../Apis/EmployeeEducationApi";
 
 export default class GetEmployee extends Component {
   state = {
@@ -24,145 +27,56 @@ export default class GetEmployee extends Component {
   componentDidMount = async () => {
     this.setState({ loadcomp: true });
     const employee_address = this.props?.match?.params?.employee_address;
-    const web3 = window.web3;
-    const EmployeeContract = await new web3.eth.Contract(
-      Employee.abi,
-      employee_address
-    );
-    this.getSkills(EmployeeContract);
-    this.getCertifications(EmployeeContract);
-    this.getWorkExp(EmployeeContract);
-    this.getEducation(EmployeeContract);
-    const employeedata = await EmployeeContract.methods
-      .getEmployeeInfo()
-      .call();
-    const newEmployedata = {
-      ethAddress: employeedata[0],
-      name: employeedata[1],
-      location: employeedata[2],
-      description: employeedata[3],
-      overallEndorsement: employeedata[4],
-      endorsecount: employeedata[5],
-    };
-    const endorseCount = newEmployedata.endorsecount;
-    const overallEndorsement = await Promise.all(
-      Array(parseInt(endorseCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.overallEndorsement(index).call()
-        )
-    );
+    let token_id;
+    const employeeData = await getUserApi(employee_address);
+    token_id = employeeData?.data?.response?.userInfo?.tokenId
+    const employeedata = {proxyAddress: employee_address, ...employeeData?.data?.response?.userInfo};
+
+    this.getSkills(token_id);
+    this.getCertifications(token_id);
+    this.getWorkExp(token_id);
+    this.getEducation(token_id);
+
     this.setState({
-      employeedata: newEmployedata,
-      overallEndorsement,
+      employeedata: employeedata,
       loadcomp: false,
     });
   };
 
-  getSkills = async (EmployeeContract) => {
-    const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-    const skills = await Promise.all(
-      Array(parseInt(skillCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getSkillByIndex(index).call()
-        )
-    );
-
-    var newskills = [];
-    skills.forEach((certi) => {
-      newskills.push({
-        name: certi[0],
-        overall_percentage: certi[1],
-        experience: certi[2],
-        endorsed: certi[3],
-        endorser_address: certi[4],
-        review: certi[5],
-        visible: certi[6],
-      });
-      return;
+  getSkills = async (tokenId) => {
+    await getSkillsApi(tokenId).then((response) => {
+      console.log("skills: ", response?.data?.response?.skills);
+      const skillsData = response?.data?.response?.skills;
+      console.log("skil ", skillsData);
+      this.setState({ skills: skillsData });
     });
-
-    this.setState({ skills: newskills });
   };
 
-  getCertifications = async (EmployeeContract) => {
-    const certiCount = await EmployeeContract?.methods
-      ?.getCertificationCount()
-      .call();
-    const certifications = await Promise.all(
-      Array(parseInt(certiCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getCertificationByIndex(index).call()
-        )
-    );
-    var newcertifications = [];
-    certifications.forEach((certi) => {
-      newcertifications.push({
-        name: certi[0],
-        organization: certi[1],
-        score: certi[2],
-        endorsed: certi[3],
-        visible: certi[4],
+  getCertifications = async (tokenId) => {
+    await getCertificatesApi(tokenId).then((response) => {
+      const certificationsData = response?.data?.response?.certifications;
+      this.setState({
+        certifications: certificationsData,
       });
-      return;
     });
-    this.setState({ certifications: newcertifications });
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
-      ?.getWorkExpCount()
-      .call();
-    const workExps = await Promise.all(
-      Array(parseInt(workExpCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-        )
-    );
-
-    var newworkExps = [];
-    workExps.forEach((work) => {
-      newworkExps.push({
-        role: work[0],
-        organization: work[1],
-        startdate: work[2],
-        enddate: work[3],
-        endorsed: work[4],
-        description: work[5],
-        visible: work[6],
-      });
-      return;
+  getWorkExp = async (tokenId) => {
+    await getWorkExperienceApi(tokenId).then((response) => {
+      const workExperienceData = response?.data?.response?.workExperiences;
+      this.setState({ workExps: workExperienceData });
     });
-
-    this.setState({ workExps: newworkExps });
   };
 
-  getEducation = async (EmployeeContract) => {
-    const educationCount = await EmployeeContract?.methods
-      ?.getEducationCount()
-      .call();
-    const educations = await Promise.all(
-      Array(parseInt(educationCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getEducationByIndex(index).call()
-        )
-    );
-    var neweducation = [];
-    educations.forEach((certi) => {
-      neweducation.push({
-        institute: certi[0],
-        startdate: certi[1],
-        enddate: certi[2],
-        endorsed: certi[3],
-        description: certi[4],
-      });
-      return;
-    });
-    this.setState({ educations: neweducation });
+  getEducation = async (tokenId) => {
+      try {
+        const response = await getEducationApi(tokenId);
+        const educationData = response?.data?.response?.education;
+     this.setState({ educations: educationData });
+      
+      } catch (error) {
+        console.error("Error retrieving education data:", error);
+      }
   };
 
   render() {
@@ -176,11 +90,11 @@ export default class GetEmployee extends Component {
               <Card className="personal-info">
                 <Card.Content>
                   <Card.Header>
-                    {this.state.employeedata?.name}
+                    {`${this.state.employeedata?.first_name} ${this.state.employeedata?.last_name}`}
                     <small
                       style={{ wordBreak: "break-word", color: "black" }}
                     >
-                      {this.state.employeedata?.ethAddress}
+                      {this.state.employeedata?.proxyAddress}
                     </small>
                   </Card.Header>
                   <br />
@@ -188,19 +102,11 @@ export default class GetEmployee extends Component {
                     <p>
                       <em>Location: </em>
                       <span style={{ color: "black" }}>
-                        {this.state.employeedata?.location}
+                        {this.state.employeedata?.city}
                       </span>
                     </p>
                   </div>
                   <br />
-                  <div>
-                    <p>
-                      <em>Overall Endorsement Rating:</em>
-                    </p>
-                    <LineChart
-                      overallEndorsement={this.state.overallEndorsement}
-                    />
-                  </div>
                 </Card.Content>
               </Card>
               <Card className="employee-des">
@@ -225,35 +131,31 @@ export default class GetEmployee extends Component {
                           <div
                             style={{ paddingRight: "50px", color: "black" }}
                           >
-                            <p>{education.description}</p>
+                            <p>{education.degree} ({education.field_of_study})</p>
                             <small
                               style={{
                                 wordBreak: "break-word",
                                 fontSize: "10px",
                               }}
                             >
-                              {education.institute}
+                              {education.school}
                             </small>
                           </div>
                           <div>
                             <small style={{ color: "black" }}>
                               <em>
-                                {education.startdate} - {education.enddate}
+                                {education.start_date} - {education.end_date}
                               </em>
                             </small>
                             <p
                               style={{
-                                color: education.endorsed
-                                  ? "#00d1b2"
-                                  : "yellow",
                                 opacity: "0.7",
                               }}
                             >
-                              {education.endorsed
-                                ? "Endorsed"
-                                : "Not Yet Endorsed"}
+                              {education.grade}
                             </p>
                           </div>
+                          <p>{education.description}</p>
                         </div>
                       ))}
                     </div>

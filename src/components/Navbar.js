@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Menu, Segment, Image, Label, Icon } from "semantic-ui-react";
+import { Menu, Segment, Image, Label } from "semantic-ui-react";
 import {isAdmin} from "../Apis/Admin";
+import {getUserApi} from "../Apis/UsersApi";
 
 import { Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
@@ -10,41 +11,25 @@ import GenererateQR from "./GenererateQR";
 import Logo from "./../images/logo.png";
 
 class Navbar extends Component {
-  state = { activeItem: "home", role: -1, account: "", showQr: false };
+  state = { activeItem: "home", role: "No Role", account: "", showQr: false };
 
   componentDidMount = async () => {
     const web3 = await window.web3;
-    console.log(web3);
     const accounts = await web3.eth.getAccounts();
     if (accounts) {
-      this.setState({ account: accounts[0] });
-      // this.admin = new Admin();
-      console.log("abc",accounts[0])
-      const response = await isAdmin(accounts[0]);
-      console.log('is Admin reposnes',response);
-      // console.log('navbar state',this.state);
-    }
-    /* const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const isEmployee = await admin?.methods?.isEmployee(accounts[0]).call();
-      const isOrganizationEndorser = await admin?.methods
-        ?.isOrganizationEndorser(accounts[0])
-        .call();
-      const owner = await admin?.methods?.owner().call();
-      var role = -1;
-      if (accounts[0] === owner) {
-        role = 0;
-      } else if (isEmployee) {
-        role = 1;
-      } else if (isOrganizationEndorser) {
-        role = 2;
+      this.setState({ account: accounts[0] });  
+      const checkAdmin = await isAdmin(this.state.account);
+      const userData = await getUserApi(this.state.account);
+      var role = "No Role";
+      if(checkAdmin.data.response.isAdmin){
+        role = "admin";
+      }else if(!checkAdmin.data.response.isAdmin && userData.data.response.userInfo.tokenId !== 0){
+        role = userData.data.response.userInfo.role;
+      }else{
+        toast.error("User not found for given address!");
       }
-      this.setState({ role });
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    } */
+      this.setState({ role })
+    }
   };
 
   handleItemClick = (e, { name }) => this.setState({ activeItem: name });
@@ -55,7 +40,7 @@ class Navbar extends Component {
 
   render() {
     const { activeItem } = this.state;
-    const roles = ["Admin", "Employee", "Organization"];
+    // const roles = ["Admin", "Employee"];
 
     return (
       <>
@@ -93,7 +78,7 @@ class Navbar extends Component {
             >
               <SearchBar />
             </Menu.Item>
-            {this.state.role === 0 && (
+            {this.state.role === "admin" && (
               <>
                 <Menu.Item
                   as={Link}
@@ -104,28 +89,14 @@ class Navbar extends Component {
                 />
                 <Menu.Item
                   as={Link}
-                  to="/all-organization-endorser"
-                  name="Organization Endorsers"
-                  active={activeItem === "Organization Endorsers"}
-                  onClick={this.handleItemClick}
-                />
-                <Menu.Item
-                  as={Link}
                   to="/create-user"
                   name="Create User"
                   active={activeItem === "Create User"}
                   onClick={this.handleItemClick}
                 />
-                <Menu.Item
-                  as={Link}
-                  to="/notifications"
-                  name="Notifications"
-                  active={activeItem === "Notifications"}
-                  onClick={this.handleItemClick}
-                />
               </>
             )}
-            {this.state.role === 1 && (
+            {this.state.role === "employee" && (
               <>
                 <Menu.Item
                   as={Link}
@@ -151,7 +122,7 @@ class Navbar extends Component {
               </>
             )}
 
-            {this.state.role === 2 && (
+            {this.state.role === "hr" && (
               <>
                 <Menu.Item
                   as={Link}
@@ -184,7 +155,7 @@ class Navbar extends Component {
               </>
             )}
 
-            {this.state.role === -1 && (
+            {this.state.role === "No Role" && (
               <>
                 <Menu.Item
                   as={Link}
@@ -204,8 +175,8 @@ class Navbar extends Component {
             )}
 
             <Menu.Item position="right">
-              <Label style={{ color: "black", background: "white" }}>
-                {this.state.role === -1 ? "No Role" : roles[this.state.role]}
+              <Label style={{ color: "black", background: "white", textTransform: "capitalize" }}>
+                {this.state.role}
               </Label>
               &nbsp;&nbsp;&nbsp;
               <div style={{ color: "lightgray" }}>
@@ -213,12 +184,12 @@ class Navbar extends Component {
                   <small>{this.state.account}</small>
                 </em>
                 &nbsp;&nbsp;&nbsp;
-                <Icon
+                {/* <Icon
                   name="qrcode"
                   size="large"
                   style={{ color: "white", cursor: "pointer" }}
-                  onClick={() => this.setState({ showQr: true })}
-                />
+                  onClick={() => this.setState({ showQr: false })}
+                /> */}
               </div>
             </Menu.Item>
           </Menu>
