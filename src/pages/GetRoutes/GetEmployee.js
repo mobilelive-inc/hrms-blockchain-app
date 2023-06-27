@@ -1,8 +1,8 @@
 import React, { Component } from "react";
-import { Card, Grid } from "semantic-ui-react";
+import { Card, Grid,Icon } from "semantic-ui-react";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import moment from "moment";
 import LoadComp from "../../components/LoadComp";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import { getUserApi } from "../../Apis/UsersApi";
@@ -42,7 +42,9 @@ export default class GetEmployee extends Component {
       loadcomp: false,
     });
   };
-
+  checkExistence(value) {
+    return value ? value : "-------";
+  }
   getSkills = async (tokenId) => {
     await getSkillsApi(tokenId).then((response) => {
       console.log("skills: ", response?.data?.response?.skills);
@@ -126,38 +128,50 @@ export default class GetEmployee extends Component {
                     </Card.Header>
                     <br />
                     <div className="education">
-                      {this.state.educations?.map((education, index) => (
-                        <div className="education-design" key={index}>
-                          <div
-                            style={{ paddingRight: "50px", color: "black" }}
-                          >
-                            <p>{education.degree} ({education.field_of_study})</p>
-                            <small
+                    {this.state.educations?.length > 0 ? (
+                        this.state.educations.map((education, index) => (
+                          <div className="education-design" key={index}>
+                            <div
                               style={{
-                                wordBreak: "break-word",
-                                fontSize: "10px",
+                                paddingRight: "50px",
+                                color: "black",
+                                fontWeight: "bold",
                               }}
                             >
-                              {education.school}
-                            </small>
+                              <div style={{ display: "flex" }}>
+                                <Icon
+                                  style={{ position: "relative" }}
+                                  name="graduation cap"
+                                />
+                                <p>{this.checkExistence(education?.degree)}</p>
+                                <span
+                                  onClick={() =>
+                                    this.handleEditEducation(education)
+                                  }
+                                >
+                                  <i
+                                    style={{
+                                      marginLeft: "200%",
+                                      marginRight: "0px",
+                                    }}
+                                    className="fas fa-pencil-alt"
+                                  ></i>
+                                </span>
+                              </div>
+                              <small
+                                style={{
+                                  wordBreak: "break-word",
+                                  fontSize: "10px",
+                                }}
+                              >
+                                {this.checkExistence(education?.school)}
+                              </small>
+                            </div>
                           </div>
-                          <div>
-                            <small style={{ color: "black" }}>
-                              <em>
-                                {education.start_date} - {education.end_date}
-                              </em>
-                            </small>
-                            <p
-                              style={{
-                                opacity: "0.7",
-                              }}
-                            >
-                              {education.grade}
-                            </p>
-                          </div>
-                          <p>{education.description}</p>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p>No education information available.</p>
+                      )}
                     </div>
                   </div>
                 </Card.Content>
@@ -175,49 +189,67 @@ export default class GetEmployee extends Component {
                   <Card.Header>Certifications</Card.Header>
                   <br />
                   <div>
-                    {this.state.certifications?.map(
-                      (certi, index) =>
-                        certi.visible && (
-                          <div key={index} className="certification-container">
-                            <div style={{ color: "black" }}>
-                              <p>{certi.name}</p>
-                              <small style={{ wordBreak: "break-word" }}>
-                                {certi.organization}
-                              </small>
-                              <p
-                                style={{
-                                  color: certi.endorsed ? "#00d1b2" : "yellow",
-                                  opacity: "0.7",
-                                }}
-                              >
-                                {certi.endorsed
-                                  ? "Endorsed"
-                                  : "Not Yet Endorsed"}
-                              </p>
-                            </div>
-                            <div>
-                              <div style={{ width: "100px" }}>
-                                <CircularProgressbar
-                                  value={certi.score}
-                                  text={`Score - ${certi.score}%`}
-                                  strokeWidth="5"
-                                  styles={buildStyles({
-                                    strokeLinecap: "round",
-                                    textSize: "12px",
-                                    pathTransitionDuration: 1,
-                                    pathColor: `rgba(255,255,255, ${
-                                      certi.score / 100
-                                    })`,
-                                    textColor: "black",
-                                    trailColor: "#393b3fa6",
-                                    backgroundColor: "white",
-                                  })}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )
-                    )}
+                  <Grid columns={3}>
+                      {this.state.certifications.length > 0 ? (
+                        this.state.certifications.map((certi, index) => {
+                          if (Array.isArray(certi)) {
+                            return null;
+                          } else if (
+                            typeof certi === "object" &&
+                            certi.title &&
+                            certi.issuing_organization
+                          ) {
+                            return (
+                              <Grid.Row key={index}>
+                                <Grid.Column>
+                                  <div
+                                    style={{
+                                      color: "black",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    <p>{this.checkExistence(certi.title)}</p>
+                                    <small>
+                                      {this.checkExistence(
+                                        certi.issuing_organization
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Issue Date
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(
+                                        moment(certi.issue_date).format(
+                                          "DD-MM-YYYY"
+                                        )
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Credential ID
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(certi.credential_id)}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                              </Grid.Row>
+                            );
+                          } else {
+                            return null;
+                          }
+                        })
+                      ) : (
+                        <p>No certifications to display!</p>
+                      )}
+                    </Grid>
                   </div>
                 </Card.Content>
               </Card>
@@ -226,37 +258,43 @@ export default class GetEmployee extends Component {
                   <Card.Header>Work Experiences</Card.Header>
                   <br />
                   <div className="education">
-                    {this.state.workExps?.map(
-                      (workExp, index) =>
-                        workExp.visible && (
-                          <div className="education-design" key={index}>
-                            <div style={{ color: "#c5c6c7" }}>
-                              <p>{workExp.role}</p>
-                              <small style={{ wordBreak: "break-word" }}>
-                                {workExp.organization}
-                              </small>
-                            </div>
-                            <div>
-                              <small>
-                                <em>
-                                  {workExp.startdate} - {workExp.enddate}
-                                </em>
-                              </small>
-                              <p
-                                style={{
-                                  color: workExp.endorsed
-                                    ? "#00d1b2"
-                                    : "yellow",
-                                  opacity: "0.7",
-                                }}
-                              >
-                                {workExp.endorsed
-                                  ? "Endorsed"
-                                  : "Not Yet Endorsed"}
-                              </p>
-                            </div>
+                  {this.state.workExps?.length > 0 ? (
+                      this.state.workExps.map((workExp, index) => (
+                        <div className="education-design">
+                          <div style={{ color: "black", fontWeight: "bold" }}>
+                            <i
+                              style={{ marginRight: "0px" }}
+                              className="fas fa-pencil-alt"
+                            ></i>
+
+                            <p>{this.checkExistence(workExp?.title)}</p>
+                            <small>
+                              {this.checkExistence(workExp?.organization)}
+                            </small>
+                            <small>
+                              {", " + this.checkExistence(workExp?.location)}
+                            </small>
                           </div>
-                        )
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>
+                              Employment Type
+                            </p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(workExp?.employment_type)}
+                            </small>
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: "bold" }}>
+                              Date of Joining
+                            </p>
+                            <small style={{ fontWeight: "bold" }}>
+                              {this.checkExistence(workExp?.start_date)}
+                            </small>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No work experiences found!</p>
                     )}
                   </div>
                 </Card.Content>
@@ -266,14 +304,23 @@ export default class GetEmployee extends Component {
                   <Card.Header>Skills</Card.Header>
                   <br />
                   <div className="skill-height-container">
-                    {this.state.skills?.map((skill, index) =>
-                      skill.visible ? (
-                        <div>
-                          <SkillCard skill={skill} key={index} />
-                        </div>
-                      ) : (
-                        <></>
-                      )
+                  {this.state.skills?.length > 0 ? (
+                      this.state.skills.map((skill, index) => {
+                        if (Array.isArray(skill)) {
+                          return null;
+                        } else if (typeof skill === "object" && skill?.title) {
+                          return (
+                            <div key={index}>
+                              <i className="fas fa-pencil-alt"></i>
+                              <SkillCard skill={skill} key={index} update />
+                            </div>
+                          );
+                        } else {
+                          return null;
+                        }
+                      })
+                    ) : (
+                      <p>No skills to display!</p>
                     )}
                   </div>
                 </Card.Content>

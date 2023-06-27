@@ -13,6 +13,15 @@ export const getUserApi = async (address)=>{
     }
 }
 
+export const createUser = async (data)=>{
+    try{
+        const response=axios.post(("https://d1h99yrv311co6.cloudfront.net/api/registry/user/create"),data)
+        return response;
+    }
+    catch(error){
+        throw error;
+    }
+}
 export const updateUserApi = async (userAddress,data)=>{
     const url = `https://d1h99yrv311co6.cloudfront.net/api/registry/user?userAddress=${userAddress}`;
     try{

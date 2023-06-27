@@ -62,11 +62,11 @@ export default class UpdateProfile extends Component {
     await getSkillsApi(id).then((response) => {
       console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      if (Array.isArray(skillsData)) {
-        skillsData.forEach((element) => {
-          skillsData.push(Object.fromEntries(element));
-        });
-      }
+      // if (Array.isArray(skillsData)) {
+      //   skillsData.forEach((element) => {
+      //     skillsData.push(Object.fromEntries(element));
+      //   });
+      // }
       console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
@@ -77,14 +77,7 @@ export default class UpdateProfile extends Component {
     await getCertificatesApi(id).then((response) => {
       console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
-      if (Array.isArray(certificationsData)) {
-        certificationsData.forEach((element) => {
-          certificationsData.push(Object.fromEntries(element));
-        });
-      }
-      // if (Array.isArray(certificationsData)) {
-      //   this.setState({ certifications: certificationsData });
-      // }
+      
       console.log("certi: ", certificationsData);
       this.setState({
         certifications: certificationsData,
@@ -94,22 +87,12 @@ export default class UpdateProfile extends Component {
   getWorkExp = async () => {
     const id = this.state.tokenId;
     await getWorkExperienceApi(id).then((response) => {
-      console.log(
-        "Work Experience: ",
-        response?.data?.response?.workExperiences
-      );
-      console.log("abc", response?.data?.response?.workExperiences);
+      
       const workExperienceData = response?.data?.response?.workExperiences;
-      // if (Array.isArray(workExperienceData)) {
-      //   workExperienceData.forEach((element) => {
-      //     workExperienceData.push(Object.fromEntries(element));
-      //   });
-      // }
-      if (Array.isArray(workExperienceData)) {
-        this.setState({ workExps: workExperienceData });
-      }
+      
+      
       console.log("work: ", workExperienceData);
-      //this.setState({ workExps: workExperienceData });
+      this.setState({ workExps: workExperienceData });
     });
   };
 
@@ -145,7 +128,6 @@ export default class UpdateProfile extends Component {
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
       const employeeContractAddress = await admin?.methods
         ?.getEmployeeContractByAddress(accounts[0])
@@ -181,117 +163,10 @@ export default class UpdateProfile extends Component {
       );
       console.log(overallEndorsement);
       this.setState({ employeedata: newEmployedata, overallEndorsement });
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    }
+    
     this.setState({ loadcomp: false });
   };
 
-  // getSkills = async (EmployeeContract) => {
-  //   const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-  //   const skills = await Promise.all(
-  //     Array(parseInt(skillCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getSkillByIndex(index).call()
-  //       )
-  //   );
-
-  //   var newskills = [];
-  //   skills.forEach((certi) => {
-  //     newskills.push({
-  //       name: certi[0],
-  //       overall_percentage: certi[1],
-  //       experience: certi[2],
-  //       endorsed: certi[3],
-  //       endorser_address: certi[4],
-  //       review: certi[5],
-  //       visible: certi[6],
-  //     });
-  //     return;
-  //   });
-
-  //   this.setState({ skills: newskills });
-  // };
-
-  // getCertifications = async (EmployeeContract) => {
-  //   const certiCount = await EmployeeContract?.methods
-  //     ?.getCertificationCount()
-  //     .call();
-  //   const certifications = await Promise.all(
-  //     Array(parseInt(certiCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getCertificationByIndex(index).call()
-  //       )
-  //   );
-  //   var newcertifications = [];
-  //   certifications.forEach((certi) => {
-  //     newcertifications.push({
-  //       name: certi[0],
-  //       organization: certi[1],
-  //       score: certi[2],
-  //       endorsed: certi[3],
-  //       visible: certi[4],
-  //     });
-  //     return;
-  //   });
-  //   this.setState({ certifications: newcertifications });
-  // };
-
-  // getWorkExp = async (EmployeeContract) => {
-  //   const workExpCount = await EmployeeContract?.methods
-  //     ?.getWorkExpCount()
-  //     .call();
-  //   const workExps = await Promise.all(
-  //     Array(parseInt(workExpCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-  //       )
-  //   );
-
-  //   var newworkExps = [];
-  //   workExps.forEach((work) => {
-  //     newworkExps.push({
-  //       role: work[0],
-  //       organization: work[1],
-  //       startdate: work[2],
-  //       enddate: work[3],
-  //       endorsed: work[4],
-  //       description: work[5],
-  //       visible: work[6],
-  //     });
-  //     return;
-  //   });
-
-  //   this.setState({ workExps: newworkExps });
-  // };
-
-  // getEducation = async (EmployeeContract) => {
-  //   const educationCount = await EmployeeContract?.methods
-  //     ?.getEducationCount()
-  //     .call();
-  //   const educations = await Promise.all(
-  //     Array(parseInt(educationCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getEducationByIndex(index).call()
-  //       )
-  //   );
-  //   var neweducation = [];
-  //   educations.forEach((certi) => {
-  //     neweducation.push({
-  //       institute: certi[0],
-  //       startdate: certi[1],
-  //       enddate: certi[2],
-  //       endorsed: certi[3],
-  //       description: certi[4],
-  //     });
-  //     return;
-  //   });
-  //   this.setState({ educations: neweducation });
-  // };
 
   closeCertificationModal = () => {
     this.setState({ certificationModal: false });
@@ -414,11 +289,6 @@ export default class UpdateProfile extends Component {
           isOpen={this.state.editFieldModal}
           closeEditFieldModal={this.closeEditFieldModal}
           tokenId={this.state.tokenId}
-
-          // name={this.state.employeedata?.name}
-          // location={this.state.employeedata?.location}
-          // description={this.state.employeedata?.description}
-          // isDescription={this.state.isDescription}
         />
 
         <Grid>
@@ -631,7 +501,17 @@ export default class UpdateProfile extends Component {
                 <Card.Content>
                   
                   <Card.Header>Work Experiences
-                  
+                  <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        workexpModal: !this.state.workexpModal,
+                      })
+                    }
+                  >
+                    <i className="fas fa-plus"></i>
+                  </span>
+
                   </Card.Header>
                   <br />
                   <div className="education">

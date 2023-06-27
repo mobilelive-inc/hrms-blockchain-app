@@ -19,6 +19,7 @@ class Navbar extends Component {
     if (accounts) {
       this.setState({ account: accounts[0] });  
       const checkAdmin = await isAdmin(this.state.account);
+      console.log("admin; ",checkAdmin)
       const userData = await getUserApi(this.state.account);
       var role = "No Role";
       if(checkAdmin.data.response.isAdmin){

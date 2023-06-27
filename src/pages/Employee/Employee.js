@@ -60,8 +60,7 @@ export default class EmployeePage extends Component {
     tokenId: null,
   };
   getJiraTasks = async () => {
-    console.log("account: ", accounts[0]);
-    const name = this.state.employeedata?.name;
+    const name = this.state.userInfo?.first_name;
     try {
       this.setState({ isLoading: true });
       this.setState({ isDisplayButton: false });
@@ -204,19 +203,15 @@ export default class EmployeePage extends Component {
 
   getSkills = async () => {
     await getSkillsApi(this.state.tokenId).then((response) => {
-      console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
   };
 
   getCertifications = async () => {
     await getCertificatesApi(this.state.tokenId).then((response) => {
-      console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
       
-      console.log("certi: ", certificationsData);
       this.setState({
         certifications: certificationsData,
       });
@@ -225,12 +220,8 @@ export default class EmployeePage extends Component {
 
   getWorkExp = async () => {
     await getWorkExperienceApi(this.state.tokenId).then((response) => {
-      console.log(
-        "Work Experience: ",
-        response?.data?.response?.workExperiences
-      );
+      
       const workExperienceData = response?.data?.response?.workExperiences;
-      console.log("work: ", workExperienceData);
       this.setState({ workExps: workExperienceData });
     });
   };
@@ -239,7 +230,6 @@ export default class EmployeePage extends Component {
     try {
       const response = await getEducationApi(this.state.tokenId);
       const educationData = response?.data?.response?.education;
-      console.log("education: ", educationData);
 
       if (Array.isArray(educationData)) {
         this.setState({ educations: educationData });
@@ -490,7 +480,7 @@ export default class EmployeePage extends Component {
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>
-                    JIRA Tasks for {this.state.employeedata?.name}
+                    JIRA Tasks
                   </Card.Header>
                   <br />
                   <div className="content-list">

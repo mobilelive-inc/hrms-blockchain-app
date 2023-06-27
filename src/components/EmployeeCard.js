@@ -5,6 +5,7 @@ import { getSkillsApi } from "../Apis/EmployeeSkillsApi";
 import { getWorkExperienceApi } from "../Apis/EmployeeExperienceApi";
 import { getCertificatesApi } from "../Apis/EmployeeCertApi";
 import { getEducationApi } from "../Apis/EmployeeEducationApi";
+import moment from "moment";
 import "./EmployeeCard.css";
 import LoadComp from "./LoadComp";
 
@@ -31,9 +32,7 @@ class EmployeeCard extends Component {
   
   getSkills = async (tokenId) => {
     await getSkillsApi(tokenId).then((response) => {
-      console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
   };
@@ -84,7 +83,7 @@ class EmployeeCard extends Component {
           <br></br>
           <div>
             <p>
-              <em>Location : </em>
+              <em style={{fontWeight:"bold"}}>Location : </em>
               <span style={{ color: "black" }}>
                 {`${this.state.employeedata?.city}`}
               </span>
@@ -92,20 +91,20 @@ class EmployeeCard extends Component {
           </div>
           <br />
           <div>
-            <em>Description :</em>
-            <p style={{ color: "#c5c6c7" }}>
+            <em style={{fontWeight:"bold"}}>Description :</em>
+            <p style={{ color: "black" }}>
               {this.state.employeedata?.description}
             </p>
           </div>
           <br />
           <div>
-            <em>Skills:</em>
+            <em style={{fontWeight:"bold"}}>Skills:</em>
             <div className="skill-holder">
               {this.state.skills?.map((skill, index) => (
                 <div
                   className="skill-design"
                   style={{
-                    color: "#c5c6c7",
+                    color: "black",
                     border: `1px solid ${this.state.colour[index % 5]}`,
                   }}
                 >
@@ -119,12 +118,12 @@ class EmployeeCard extends Component {
           {this.state.readmore ? (
             <div>
               <div>
-                <em>Education:</em>
+                <em style={{fontWeight:"bold"}}>Education:</em>
                 <div className="education">
                   {this.state.educations?.map((education, index) => (
                     <div
                       className="education-design"
-                      style={{ color: "#c5c6c7" }}
+                      style={{ color: "black" }}
                     >
                       <div>
                         <p>{education.degree} ({education.field_of_study})</p>
@@ -133,7 +132,7 @@ class EmployeeCard extends Component {
                       <div>
                         <small>
                           <em>
-                            {education.start_date} - {education.end_date}
+                            {moment(education.start_date).format("DD-MM-YYYY")} - {moment(education.end_date).format("DD-MM-YYYY")}
                           </em>
                         </small>
                         <p
@@ -150,12 +149,12 @@ class EmployeeCard extends Component {
               </div>
               <br />
               <div>
-                <em>Certifications:</em>
+                <em style={{fontWeight:"bold"}}>Certifications:</em>
                 <div className="certifications">
                   {this.state.certifications?.map((certification, index) => (
                     <div
                       className="certification-design"
-                      style={{ color: "#c5c6c7" }}
+                      style={{ color: "black" }}
                     >
                       <div>
                         <p>{certification.title}</p>
@@ -178,12 +177,12 @@ class EmployeeCard extends Component {
               </div>
               <br />
               <div>
-                <em>Work Experience:</em>
+                <em style={{fontWeight:"bold"}}>Work Experience:</em>
                 <div className="workexp">
                   {this.state.workExps?.map((work, index) => (
                     <div
                       className="workexp-design"
-                      style={{ color: "#c5c6c7" }}
+                      style={{ color: "black" }}
                     >
                       <div>
                         <p>{work.title}</p>

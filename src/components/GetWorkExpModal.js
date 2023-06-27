@@ -63,7 +63,7 @@ export default class GetWorkExpModal extends Component {
         console.log("work experience: ", response);
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
-
+        
         const receipt = web3.eth.sendTransaction(transaction)
         .then((res) => {
           return new Promise((resolve) => setTimeout(resolve, 7000));
