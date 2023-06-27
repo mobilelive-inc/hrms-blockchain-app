@@ -25,6 +25,7 @@ import {
   reqEducationEndorsementFunc,
   reqWorkexpEndorsementFunc,
 } from "../../firebase/api";
+import moment from "moment/moment";
 
 export default class UpdateProfile extends Component {
   state = {
@@ -57,30 +58,26 @@ export default class UpdateProfile extends Component {
   };
 
   getSkills = async () => {
-    const id = 0;
+    const id = this.state.tokenId;
     await getSkillsApi(id).then((response) => {
       console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      if (Array.isArray(skillsData)) {
-        skillsData.forEach((element) => {
-          skillsData.push(Object.fromEntries(element));
-        });
-      }
+      // if (Array.isArray(skillsData)) {
+      //   skillsData.forEach((element) => {
+      //     skillsData.push(Object.fromEntries(element));
+      //   });
+      // }
       console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
   };
 
   getCertifications = async () => {
-    const id = 0;
+    const id = this.state.tokenId;
     await getCertificatesApi(id).then((response) => {
       console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
-      if (Array.isArray(certificationsData)) {
-        certificationsData.forEach((element) => {
-          certificationsData.push(Object.fromEntries(element));
-        });
-      }
+      
       console.log("certi: ", certificationsData);
       this.setState({
         certifications: certificationsData,
@@ -88,18 +85,12 @@ export default class UpdateProfile extends Component {
     });
   };
   getWorkExp = async () => {
-    const id = 1;
+    const id = this.state.tokenId;
     await getWorkExperienceApi(id).then((response) => {
-      console.log(
-        "Work Experience: ",
-        response?.data?.response?.workExperiences
-      );
+      
       const workExperienceData = response?.data?.response?.workExperiences;
-      if (Array.isArray(workExperienceData)) {
-        workExperienceData.forEach((element) => {
-          workExperienceData.push(Object.fromEntries(element));
-        });
-      }
+      
+      
       console.log("work: ", workExperienceData);
       this.setState({ workExps: workExperienceData });
     });
@@ -111,7 +102,7 @@ export default class UpdateProfile extends Component {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
       console.log("education: ", educationData);
-  
+
       if (Array.isArray(educationData)) {
         this.setState({ educations: educationData });
       }
@@ -119,7 +110,7 @@ export default class UpdateProfile extends Component {
       console.error("Error retrieving education data:", error);
     }
   };
-  
+
   checkExistence(value) {
     return value ? value : "-------";
   }
@@ -137,7 +128,6 @@ export default class UpdateProfile extends Component {
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
       const employeeContractAddress = await admin?.methods
         ?.getEmployeeContractByAddress(accounts[0])
@@ -173,138 +163,31 @@ export default class UpdateProfile extends Component {
       );
       console.log(overallEndorsement);
       this.setState({ employeedata: newEmployedata, overallEndorsement });
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    }
+    
     this.setState({ loadcomp: false });
   };
 
-  // getSkills = async (EmployeeContract) => {
-  //   const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-  //   const skills = await Promise.all(
-  //     Array(parseInt(skillCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getSkillByIndex(index).call()
-  //       )
-  //   );
-
-  //   var newskills = [];
-  //   skills.forEach((certi) => {
-  //     newskills.push({
-  //       name: certi[0],
-  //       overall_percentage: certi[1],
-  //       experience: certi[2],
-  //       endorsed: certi[3],
-  //       endorser_address: certi[4],
-  //       review: certi[5],
-  //       visible: certi[6],
-  //     });
-  //     return;
-  //   });
-
-  //   this.setState({ skills: newskills });
-  // };
-
-  // getCertifications = async (EmployeeContract) => {
-  //   const certiCount = await EmployeeContract?.methods
-  //     ?.getCertificationCount()
-  //     .call();
-  //   const certifications = await Promise.all(
-  //     Array(parseInt(certiCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getCertificationByIndex(index).call()
-  //       )
-  //   );
-  //   var newcertifications = [];
-  //   certifications.forEach((certi) => {
-  //     newcertifications.push({
-  //       name: certi[0],
-  //       organization: certi[1],
-  //       score: certi[2],
-  //       endorsed: certi[3],
-  //       visible: certi[4],
-  //     });
-  //     return;
-  //   });
-  //   this.setState({ certifications: newcertifications });
-  // };
-
-  // getWorkExp = async (EmployeeContract) => {
-  //   const workExpCount = await EmployeeContract?.methods
-  //     ?.getWorkExpCount()
-  //     .call();
-  //   const workExps = await Promise.all(
-  //     Array(parseInt(workExpCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-  //       )
-  //   );
-
-  //   var newworkExps = [];
-  //   workExps.forEach((work) => {
-  //     newworkExps.push({
-  //       role: work[0],
-  //       organization: work[1],
-  //       startdate: work[2],
-  //       enddate: work[3],
-  //       endorsed: work[4],
-  //       description: work[5],
-  //       visible: work[6],
-  //     });
-  //     return;
-  //   });
-
-  //   this.setState({ workExps: newworkExps });
-  // };
-
-  // getEducation = async (EmployeeContract) => {
-  //   const educationCount = await EmployeeContract?.methods
-  //     ?.getEducationCount()
-  //     .call();
-  //   const educations = await Promise.all(
-  //     Array(parseInt(educationCount))
-  //       .fill()
-  //       .map((ele, index) =>
-  //         EmployeeContract?.methods?.getEducationByIndex(index).call()
-  //       )
-  //   );
-  //   var neweducation = [];
-  //   educations.forEach((certi) => {
-  //     neweducation.push({
-  //       institute: certi[0],
-  //       startdate: certi[1],
-  //       enddate: certi[2],
-  //       endorsed: certi[3],
-  //       description: certi[4],
-  //     });
-  //     return;
-  //   });
-  //   this.setState({ educations: neweducation });
-  // };
 
   closeCertificationModal = () => {
     this.setState({ certificationModal: false });
-    this.getCertifications(this.state.EmployeeContract);
+    this.getCertifications();
   };
 
   closeWorkExpModal = () => {
     this.setState({ workexpModal: false });
-    this.getWorkExp(this.state.EmployeeContract);
+    this.getWorkExp();
   };
 
   closeSkillModal = () => {
     this.setState({ skillmodal: false });
-    this.getSkills(this.state.EmployeeContract);
+    this.getSkills();
   };
   closeFileModal = () => {
     this.setState({ filemodal: false });
   };
   closeEducationModal = () => {
     this.setState({ educationmodal: false, selectedEducation: null });
-    this.getEducation(this.state.EmployeeContract);
+    this.getEducation();
   };
 
   closeEditFieldModal = () => {
@@ -379,14 +262,17 @@ export default class UpdateProfile extends Component {
         <GetCertificationModal
           isOpen={this.state.certificationModal}
           closeCertificationModal={this.closeCertificationModal}
+          tokenId={this.state.tokenId}
         />
         <GetWorkExpModal
           isOpen={this.state.workexpModal}
           closeCertificationModal={this.closeWorkExpModal}
+          tokenId={this.state.tokenId}
         />
         <GetSkillsModal
           isOpen={this.state.skillmodal}
           closeCertificationModal={this.closeSkillModal}
+          tokenId={this.state.tokenId}
         />
         <GetFilesModal
           isOpen={this.state.filemodal}
@@ -403,11 +289,6 @@ export default class UpdateProfile extends Component {
           isOpen={this.state.editFieldModal}
           closeEditFieldModal={this.closeEditFieldModal}
           tokenId={this.state.tokenId}
-
-          // name={this.state.employeedata?.name}
-          // location={this.state.employeedata?.location}
-          // description={this.state.employeedata?.description}
-          // isDescription={this.state.isDescription}
         />
 
         <Grid>
@@ -533,9 +414,12 @@ export default class UpdateProfile extends Component {
               </Card>
             </Grid.Column>
             <Grid.Column width={10}>
+              
               <Card className="employee-des">
-                <Card.Content>
-                  <span
+                <Card.Content className="content">
+                  <Card.Header style={{ display: "flex" }}>
+                    Certifications
+                    <span
                     className="add-button"
                     onClick={(e) =>
                       this.setState({
@@ -545,45 +429,78 @@ export default class UpdateProfile extends Component {
                   >
                     <i className="fas fa-plus"></i>
                   </span>
-                  <Card.Header>Certifications</Card.Header>
+                  </Card.Header>
                   <br />
-                  <br />
+                  
                   <div className="education">
-                    {this.state.certifications.length > 0 ? (
-                      this.state.certifications.map((certi, index) => (
-                        <div className="education-design">
-                          <div style={{ color: "black", fontWeight: "bold" }}>
-                            <i
-                              style={{ marginLeft: "200%", marginRight: "0px" }}
-                              className="fas fa-pencil-alt"
-                            ></i>
-                            <p>{this.checkExistence(certi?.title)}</p>
-                            <small>
-                              {this.checkExistence(certi?.issuing_organization)}
-                            </small>
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>Issue Date</p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(certi?.issue_date)}
-                            </small>
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>Credential ID</p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(certi?.credential_id)}
-                            </small>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No certifications to display!</p>
-                    )}
+                    <Grid columns={3}>
+                      {this.state.certifications.length > 0 ? (
+                        this.state.certifications.map((certi, index) => {
+                          if (Array.isArray(certi)) {
+                            return null;
+                          } else if (
+                            typeof certi === "object" &&
+                            certi.title &&
+                            certi.issuing_organization
+                          ) {
+                            return (
+                              <Grid.Row key={index}>
+                                <Grid.Column>
+                                  <div
+                                    style={{
+                                      color: "black",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    <p>{this.checkExistence(certi.title)}</p>
+                                    <small>
+                                      {this.checkExistence(
+                                        certi.issuing_organization
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Issue Date
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(
+                                        moment(certi.issue_date).format(
+                                          "DD-MM-YYYY"
+                                        )
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Credential ID
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(certi.credential_id)}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                              </Grid.Row>
+                            );
+                          } else {
+                            return null;
+                          }
+                        })
+                      ) : (
+                        <p>No certifications to display!</p>
+                      )}
+                    </Grid>
                   </div>
                 </Card.Content>
               </Card>
               <Card className="employee-des">
                 <Card.Content>
+                  
+                  <Card.Header>Work Experiences
                   <span
                     className="add-button"
                     onClick={(e) =>
@@ -594,7 +511,8 @@ export default class UpdateProfile extends Component {
                   >
                     <i className="fas fa-plus"></i>
                   </span>
-                  <Card.Header>Work Experiences</Card.Header>
+
+                  </Card.Header>
                   <br />
                   <div className="education">
                     {this.state.workExps?.length > 0 ? (
@@ -655,12 +573,20 @@ export default class UpdateProfile extends Component {
                   <br />
                   <div className="education">
                     {this.state.skills?.length > 0 ? (
-                      this.state.skills.map((skill, index) => (
-                        <div key={index}>
-                          <i className="fas fa-pencil-alt"></i>
-                          <SkillCard skill={skill} key={index} update />
-                        </div>
-                      ))
+                      this.state.skills.map((skill, index) => {
+                        if (Array.isArray(skill)) {
+                          return null;
+                        } else if (typeof skill === "object" && skill?.title) {
+                          return (
+                            <div key={index}>
+                              <i className="fas fa-pencil-alt"></i>
+                              <SkillCard skill={skill} key={index} update />
+                            </div>
+                          );
+                        } else {
+                          return null;
+                        }
+                      })
                     ) : (
                       <p>No skills to display!</p>
                     )}

@@ -9,3 +9,13 @@ export const getWorkExperienceApi = async (id)=>{
         throw error;
     }
 }
+
+export const addExperienceApi =async(data)=>{
+    try{
+        const response = axios.post((`https://d1h99yrv311co6.cloudfront.net/api/registry/employee/work`),data)
+        return response;
+    }
+    catch (error){
+        throw error;
+    }
+}

@@ -87,15 +87,22 @@ export default class GetEditFieldModal extends Component {
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
   
-        const receipt = web3.eth.sendTransaction(transaction);
+        const receipt = web3.eth.sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(()=>{
+          this.setState({ loading: false });
+          this.props.closeEditFieldModal();
+        })
+      
         console.log("receipt > ", receipt);
       })
       .catch((error) => {
         console.log(error)
       });
   
-    this.setState({ loading: false });
-    this.props.closeEditFieldModal();
+    
   };
   
   handleChange = (e) => {

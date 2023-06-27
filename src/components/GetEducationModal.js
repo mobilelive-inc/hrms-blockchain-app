@@ -75,7 +75,14 @@ export default class GetEducationModal extends Component {
           const transaction = response?.data?.response?.transactionData;
           transaction.from = accounts[0];
 
-          const receipt = web3.eth.sendTransaction(transaction);
+          const receipt = web3.eth.sendTransaction(transaction)
+          .then((res) => {
+            return new Promise((resolve) => setTimeout(resolve, 7000));
+          })
+          .then(()=>{
+            this.setState({ loading: false });
+            this.props.closeCertificationModal();
+          })
           console.log("receipt > ", receipt);
         });
 
@@ -89,8 +96,7 @@ export default class GetEducationModal extends Component {
       console.log(school, degree, field_of_study);
     }
 
-    this.setState({ loading: false });
-    this.props.closeCertificationModal();
+    
   };
 
   componentDidUpdate(prevProps) {

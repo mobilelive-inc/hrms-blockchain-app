@@ -3,7 +3,6 @@
   margin-left: auto !important;
   margin-right: auto !important;
   background: #393b3fa6 !important;
-  color: white !important;
   margin-bottom: 2rem !important;
 }
 
@@ -15,7 +14,6 @@
   display: flex !important;
   justify-content: space-between !important;
   flex-wrap: wrap !important;
-  color: white !important;
 }
 
 .employee-card > .content > .header > small {
@@ -46,7 +44,7 @@
 }
 
 .readopenclose {
-  color: #c5c6c7;
+  color: black;
   float: right;
   cursor: pointer;
 }

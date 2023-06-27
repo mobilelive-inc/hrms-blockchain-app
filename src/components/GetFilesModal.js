@@ -15,7 +15,6 @@ export default class GetFilesModal extends Component {
     fileName: null,
     userAddress:null,
     loading: false,
-    chaudhary:{}
   };
   formData = new FormData();
   
@@ -23,13 +22,10 @@ export default class GetFilesModal extends Component {
     const file = event.target.files[0];
     this.setState({file:file});
     this.formData.append("file", file);
-    console.log("file: ",file)
-    //const extension = file.name.match(/\.[0-9a-z]+$/i)[0];
     this.setState({ selectedFile: event.target.files[0] });
   };
   handleFileNameChange = (event) => {
     const fileName = event.target.value;
-    console.log("name: ", fileName);
     this.setState({ fileName: fileName });
 
   };

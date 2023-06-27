@@ -11,37 +11,36 @@ import {
 import Admin from "../../abis/Admin.json";
 import { toast } from "react-toastify";
 import ScanQR from "../../components/ScanQR";
+import { createUser } from "../../Apis/UsersApi";
 import "./Admin.css";
 
 class CreateUser extends Component {
   state = {
-    name: "",
-    location: "",
-    ethAddress: "",
+    role:"",
+    first_name:"",
+    last_name:"",
+    industry:"",
+    current_position:"",
+    education:"",
+    country:"",
+    city:"",
+    phone_number:"",
+    dob:"",  
+    userAddress: "",
+    email:"",
+    
     description: "",
-    role: 0,
+    
     loading: false,
     errorMessage: "",
     scanQR: false,
   };
 
   roleOptions = [
-    {
-      key: "0",
-      text: "No-Role-Selected",
-      value: "0",
-    },
-    {
-      key: "1",
-      text: "Employee",
-      value: "1",
-    },
-    {
-      key: "2",
-      text: "OrganizationEndorser",
-      value: "2",
-    },
+    { key: "employee", text: "Employee", value: "employee" },
+    { key: "admin", text: "Admin", value: "admin" },
   ];
+  
 
   handleDropdownSelect = (e, data) => {
     this.setState({ role: data.value });
@@ -56,49 +55,50 @@ class CreateUser extends Component {
 
   handleSubmit = async (e) => {
     e.preventDefault();
-    const { ethAddress, name, location, role, description } = this.state;
-    if (!name || !location || !description || !role || !ethAddress) {
-      toast.error("Please fill all the fields!!");
+    const { role, first_name, last_name, userAddress, email } = this.state;
+    if (!first_name || !last_name || !role || !userAddress) {
+      toast.error("Please fill in the required fields!!");
       return;
     }
     this.setState({ loading: true, errorMessage: "" });
     const web3 = window.web3;
-    const accounts = await web3.eth.getAccounts();
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-
-      const owner = await admin.methods.owner().call();
-      if (owner !== accounts[0]) {
-        this.setState({
-          errorMessage: "Sorry! You are not the Admin!!",
-          loading: false,
-        });
-        return;
-      }
-      try {
-        await admin.methods
-          .registerUser(ethAddress, name, location, description, role)
-          .send({ from: accounts[0] });
-        toast.success("New user registered succressfully!!!!");
-        this.props.history.push(
-          `${role === "1" ? "/" : "/all-organization-endorser"}`
-        );
-        this.setState({
-          name: "",
-          location: "",
-          ethAddress: "",
-          description: "",
-          role: 0,
-        });
-      } catch (err) {
-        this.setState({ errorMessage: err.message });
-      }
-      this.setState({ loading: false });
+    console.log("adminData: ", AdminData);
+    const accounts = await web3.eth.getAccounts();
+    const messageToR = `0x${Buffer.from(
+      'Please confirm to verify info update',
+      'utf8'
+    ).toString('hex')}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    const dataToSend = {
+      userAddress: userAddress,
+      signature: signature,
+      role: role,
+      first_name: first_name,
+      last_name: last_name,
+      email: email
+    };
+    const response = await createUser(dataToSend);
+    
+    if (response?.data?.response?.transactionData) {
+      const txData = response.data.response.transactionData;
+      const transaction = {
+        from: accounts[0],
+        to: txData.to,
+        value: txData.value,
+        gas: txData.gas,
+        gasPrice: txData.gasPrice,
+        data: txData.data
+      };
+      const receipt = await web3.eth.sendTransaction(transaction);
+      console.log("receipt: ",receipt)
+      this.setState({loading:false})
+    } else {
+      console.error("Transaction data is missing in the response.");
     }
   };
-
+  
   closeScanQRModal = () => {
     this.setState({ scanQR: false });
   };
@@ -126,33 +126,33 @@ class CreateUser extends Component {
               <Form error={!!this.state.errorMessage}>
                 <Form.Field className="form-inputs-admin">
                   <input
-                    id="name"
-                    placeholder="Name"
+                    id="first_name"
+                    placeholder="First Name"
                     autoComplete="off"
                     autoCorrect="off"
-                    value={this.state.name}
+                    value={this.state.first_name}
                     onChange={this.handleChange}
                   />
                 </Form.Field>
                 <br />
                 <Form.Field className="form-inputs-admin">
                   <input
-                    id="location"
-                    placeholder="Location"
+                    id="last_name"
+                    placeholder="Last Name"
                     autoComplete="off"
                     autoCorrect="off"
-                    value={this.state.location}
+                    value={this.state.last_name}
                     onChange={this.handleChange}
                   />
                 </Form.Field>
                 <br />
                 <Form.Field className="form-inputs-admin">
                   <input
-                    id="description"
-                    placeholder="Description"
+                    id="email"
+                    placeholder="Email"
                     autoComplete="off"
                     autoCorrect="off"
-                    value={this.state.description}
+                    value={this.state.email}
                     onChange={this.handleChange}
                   />
                 </Form.Field>
@@ -160,19 +160,14 @@ class CreateUser extends Component {
                 <Form.Field className="form-inputs-admin">
                   <Input action className="form-inputs-admin">
                     <input
-                      id="ethAddress"
-                      placeholder="0x0"
+                      id="userAddress"
+                      placeholder="User's Address"
                       autoComplete="off"
                       autoCorrect="off"
-                      value={this.state.ethAddress}
+                      value={this.state.userAddress}
                       onChange={this.handleChange}
                     />
-                    <Button
-                      type="button"
-                      content="QR"
-                      icon="qrcode"
-                      onClick={() => this.setState({ scanQR: true })}
-                    />
+                    
                   </Input>
                 </Form.Field>
                 <br />

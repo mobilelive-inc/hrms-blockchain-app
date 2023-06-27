@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
+import { addSkillApi } from "../Apis/EmployeeSkillsApi";
 import "./Modals.css";
 
 export default class GetSkillsModal extends Component {
@@ -13,39 +13,57 @@ export default class GetSkillsModal extends Component {
   };
 
   handleSubmit = async (e) => {
-    this.setState({ loading: true });
+    const tokenId=this.props.tokenId;
     const { title, experience } = this.state;
     if (!title || !experience) {
       toast.error("Please enter all the fields.");
       return;
     }
+    this.setState({ loading: true });
     e.preventDefault();
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    console.log(AdminData)
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
-      try {
-        await EmployeeContract.methods.addSkill(title, experience).send({
-          from: accounts[0],
-        });
-        toast.success("Skill saved successfully!!");
-      } catch (err) {
-        toast.error(err.message);
-      }
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
+    const messageToR = `0x${Buffer.from(
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    console.log("field: ", signature);
+
+    const dataToSend={
+      tokenId:tokenId,
+      signature:signature,
+      userAddress:accounts[0],
+      title:title,
+      experience:experience
     }
-    this.setState({ loading: false });
-    this.props.closeCertificationModal();
+
+
+    try {
+      await addSkillApi(dataToSend).then((response) => {
+        console.log("Skills: ", response);
+        const transaction = response?.data?.response?.transactionData;
+        transaction.from = accounts[0];
+
+        const receipt = web3.eth.sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(()=>{
+          this.setState({ loading: false });
+          this.props.closeCertificationModal();
+        })
+        console.log("receipt > ", receipt);
+      });
+
+      toast.success("Skill saved successfullyy!!");
+    } catch (err) {
+      toast.error(err.message);
+    } 
+    
   };
 
   handleChange = (e) => {
