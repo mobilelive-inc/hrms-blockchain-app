@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Input, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
+// import Employee from "../abis/Employee.json";
+import WorkExperience from "../abis/WorkExperience.json";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
 
@@ -28,23 +29,24 @@ export default class GetWorkExpModal extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    const WorkExperienceData = await WorkExperience.networks[networkId];
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
+    if (AdminData && WorkExperienceData) {
+      // const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
+      /* const employeeContractAddress = await admin?.methods
         ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
+        .call(); */
+      const WorkExperienceContract = await new web3.eth.Contract(
+        WorkExperience.abi,
+        WorkExperienceData.address
       );
       try {
-        await EmployeeContract.methods
+        await WorkExperienceContract.methods
           .addWorkExp(role, organization, startdate, enddate, description)
           .send({
             from: accounts[0],
           });
-        toast.success("Certification saved successfullyy!!");
+        toast.success("Work Experience saved successfullyy!!");
       } catch (err) {
         toast.error(err.message);
       }

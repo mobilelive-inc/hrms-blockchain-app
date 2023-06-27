@@ -25,7 +25,6 @@
 
 .delete-button-visiblility {
   margin-left: 10px;
-  color: white;
   cursor: pointer;
 }
 
@@ -34,7 +33,7 @@
 }
 
 .endorsement-req-button {
-  border: 1px solid white;
+  border: 1px solid #000;
   border-radius: 7px;
   text-align: center;
   margin-top: 5px;

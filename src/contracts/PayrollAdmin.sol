@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract PayrollAdmin  is AccessControl {
   bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
-  // address admin;
   string name;
   address payroll_admin_address;
 
@@ -12,17 +11,19 @@ contract PayrollAdmin  is AccessControl {
     address _admin,
     address _payroll_admin_address,
     string memory _name
-  ) public {
-    // admin = _admin;
+  )  {
     _setupRole(DEFAULT_ADMIN_ROLE,_admin);
     _setupRole(PAYROLL_ADMIN_ROLE,_payroll_admin_address);
     name = _name;
     payroll_admin_address = _payroll_admin_address;
   }
 
-  modifier OnlyPayrollAdmin() {
-    // require(msg.sender == employee_address);
+  function _isPayrollAdmin() private view{
     require(hasRole(PAYROLL_ADMIN_ROLE, payroll_admin_address), "Caller is not an payroll admin");
+  }
+
+  modifier OnlyPayrollAdmin() {
+    _isPayrollAdmin();
     _;
   }
 
@@ -40,7 +41,6 @@ contract PayrollAdmin  is AccessControl {
   address[] allEmployees;
 
   function addEmployees(address employee_address) public OnlyPayrollAdmin {
-    // require(msg.sender == payroll_admin_address, "Only owner can perform this action");
     allEmployees.push(employee_address);
   }
 

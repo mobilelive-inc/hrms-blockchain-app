@@ -2,32 +2,28 @@
 pragma solidity >=0.5.0 <0.9.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Employee.sol";
-import "./OrganizationEndorser.sol";
-import "./PayrollAdmin.sol";
+import "./Registry/EmployeeRegistry.sol";
+import "./Registry/OrganizationRegistry.sol";
+import "./Registry/PayrollAdminRegistry.sol";
 
 contract Admin is AccessControl, Ownable {
 address public admin;
-bytes32 public constant EMPLOYEE_ROLE = keccak256("EMPLOYEE_ROLE");
-bytes32 public constant ORGANIZATION_ROLE = keccak256("ORGANIZATION_ROLE");
-bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
+EmployeeRegistry public employeeRegistry;
+OrganizationRegistry public organizationRegistry;
+PayrollAdminRegistry public payrollAdminRegistry;
 
-  constructor() public {
+  constructor()  {
     admin = msg.sender;
     _setupRole(DEFAULT_ADMIN_ROLE, admin);
+    employeeRegistry = new EmployeeRegistry();
+    organizationRegistry = new OrganizationRegistry();
+    payrollAdminRegistry = new PayrollAdminRegistry();
   }
 
   function transferOwnership(address newOwner) public override onlyOwner {
     require(newOwner != address(0), "Invalid address");
     _transferOwnership(newOwner);
   }
-
-  mapping(address => address) registeredEmployeesmap;
-  mapping(address => address) registeredOrganizationmap;
-  mapping(address => address) registeredPayrollAdminmap;
-  address[] registeredEmployees;
-  address[] registeredOrganization;
-  address[] registeredPayrollAdmin;
 
   function registerUser(
     address EthAddress,
@@ -36,44 +32,20 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     string memory Description,
     uint256 Role
   ) public onlyOwner {
+
     if (Role == 1) {
-      Employee newEmployee = new Employee(
-        admin,
-        EthAddress,
-        Name,
-        Location,
-        Description
-      );
-      registeredEmployeesmap[EthAddress] = address(newEmployee);
-      registeredEmployees.push(EthAddress);
-      grantRole(EMPLOYEE_ROLE, address(newEmployee));
-    } else if(Role == 2) {
-      OrganizationEndorser newOrganizationEndorser = new OrganizationEndorser(
-        admin,
-        EthAddress,
-        Name,
-        Location,
-        Description
-      );
-      registeredOrganizationmap[EthAddress] = address(newOrganizationEndorser);
-      registeredOrganization.push(EthAddress);
-      grantRole(ORGANIZATION_ROLE, address(newOrganizationEndorser));
-    }else if(Role == 3){
-      PayrollAdmin newPayrollAdmin = new PayrollAdmin(
-        admin,
-        EthAddress,
-        Name
-      );
-      registeredPayrollAdminmap[EthAddress] = address(newPayrollAdmin);
-      registeredPayrollAdmin.push(EthAddress);
-      grantRole(PAYROLL_ADMIN_ROLE, address(newPayrollAdmin));
+        employeeRegistry.registerEmployee(EthAddress, Name, Location, Description);
+    } else if (Role == 2) {
+        organizationRegistry.registerOrganizationEndorser(EthAddress, Name, Location, Description);
+    } else if (Role == 3) {
+        payrollAdminRegistry.registerPayrollAdmin(EthAddress, Name);
     }
   }
 
   /****************************************************************USER SECTION**************************************************/
 
   function isEmployee(address _employeeAddress) public view returns (bool) {
-    return hasRole(EMPLOYEE_ROLE, registeredEmployeesmap[_employeeAddress]);
+    return employeeRegistry.isEmployee(_employeeAddress);
   }
 
   function isOrganizationEndorser(address _organizationEndorser)
@@ -81,11 +53,11 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (bool)
   {
-      return hasRole(ORGANIZATION_ROLE, registeredOrganizationmap[_organizationEndorser]);
+    return organizationRegistry.isOrganizationEndorser(_organizationEndorser);
   }
 
   function employeeCount() public view returns (uint256) {
-    return registeredEmployees.length;
+    return employeeRegistry.employeeCount();
   }
 
   function getEmployeeContractByAddress(address _employee)
@@ -93,7 +65,7 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (address)
   {
-    return registeredEmployeesmap[_employee];
+    return employeeRegistry.getEmployeeContractByAddress(_employee);
   }
 
   function getEmployeeContractByIndex(uint256 index)
@@ -101,11 +73,11 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (address)
   {
-    return getEmployeeContractByAddress(registeredEmployees[index]);
+    return employeeRegistry.getEmployeeContractByIndex(index);
   }
 
   function OrganizationEndorserCount() public view returns (uint256) {
-    return registeredOrganization.length;
+    return organizationRegistry.organizationEndorserCount();
   }
 
   function getOrganizationContractByAddress(address _organization)
@@ -113,7 +85,7 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (address)
   {
-    return registeredOrganizationmap[_organization];
+    return organizationRegistry.getOrganizationEndorserContractByAddress(_organization);
   }
 
   function getOrganizationContractByIndex(uint256 index)
@@ -121,15 +93,15 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (address)
   {
-    return getOrganizationContractByAddress(registeredOrganization[index]);
+    return organizationRegistry.getOrganizationEndorserContractByIndex(index);
   }
 
   function isPayrollAdmin(address _payrollAddress) public view returns (bool) {
-    return hasRole(PAYROLL_ADMIN_ROLE, registeredPayrollAdminmap[_payrollAddress]);
+    return payrollAdminRegistry.isPayrollAdmin(_payrollAddress);
   }
 
   function payrollAdminCount() public view returns (uint256) {
-    return registeredPayrollAdmin.length;
+    return payrollAdminRegistry.payrollAdminCount();
   }
 
   function getPayrollContractByAddress(address _payrollAdmin)
@@ -137,7 +109,7 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (address)
   {
-    return registeredPayrollAdminmap[_payrollAdmin];
+    return payrollAdminRegistry.getPayrollAdminContractByAddress(_payrollAdmin);
   }
 
   function getPayrollContractByIndex(uint256 index)
@@ -145,7 +117,7 @@ bytes32 public constant PAYROLL_ADMIN_ROLE = keccak256("PAYROLL_ADMIN_ROLE");
     view
     returns (address)
   {
-    return getPayrollContractByAddress(registeredPayrollAdmin[index]);
+    return payrollAdminRegistry.getPayrollAdminContractByIndex(index);
   }
   
 }

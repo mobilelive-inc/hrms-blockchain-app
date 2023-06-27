@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract Employee is AccessControl {
   bytes32 public constant EMPLOYEE_ROLE = keccak256("EMPLOYEE_ROLE");
 
-  // address admin;
   address employee_address;
   string description;
   string location;
@@ -19,7 +18,7 @@ contract Employee is AccessControl {
     string memory _name,
     string memory _description,
     string memory _location
-  ) public {
+  ) {
     // admin = _admin;
     _setupRole(DEFAULT_ADMIN_ROLE,_admin);
     _setupRole(EMPLOYEE_ROLE,_employee_address);
@@ -30,9 +29,12 @@ contract Employee is AccessControl {
     endorsecount = 0;
   }
 
-  modifier OnlyEmployee() {
-    // require(msg.sender == employee_address);
+  function _onlyEmployee() private view {
     require(hasRole(EMPLOYEE_ROLE, employee_address), "Caller is not an employee");
+  }
+
+  modifier OnlyEmployee() {
+    _onlyEmployee();
     _;
   }
 
@@ -227,92 +229,6 @@ contract Employee is AccessControl {
     certificationmap[_name].visible = !certificationmap[_name].visible;
   }
 
-  /********************************************************************Work Experience Section********************************************************************/
-
-  struct workexpInfo {
-    string role;
-    address organization;
-    string startdate;
-    string enddate;
-    bool endorsed;
-    string description;
-    bool visible;
-  }
-
-  mapping(address => workexpInfo) workexpmap;
-  address[] workexps;
-
-  function addWorkExp(
-    string memory _role,
-    address _organization,
-    string memory _startdate,
-    string memory _enddate,
-    string memory _description
-  ) public OnlyEmployee {
-    workexpInfo memory newworkexp;
-    newworkexp.role = _role;
-    newworkexp.organization = _organization;
-    newworkexp.startdate = _startdate;
-    newworkexp.enddate = _enddate;
-    newworkexp.endorsed = false;
-    newworkexp.visible = true;
-    newworkexp.description = _description;
-    workexpmap[_organization] = newworkexp;
-    workexps.push(_organization);
-  }
-
-  function endorseWorkExp() public {
-    require(workexpmap[msg.sender].organization != address(0x0), 'Organization does not exist!');
-    workexpmap[msg.sender].endorsed = true;
-  }
-
-  function getWorkExpByAddress(address _organization)
-    private
-    view
-    returns (
-      string memory,
-      address,
-      string memory,
-      string memory,
-      bool,
-      string memory,
-      bool
-    )
-  {
-    return (
-      workexpmap[_organization].role,
-      workexpmap[_organization].organization,
-      workexpmap[_organization].startdate,
-      workexpmap[_organization].enddate,
-      workexpmap[_organization].endorsed,
-      workexpmap[_organization].description,
-      workexpmap[_organization].visible
-    );
-  }
-
-  function getWorkExpCount() public view returns (uint256) {
-    return workexps.length;
-  }
-
-  function getWorkExpByIndex(uint256 _index)
-    public
-    view
-    returns (
-      string memory,
-      address,
-      string memory,
-      string memory,
-      bool,
-      string memory,
-      bool
-    )
-  {
-    return getWorkExpByAddress(workexps[_index]);
-  }
-
-  function deleteWorkExp(address org) public OnlyEmployee {
-    workexpmap[org].visible = false;
-  }
 
   /********************************************************************Education Section********************************************************************/
 

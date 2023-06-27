@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { Card, Grid } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
+import WorkExperience from "../../abis/WorkExperience.json";
 import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
@@ -29,8 +30,9 @@ export default class EmployeePage extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    const WorkExperienceData = await WorkExperience.networks[networkId];
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
+    if (AdminData && WorkExperienceData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
       const employeeContractAddress = await admin?.methods
         ?.getEmployeeContractByAddress(accounts[0])
@@ -39,9 +41,13 @@ export default class EmployeePage extends Component {
         Employee.abi,
         employeeContractAddress
       );
+      const WorkExperienceContract = await new web3.eth.Contract(
+        WorkExperience.abi,
+        WorkExperienceData.address
+      );
       this.getSkills(EmployeeContract);
       this.getCertifications(EmployeeContract);
-      this.getWorkExp(EmployeeContract);
+      this.getWorkExp(WorkExperienceContract);
       this.getEducation(EmployeeContract);
       const employeedata = await EmployeeContract.methods
         .getEmployeeInfo()
@@ -122,15 +128,15 @@ export default class EmployeePage extends Component {
     this.setState({ certifications: newcertifications });
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
+  getWorkExp = async (WorkExperienceContract) => {
+    const workExpCount = await WorkExperienceContract?.methods
       ?.getWorkExpCount()
       .call();
     const workExps = await Promise.all(
       Array(parseInt(workExpCount))
         .fill()
         .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
+          WorkExperienceContract?.methods?.getWorkExpByIndex(index).call()
         )
     );
 

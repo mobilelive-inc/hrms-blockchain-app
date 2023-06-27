@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { Card } from "semantic-ui-react";
 import Employee from "../abis/Employee.json";
+import WorkExperience from "../abis/WorkExperience.json";
 import "./EmployeeCard.css";
 import LoadComp from "./LoadComp";
 
@@ -19,13 +20,21 @@ class EmployeeCard extends Component {
 
   componentDidMount = async () => {
     const web3 = window.web3;
+    const networkId = await web3.eth.net.getId();
+    const WorkExperienceData = await WorkExperience.networks[networkId];
+
     const EmployeeContract = await new web3.eth.Contract(
       Employee.abi,
       this.props.employeeContractAddress
     );
+    const WorkExperienceContract = await new web3.eth.Contract(
+      WorkExperience.abi,
+      WorkExperienceData.address
+      // this.props.employeeContractAddress
+    );
     this.getSkills(EmployeeContract);
     this.getCertifications(EmployeeContract);
-    this.getWorkExp(EmployeeContract);
+    this.getWorkExp(WorkExperienceContract);
     this.getEducation(EmployeeContract);
     const employeedata = await EmployeeContract.methods
       .getEmployeeInfo()
@@ -91,15 +100,15 @@ class EmployeeCard extends Component {
     this.setState({ certifications: newcertifications });
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
+  getWorkExp = async (WorkExperienceContract) => {
+    const workExpCount = await WorkExperienceContract?.methods
       ?.getWorkExpCount()
       .call();
     const workExps = await Promise.all(
       Array(parseInt(workExpCount))
         .fill()
         .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
+          WorkExperienceContract?.methods?.getWorkExpByIndex(index).call()
         )
     );
 

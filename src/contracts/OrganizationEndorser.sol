@@ -11,8 +11,12 @@ contract OrganizationEndorser is AccessControl {
   string description;
   string location;
 
-  modifier onlyOrganization() {
+  function _isOrganization() private view{
     require(hasRole(ORGANIZATION_ROLE, organization_address), "Caller is not an organization");
+  }
+
+  modifier onlyOrganization() {
+    _isOrganization();
     _;
   }
 
@@ -22,8 +26,7 @@ contract OrganizationEndorser is AccessControl {
     string memory _name,
     string memory _description,
     string memory _location
-  ) public {
-    // admin = _admin;
+  ) {
     _setupRole(DEFAULT_ADMIN_ROLE, _admin);
     _setupRole(ORGANIZATION_ROLE, _organization_address);
     name = _name;
@@ -48,7 +51,6 @@ contract OrganizationEndorser is AccessControl {
   address[] allEmployees;
 
   function addEmployees(address employee_address) public onlyOrganization {
-    // require(msg.sender == organization_address);
     allEmployees.push(employee_address);
   }
 

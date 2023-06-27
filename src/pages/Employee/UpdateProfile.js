@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { Card, Grid } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
+import WorkExperience from "../../abis/WorkExperience.json";
 import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
@@ -39,6 +40,7 @@ export default class UpdateProfile extends Component {
     isDescription: false,
     loadcomp: false,
     EmployeeContract: {},
+    WorkExperienceContract: {}
   };
 
   componentDidMount = async () => {
@@ -46,8 +48,9 @@ export default class UpdateProfile extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    const WorkExperienceData = await WorkExperience.networks[networkId];
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
+    if (AdminData && WorkExperienceData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
       const employeeContractAddress = await admin?.methods
         ?.getEmployeeContractByAddress(accounts[0])
@@ -56,10 +59,15 @@ export default class UpdateProfile extends Component {
         Employee.abi,
         employeeContractAddress
       );
-      this.setState({ EmployeeContract });
+      const WorkExperienceContract = await new web3.eth.Contract(
+        WorkExperience.abi,
+        WorkExperienceData.address
+      );
+      
+      this.setState({ EmployeeContract, WorkExperienceContract });
       this.getSkills(EmployeeContract);
       this.getCertifications(EmployeeContract);
-      this.getWorkExp(EmployeeContract);
+      this.getWorkExp(WorkExperienceContract);
       this.getEducation(EmployeeContract);
       const employeedata = await EmployeeContract.methods
         .getEmployeeInfo()
@@ -140,15 +148,15 @@ export default class UpdateProfile extends Component {
     this.setState({ certifications: newcertifications });
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
+  getWorkExp = async (WorkExperienceContract) => {
+    const workExpCount = await WorkExperienceContract?.methods
       ?.getWorkExpCount()
       .call();
     const workExps = await Promise.all(
       Array(parseInt(workExpCount))
         .fill()
         .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
+          WorkExperienceContract?.methods?.getWorkExpByIndex(index).call()
         )
     );
 
@@ -201,7 +209,7 @@ export default class UpdateProfile extends Component {
 
   closeWorkExpModal = () => {
     this.setState({ workexpModal: false });
-    this.getWorkExp(this.state.EmployeeContract);
+    this.getWorkExp(this.state.WorkExperienceContract);
   };
 
   closeSkillModal = () => {
@@ -252,18 +260,18 @@ export default class UpdateProfile extends Component {
       const employeeContractAddress = await admin?.methods
         ?.getEmployeeContractByAddress(accounts[0])
         .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
+      const WorkExperienceContract = await new web3.eth.Contract(
+        WorkExperience.abi,
         employeeContractAddress
       );
-      await EmployeeContract?.methods
+      await WorkExperienceContract?.methods
         ?.deleteWorkExp(org)
         .send({ from: accounts[0] });
       toast.success("Work Exp. visibility changed successfully!!");
     } else {
       toast.error("The Admin Contract does not exist on this network!");
     }
-    this.getWorkExp(this.state.EmployeeContract);
+    this.getWorkExp(this.state.WorkExperienceContract);
   };
 
   reqEducationEndorsement = async (education) => {
@@ -575,7 +583,7 @@ export default class UpdateProfile extends Component {
                           </small>
                           <p
                             style={{
-                              color: workExp.endorsed ? "#00d1b2" : "yellow",
+                              color: workExp.endorsed ? "#00d1b2" : "red",
                               opacity: "0.7",
                             }}
                           >
