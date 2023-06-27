@@ -19,7 +19,8 @@ class Navbar extends Component {
     if (accounts) {
       this.setState({ account: accounts[0] });
       // this.admin = new Admin();
-      const response = await isAdmin(this.state.account);
+      console.log("abc",accounts[0])
+      const response = await isAdmin(accounts[0]);
       console.log('is Admin reposnes',response);
       // console.log('navbar state',this.state);
     }

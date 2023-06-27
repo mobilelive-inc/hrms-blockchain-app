@@ -5,6 +5,7 @@ import Admin from "../../abis/Admin.json";
 import Employee from "../../abis/Employee.json";
 //import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
+import moment from "moment";
 import "./Employee.css";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
@@ -57,7 +58,7 @@ export default class EmployeePage extends Component {
     isGitLoading: false,
     orgName: [],
     userInfo: null,
-    tokenId:null
+    tokenId: null,
   };
   getJiraTasks = async () => {
     console.log("account: ", accounts[0]);
@@ -232,30 +233,21 @@ export default class EmployeePage extends Component {
   };
 
   getSkills = async () => {
-    const id = 0;
+    const id = this.state.tokenId;
     await getSkillsApi(id).then((response) => {
       console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      if (Array.isArray(skillsData)) {
-        skillsData.forEach((element) => {
-          skillsData.push(Object.fromEntries(element));
-        });
-      }
       console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
   };
 
   getCertifications = async () => {
-    const id = 0;
+    const id = this.state.tokenId;
     await getCertificatesApi(id).then((response) => {
       console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
-      if (Array.isArray(certificationsData)) {
-        certificationsData.forEach((element) => {
-          certificationsData.push(Object.fromEntries(element));
-        });
-      }
+      
       console.log("certi: ", certificationsData);
       this.setState({
         certifications: certificationsData,
@@ -264,18 +256,14 @@ export default class EmployeePage extends Component {
   };
 
   getWorkExp = async () => {
-    const id = 1;
+    const id = this.state.tokenId;
     await getWorkExperienceApi(id).then((response) => {
       console.log(
         "Work Experience: ",
         response?.data?.response?.workExperiences
       );
       const workExperienceData = response?.data?.response?.workExperiences;
-      if (Array.isArray(workExperienceData)) {
-        workExperienceData.forEach((element) => {
-          workExperienceData.push(Object.fromEntries(element));
-        });
-      }
+      
       console.log("work: ", workExperienceData);
       this.setState({ workExps: workExperienceData });
     });
@@ -287,7 +275,7 @@ export default class EmployeePage extends Component {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
       console.log("education: ", educationData);
-  
+
       if (Array.isArray(educationData)) {
         this.setState({ educations: educationData });
       }
@@ -311,7 +299,7 @@ export default class EmployeePage extends Component {
               <Card className="personal-info">
                 <Card.Content>
                   <Card.Header>About</Card.Header>
-                  <br/>
+                  <br />
                   <span style={{ fontWeight: "bold" }}>
                     {this.checkExistence(this.state.userInfo?.first_name) +
                       " " +
@@ -401,32 +389,67 @@ export default class EmployeePage extends Component {
                   </Card.Header>
                   <br />
                   <div className="education">
-                    {this.state.certifications.length > 0 ? (
-                      this.state.certifications.map((certi, index) => (
-                        <div className="education-design">
-                          <div style={{ color: "black", fontWeight: "bold" }}>
-                            <p>{this.checkExistence(certi?.title)}</p>
-                            <small>
-                              {this.checkExistence(certi?.issuing_organization)}
-                            </small>
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>Issue Date</p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(certi?.issue_date)}
-                            </small>
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>Credential ID</p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(certi?.credential_id)}
-                            </small>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No certifications to display!</p>
-                    )}
+                    <Grid columns={3}>
+                      {this.state.certifications.length > 0 ? (
+                        this.state.certifications.map((certi, index) => {
+                          if (Array.isArray(certi)) {
+                            return null;
+                          } else if (
+                            typeof certi === "object" &&
+                            certi.title &&
+                            certi.issuing_organization
+                          ) {
+                            return (
+                              <Grid.Row key={index}>
+                                <Grid.Column>
+                                  <div
+                                    style={{
+                                      color: "black",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    <p>{this.checkExistence(certi.title)}</p>
+                                    <small>
+                                      {this.checkExistence(
+                                        certi.issuing_organization
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Issue Date
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(
+                                        moment(certi.issue_date).format(
+                                          "DD-MM-YYYY"
+                                        )
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Credential ID
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(certi.credential_id)}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                              </Grid.Row>
+                            );
+                          } else {
+                            return null;
+                          }
+                        })
+                      ) : (
+                        <p>No certifications to display!</p>
+                      )}
+                    </Grid>
                   </div>
                 </Card.Content>
               </Card>
@@ -435,9 +458,10 @@ export default class EmployeePage extends Component {
                   <Card.Header>Work Experiences</Card.Header>
                   <br />
                   <div className="education">
+                    <Grid columns={3}>
                     {this.state.workExps?.length > 0 ? (
                       this.state.workExps.map((workExp, index) => (
-                        <div className="education-design">
+                        <div className="education-design" key={index}>
                           <div style={{ color: "black", fontWeight: "bold" }}>
                             <p>{this.checkExistence(workExp?.title)}</p>
                             <small>
@@ -468,6 +492,7 @@ export default class EmployeePage extends Component {
                     ) : (
                       <p>No work experiences found!</p>
                     )}
+                    </Grid>
                   </div>
                 </Card.Content>
               </Card>
@@ -477,18 +502,26 @@ export default class EmployeePage extends Component {
                   <br />
                   <div className="education">
                     {this.state.skills?.length > 0 ? (
-                      this.state.skills.map((skill, index) => (
-                        <div key={index}>
-                          <SkillCard skill={skill} />
-                        </div>
-                      ))
+                      this.state.skills.map((skill, index) => {
+                        if (Array.isArray(skill)) {
+                          return null;
+                        } else if (typeof skill === "object" && skill?.title) {
+                          return (
+                            <div key={index}>
+                              <i className="fas fa-pencil-alt"></i>
+                              <SkillCard skill={skill} key={index} />
+                            </div>
+                          );
+                        } else {
+                          return null;
+                        }
+                      })
                     ) : (
                       <p>No skills to display!</p>
                     )}
                   </div>
                 </Card.Content>
               </Card>
-
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>
@@ -500,13 +533,13 @@ export default class EmployeePage extends Component {
                       <CircularProgress />
                     ) : (
                       this.state.jiraKeys &&
-                      this.state.jiraKeys.map((key) => (
+                      this.state.jiraKeys.map((key, index) => (
                         <p
                           style={{ fontWeight: "bold" }}
-                          key={key}
+                          key={index}
                           onClick={() => this.openModal(key)}
                         >
-                          <Card className="list-items">
+                          <Card className="list-items" key={index}>
                             <Card.Content className="info-style">
                               {key}
                               <Icon
@@ -521,14 +554,12 @@ export default class EmployeePage extends Component {
                   </div>
                 </Card.Content>
               </Card>
-
               <ModalComponent
                 showModal={this.state.showModal}
                 selectedKey={this.state.selectedKey}
                 onClose={this.closeModal}
                 Response={this.state.Response}
               />
-
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Github Repos</Card.Header>
@@ -555,13 +586,11 @@ export default class EmployeePage extends Component {
                   </div>
                 </Card.Content>
               </Card>
-
               <ModalComponentGit
                 showModal={this.state.showCommitsModal}
                 commits={this.state.commits}
                 onClose={this.closeCommitsModal}
               />
-
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Files</Card.Header>

@@ -59,7 +59,7 @@ export default class SkillCard extends Component {
                       {this.checkExistence(skill?.title)}
                     </p>
                     <small style={{ color: "black", fontWeight: "bold" }}>
-                      {this.checkExistence(skill?.experience)}
+                      {this.checkExistence(skill?.experience)+" years"}
                     </small>
                   </div>
             </div>

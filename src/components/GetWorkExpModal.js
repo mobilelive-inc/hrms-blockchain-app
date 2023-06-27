@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
+import { addExperienceApi } from "../Apis/EmployeeExperienceApi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
@@ -24,6 +24,7 @@ export default class GetWorkExpModal extends Component {
   };
 
   handleSubmit = async (e) => {
+    const tokenId=this.props.tokenId;
     const { title,employment_type,company_name,location,location_type,is_currently, start_date, end_date, description } = this.state;
     if (!title | !employment_type || !company_name || !location || !location_type || !is_currently || !start_date || !end_date || !description) {
       toast.error("Please enter all the fields.");
@@ -35,30 +36,51 @@ export default class GetWorkExpModal extends Component {
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
-      try {
-        await EmployeeContract.methods
-          .addWorkExp(title, company_name, start_date, end_date, description)
-          .send({
-            from: accounts[0],
-          });
-        toast.success("Certification saved successfullyy!!");
-      } catch (err) {
-        toast.error(err.message);
-      }
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
+    console.log(AdminData);
+    const messageToR = `0x${Buffer.from(
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    console.log("field: ", signature);
+
+    const dataToSend={
+      tokenId:tokenId,
+      signature:signature,
+      userAddress:accounts[0],
+      title:title,
+      employment_type:employment_type,
+      company_name:company_name,
+      location:location,
+      location_type:location_type,
+      is_currently:is_currently,
+      start_date:start_date,
+      end_date:end_date,
+      description:description
     }
-    this.setState({ loading: false });
-    this.props.closeCertificationModal();
+    try {
+      await addExperienceApi(dataToSend).then((response) => {
+        console.log("work experience: ", response);
+        const transaction = response?.data?.response?.transactionData;
+        transaction.from = accounts[0];
+
+        const receipt = web3.eth.sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(()=>{
+          this.setState({ loading: false });
+          this.props.closeCertificationModal();
+        })
+        console.log("receipt > ", receipt);
+      });
+
+      toast.success("Work Experience saved successfullyy!!");
+    } catch (err) {
+      toast.error(err.message);
+    }
+
+    
   };
 
   handleChange = (e) => {
@@ -121,7 +143,7 @@ export default class GetWorkExpModal extends Component {
                     placeholder="Employment Type"
                     autoComplete="off"
                     autoCorrect="off"
-                    value={this.state.organization}
+                    value={this.state.employment_type}
                     onChange={this.handleChange}
                   />                  
               </Form.Field>

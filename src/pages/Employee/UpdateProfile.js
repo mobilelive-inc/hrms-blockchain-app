@@ -25,6 +25,7 @@ import {
   reqEducationEndorsementFunc,
   reqWorkexpEndorsementFunc,
 } from "../../firebase/api";
+import moment from "moment/moment";
 
 export default class UpdateProfile extends Component {
   state = {
@@ -57,7 +58,7 @@ export default class UpdateProfile extends Component {
   };
 
   getSkills = async () => {
-    const id = 0;
+    const id = this.state.tokenId;
     await getSkillsApi(id).then((response) => {
       console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
@@ -72,7 +73,7 @@ export default class UpdateProfile extends Component {
   };
 
   getCertifications = async () => {
-    const id = 0;
+    const id = this.state.tokenId;
     await getCertificatesApi(id).then((response) => {
       console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
@@ -81,6 +82,9 @@ export default class UpdateProfile extends Component {
           certificationsData.push(Object.fromEntries(element));
         });
       }
+      // if (Array.isArray(certificationsData)) {
+      //   this.setState({ certifications: certificationsData });
+      // }
       console.log("certi: ", certificationsData);
       this.setState({
         certifications: certificationsData,
@@ -88,20 +92,24 @@ export default class UpdateProfile extends Component {
     });
   };
   getWorkExp = async () => {
-    const id = 1;
+    const id = this.state.tokenId;
     await getWorkExperienceApi(id).then((response) => {
       console.log(
         "Work Experience: ",
         response?.data?.response?.workExperiences
       );
+      console.log("abc", response?.data?.response?.workExperiences);
       const workExperienceData = response?.data?.response?.workExperiences;
+      // if (Array.isArray(workExperienceData)) {
+      //   workExperienceData.forEach((element) => {
+      //     workExperienceData.push(Object.fromEntries(element));
+      //   });
+      // }
       if (Array.isArray(workExperienceData)) {
-        workExperienceData.forEach((element) => {
-          workExperienceData.push(Object.fromEntries(element));
-        });
+        this.setState({ workExps: workExperienceData });
       }
       console.log("work: ", workExperienceData);
-      this.setState({ workExps: workExperienceData });
+      //this.setState({ workExps: workExperienceData });
     });
   };
 
@@ -111,7 +119,7 @@ export default class UpdateProfile extends Component {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
       console.log("education: ", educationData);
-  
+
       if (Array.isArray(educationData)) {
         this.setState({ educations: educationData });
       }
@@ -119,7 +127,7 @@ export default class UpdateProfile extends Component {
       console.error("Error retrieving education data:", error);
     }
   };
-  
+
   checkExistence(value) {
     return value ? value : "-------";
   }
@@ -287,24 +295,24 @@ export default class UpdateProfile extends Component {
 
   closeCertificationModal = () => {
     this.setState({ certificationModal: false });
-    this.getCertifications(this.state.EmployeeContract);
+    this.getCertifications();
   };
 
   closeWorkExpModal = () => {
     this.setState({ workexpModal: false });
-    this.getWorkExp(this.state.EmployeeContract);
+    this.getWorkExp();
   };
 
   closeSkillModal = () => {
     this.setState({ skillmodal: false });
-    this.getSkills(this.state.EmployeeContract);
+    this.getSkills();
   };
   closeFileModal = () => {
     this.setState({ filemodal: false });
   };
   closeEducationModal = () => {
     this.setState({ educationmodal: false, selectedEducation: null });
-    this.getEducation(this.state.EmployeeContract);
+    this.getEducation();
   };
 
   closeEditFieldModal = () => {
@@ -379,14 +387,17 @@ export default class UpdateProfile extends Component {
         <GetCertificationModal
           isOpen={this.state.certificationModal}
           closeCertificationModal={this.closeCertificationModal}
+          tokenId={this.state.tokenId}
         />
         <GetWorkExpModal
           isOpen={this.state.workexpModal}
           closeCertificationModal={this.closeWorkExpModal}
+          tokenId={this.state.tokenId}
         />
         <GetSkillsModal
           isOpen={this.state.skillmodal}
           closeCertificationModal={this.closeSkillModal}
+          tokenId={this.state.tokenId}
         />
         <GetFilesModal
           isOpen={this.state.filemodal}
@@ -533,9 +544,12 @@ export default class UpdateProfile extends Component {
               </Card>
             </Grid.Column>
             <Grid.Column width={10}>
+              
               <Card className="employee-des">
-                <Card.Content>
-                  <span
+                <Card.Content className="content">
+                  <Card.Header style={{ display: "flex" }}>
+                    Certifications
+                    <span
                     className="add-button"
                     onClick={(e) =>
                       this.setState({
@@ -545,56 +559,80 @@ export default class UpdateProfile extends Component {
                   >
                     <i className="fas fa-plus"></i>
                   </span>
-                  <Card.Header>Certifications</Card.Header>
+                  </Card.Header>
                   <br />
-                  <br />
+                  
                   <div className="education">
-                    {this.state.certifications.length > 0 ? (
-                      this.state.certifications.map((certi, index) => (
-                        <div className="education-design">
-                          <div style={{ color: "black", fontWeight: "bold" }}>
-                            <i
-                              style={{ marginLeft: "200%", marginRight: "0px" }}
-                              className="fas fa-pencil-alt"
-                            ></i>
-                            <p>{this.checkExistence(certi?.title)}</p>
-                            <small>
-                              {this.checkExistence(certi?.issuing_organization)}
-                            </small>
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>Issue Date</p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(certi?.issue_date)}
-                            </small>
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>Credential ID</p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(certi?.credential_id)}
-                            </small>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No certifications to display!</p>
-                    )}
+                    <Grid columns={3}>
+                      {this.state.certifications.length > 0 ? (
+                        this.state.certifications.map((certi, index) => {
+                          if (Array.isArray(certi)) {
+                            return null;
+                          } else if (
+                            typeof certi === "object" &&
+                            certi.title &&
+                            certi.issuing_organization
+                          ) {
+                            return (
+                              <Grid.Row key={index}>
+                                <Grid.Column>
+                                  <div
+                                    style={{
+                                      color: "black",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    <p>{this.checkExistence(certi.title)}</p>
+                                    <small>
+                                      {this.checkExistence(
+                                        certi.issuing_organization
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Issue Date
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(
+                                        moment(certi.issue_date).format(
+                                          "DD-MM-YYYY"
+                                        )
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Credential ID
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {this.checkExistence(certi.credential_id)}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                              </Grid.Row>
+                            );
+                          } else {
+                            return null;
+                          }
+                        })
+                      ) : (
+                        <p>No certifications to display!</p>
+                      )}
+                    </Grid>
                   </div>
                 </Card.Content>
               </Card>
               <Card className="employee-des">
                 <Card.Content>
-                  <span
-                    className="add-button"
-                    onClick={(e) =>
-                      this.setState({
-                        workexpModal: !this.state.workexpModal,
-                      })
-                    }
-                  >
-                    <i className="fas fa-plus"></i>
-                  </span>
-                  <Card.Header>Work Experiences</Card.Header>
+                  
+                  <Card.Header>Work Experiences
+                  
+                  </Card.Header>
                   <br />
                   <div className="education">
                     {this.state.workExps?.length > 0 ? (
@@ -655,12 +693,20 @@ export default class UpdateProfile extends Component {
                   <br />
                   <div className="education">
                     {this.state.skills?.length > 0 ? (
-                      this.state.skills.map((skill, index) => (
-                        <div key={index}>
-                          <i className="fas fa-pencil-alt"></i>
-                          <SkillCard skill={skill} key={index} update />
-                        </div>
-                      ))
+                      this.state.skills.map((skill, index) => {
+                        if (Array.isArray(skill)) {
+                          return null;
+                        } else if (typeof skill === "object" && skill?.title) {
+                          return (
+                            <div key={index}>
+                              <i className="fas fa-pencil-alt"></i>
+                              <SkillCard skill={skill} key={index} update />
+                            </div>
+                          );
+                        } else {
+                          return null;
+                        }
+                      })
                     ) : (
                       <p>No skills to display!</p>
                     )}

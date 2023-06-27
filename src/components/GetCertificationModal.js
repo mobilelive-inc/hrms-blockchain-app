@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { addCertificationApi } from "../Apis/EmployeeCertApi";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
 
@@ -21,6 +21,7 @@ export default class GetCertificationModal extends Component {
   };
 
   handleSubmit = async (e) => {
+    const tokenId=this.props.tokenId;
     const {
       title,
       issuing_organization,
@@ -45,29 +46,48 @@ export default class GetCertificationModal extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    console.log(AdminData);
     const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
-      try {
-        await EmployeeContract.methods.addCertification().send({
-          from: accounts[0],
-        });
-        toast.success("Certification saved successfullyy!!");
-      } catch (err) {
-        toast.error(err.message);
-      }
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
+    const messageToR = `0x${Buffer.from(
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    console.log("field: ", signature);
+
+    const dataToSend={
+      tokenId:tokenId,
+      signature:signature,
+      title:title,
+      issuing_organization:issuing_organization,
+      issue_date:issue_date,
+      expiry_date:expiry_date,
+      credential_id:credential_id,
+      credential_url:credential_url,
+      userAddress:accounts[0],
     }
-    this.setState({ loading: false });
-    this.props.closeCertificationModal();
+    try {
+      await addCertificationApi(dataToSend).then((response) => {
+        console.log("certification: ", response);
+        const transaction = response?.data?.response?.transactionData;
+        transaction.from = accounts[0];
+
+        const receipt = web3.eth.sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(()=>{
+          this.setState({ loading: false });
+          this.props.closeCertificationModal();
+        })
+        console.log("receipt > ", receipt);
+      });
+
+      toast.success("Certification saved successfullyy!!");
+    } catch (err) {
+      toast.error(err.message);
+    } 
+      
   };
 
   handleChange = (e) => {
@@ -112,6 +132,16 @@ export default class GetCertificationModal extends Component {
           />
           <Modal.Content className="modal-content">
             <Form className="form-inputs">
+            <Form.Field className="form-inputs">
+                <input
+                  id="credential_id"
+                  placeholder="Credential Id"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.credential_id}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
               <Form.Field className="form-inputs">
                 <input
                   id="title"
@@ -129,6 +159,16 @@ export default class GetCertificationModal extends Component {
                   autoComplete="off"
                   autoCorrect="off"
                   value={this.state.issuing_organization}
+                  onChange={this.handleChange}
+                />
+              </Form.Field>
+              <Form.Field className="form-inputs">
+                <input
+                  id="credential_url"
+                  placeholder="Credential URL"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.credential_url}
                   onChange={this.handleChange}
                 />
               </Form.Field>
