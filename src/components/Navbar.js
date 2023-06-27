@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Menu, Segment, Image, Label, Icon } from "semantic-ui-react";
-import Admin from "../abis/Admin.json";
+import {isAdmin} from "../Apis/Admin";
+
 import { Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import GenererateQR from "./GenererateQR";
@@ -17,8 +18,12 @@ class Navbar extends Component {
     const accounts = await web3.eth.getAccounts();
     if (accounts) {
       this.setState({ account: accounts[0] });
+      // this.admin = new Admin();
+      const response = await isAdmin(this.state.account);
+      console.log('is Admin reposnes',response);
+      // console.log('navbar state',this.state);
     }
-    const networkId = await web3.eth.net.getId();
+    /* const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
     if (AdminData) {
       const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
@@ -38,7 +43,7 @@ class Navbar extends Component {
       this.setState({ role });
     } else {
       toast.error("The Admin Contract does not exist on this network!");
-    }
+    } */
   };
 
   handleItemClick = (e, { name }) => this.setState({ activeItem: name });
@@ -77,15 +82,13 @@ class Navbar extends Component {
               style={{ marginRight: "25px", padding: "0px" }}
             >
               <div >
-                <Image style={{height:"70%",width:"70%",bottom:"8px"}}  src={Logo} />
+                <Image style={{height:"35px"}}  src={Logo} />
               </div>
-              <div>
-                <h2 style={{fontStyle:"Italic",fontSize:"30px"}}>HRMS SYSTEM</h2>
-              </div>
+              <sup style={{fontWeight: "bold", marginLeft: "5px"}}>HRMS SYSTEM</sup>
             </Menu.Item>
             <Menu.Item
               style={{ marginRight: "10px", padding: "0px" }}
-              position="left"
+             
             >
               <SearchBar />
             </Menu.Item>
