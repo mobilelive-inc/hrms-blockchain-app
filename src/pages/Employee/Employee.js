@@ -310,7 +310,7 @@ export default class EmployeePage extends Component {
                                 style={{ position: "relative" }}
                                 name="graduation cap"
                               />
-                              <p>{this.checkExistence(education?.degree)}</p>
+                                <p>{this.checkExistence(education?.degree)}{"("+this.checkExistence(education?.field_of_study)+")"}</p>
                             </div>
                             <small
                               style={{
@@ -320,6 +320,10 @@ export default class EmployeePage extends Component {
                             >
                               {this.checkExistence(education?.school)}
                             </small>
+                            <br/>
+
+                            <small>{moment(this.checkExistence(education?.start_date)).format("DD-MM-YYYY")}{"-"+(moment(this.checkExistence(education?.end_date)).format("DD-MM-YYYY"))}</small>
+
                           </div>
                         </div>
                       ))}
@@ -347,13 +351,13 @@ export default class EmployeePage extends Component {
                     <Grid columns={3}>
                       {this.state.certifications.length > 0 ? (
                         this.state.certifications.map((certi, index) => {
-                          if (Array.isArray(certi)) {
-                            return null;
-                          } else if (
-                            typeof certi === "object" &&
-                            certi.title &&
-                            certi.issuing_organization
-                          ) {
+                          // if (Array.isArray(certi)) {
+                          //   return null;
+                          // } else if (
+                          //   typeof certi === "object" &&
+                          //   certi.title &&
+                          //   certi.issuing_organization
+                          // ) {l
                             return (
                               <Grid.Row key={index}>
                                 <Grid.Column>
@@ -397,9 +401,9 @@ export default class EmployeePage extends Component {
                                 </Grid.Column>
                               </Grid.Row>
                             );
-                          } else {
-                            return null;
-                          }
+                          // } else {
+                          //   return null;
+                          // }
                         })
                       ) : (
                         <p>No certifications to display!</p>
@@ -415,8 +419,11 @@ export default class EmployeePage extends Component {
                   <div className="education">
                     <Grid columns={3}>
                     {this.state.workExps?.length > 0 ? (
-                      this.state.workExps.map((workExp, index) => (
-                        <div className="education-design" key={index}>
+                      this.state.workExps.map((workExp, index) => {
+                        
+                        return (
+                        <Grid.Row key={index}>
+                          <Grid.Column>
                           <div style={{ color: "black", fontWeight: "bold" }}>
                             <p>{this.checkExistence(workExp?.title)}</p>
                             <small>
@@ -426,6 +433,8 @@ export default class EmployeePage extends Component {
                               {", " + this.checkExistence(workExp?.location)}
                             </small>
                           </div>
+                          </Grid.Column>
+                          <Grid.Column>
                           <div>
                             <p style={{ fontWeight: "bold" }}>
                               Employment Type
@@ -434,6 +443,8 @@ export default class EmployeePage extends Component {
                               {this.checkExistence(workExp?.employment_type)}
                             </small>
                           </div>
+                          </Grid.Column>
+                          <Grid.Column>
                           <div>
                             <p style={{ fontWeight: "bold" }}>
                               Date of Joining
@@ -442,8 +453,10 @@ export default class EmployeePage extends Component {
                               {this.checkExistence(workExp?.start_date)}
                             </small>
                           </div>
-                        </div>
-                      ))
+                          </Grid.Column>
+                        </Grid.Row>
+                        );
+                        })
                     ) : (
                       <p>No work experiences found!</p>
                     )}
@@ -463,7 +476,6 @@ export default class EmployeePage extends Component {
                         } else if (typeof skill === "object" && skill?.title) {
                           return (
                             <div key={index}>
-                              <i className="fas fa-pencil-alt"></i>
                               <SkillCard skill={skill} key={index} />
                             </div>
                           );

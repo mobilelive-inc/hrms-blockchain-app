@@ -22,3 +22,13 @@ export const addEducation =async(data)=>{
         throw error;
     }
 }
+
+export const updateEducation = async (data,tokenId) => {
+    try{
+        const response = await axios.put((`https://d1h99yrv311co6.cloudfront.net/api/registry/employee/education/${tokenId}`),data)
+        return response;
+    }
+    catch(error){
+        throw error;
+    }
+}

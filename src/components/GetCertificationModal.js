@@ -4,8 +4,9 @@ import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addCertificationApi } from "../Apis/EmployeeCertApi";
+import { addCertificationApi,updateCertificationApi } from "../Apis/EmployeeCertApi";
 import "./Modals.css";
+import { parseISO } from 'date-fns';
 import ScanQR from "./ScanQR";
 
 export default class GetCertificationModal extends Component {
@@ -16,12 +17,15 @@ export default class GetCertificationModal extends Component {
     expiry_date: "",
     credential_id: "",
     credential_url: "",
+    index:0,
+    editing:false,
     loading: false,
     scanQR: false,
   };
 
   handleSubmit = async (e) => {
     const tokenId=this.props.tokenId;
+    const index=this.props.index;
     const {
       title,
       issuing_organization,
@@ -29,6 +33,7 @@ export default class GetCertificationModal extends Component {
       expiry_date,
       credential_id,
       credential_url,
+      editing
     } = this.state;
     if (
       !title ||
@@ -54,9 +59,9 @@ export default class GetCertificationModal extends Component {
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     console.log("field: ", signature);
-
+ if (!editing){
+  console.log("In add")
     const dataToSend={
-      tokenId:tokenId,
       signature:signature,
       title:title,
       issuing_organization:issuing_organization,
@@ -65,9 +70,10 @@ export default class GetCertificationModal extends Component {
       credential_id:credential_id,
       credential_url:credential_url,
       userAddress:accounts[0],
+      index:index
     }
     try {
-      await addCertificationApi(dataToSend).then((response) => {
+      await addCertificationApi(dataToSend,tokenId).then((response) => {
         console.log("certification: ", response);
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
@@ -87,8 +93,90 @@ export default class GetCertificationModal extends Component {
     } catch (err) {
       toast.error(err.message);
     } 
-      
+  } 
+  else {
+    console.log("In update");
+    const dataToSend={
+      signature:signature,
+      title:title,
+      issuing_organization:issuing_organization,
+      issue_date:issue_date,
+      expiry_date:expiry_date,
+      credential_id:credential_id,
+      credential_url:credential_url,
+      userAddress:accounts[0],
+      index:1
+    }
+
+    try {
+      await updateCertificationApi(dataToSend,tokenId).then((response) => {
+        console.log("certification: ", response);
+        const transaction = response?.data?.response?.transactionData;
+        transaction.from = accounts[0];
+
+        const receipt = web3.eth.sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(()=>{
+          this.setState({ loading: false });
+          this.props.closeCertificationModal();
+        })
+        console.log("receipt > ", receipt);
+      });
+
+      toast.success("Certification updated successfullyy!!");
+    } catch (err) {
+      toast.error(err.message);
+    }
+
+
+
+  } 
   };
+
+  componentDidUpdate(prevProps) {
+
+    if (prevProps.certification !== this.props.certification) {
+      
+      
+      const {
+        title = "",
+        issuing_organization = "",
+        credential_id="",
+        credential_url="",
+      } = this.props.certification || {};
+      let {
+        issue_date = "",
+        expiry_date="",
+      } =this.props.certification || {};
+
+      if (issue_date){
+        issue_date=parseISO(issue_date.toString())
+      }
+      else{
+        issue_date=""
+      }
+      if (expiry_date){
+        expiry_date=parseISO(expiry_date.toString())
+      }
+      else{
+        expiry_date=""
+      }
+      
+      this.setState({
+        title,
+        issuing_organization,
+        credential_id,
+        credential_url,
+        issue_date:issue_date,
+        expiry_date:expiry_date,
+        editing: true,
+      });
+      
+    }
+  }
+
 
   handleChange = (e) => {
     this.setState({ [e.target.id]: e.target.value });
@@ -124,10 +212,14 @@ export default class GetCertificationModal extends Component {
           size="tiny"
           className="modal-des"
         >
-          <Header
+         <Header
             className="modal-heading"
             icon="pencil"
-            content="Enter Certification Details"
+            content={
+              this.state.editing
+                ? "Edit Certification Details"
+                : "Enter Certification Details"
+            }
             as="h2"
           />
           <Modal.Content className="modal-content">

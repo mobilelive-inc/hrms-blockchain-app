@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import { addSkillApi } from "../Apis/EmployeeSkillsApi";
+import { addSkillApi,updateSkillApi } from "../Apis/EmployeeSkillsApi";
 import "./Modals.css";
 
 export default class GetSkillsModal extends Component {
@@ -10,11 +10,13 @@ export default class GetSkillsModal extends Component {
     title: "",
     experience: "",
     loading: false,
+    editing:false,
   };
 
   handleSubmit = async (e) => {
     const tokenId=this.props.tokenId;
-    const { title, experience } = this.state;
+    const index=this.props.index;
+    const { title, experience,editing } = this.state;
     if (!title || !experience) {
       toast.error("Please enter all the fields.");
       return;
@@ -32,18 +34,16 @@ export default class GetSkillsModal extends Component {
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     console.log("field: ", signature);
-
-    const dataToSend={
+      if (!editing){
+      const dataToSend={
       tokenId:tokenId,
       signature:signature,
       userAddress:accounts[0],
       title:title,
       experience:experience
-    }
-
-
+       }
     try {
-      await addSkillApi(dataToSend).then((response) => {
+      await addSkillApi(dataToSend,tokenId).then((response) => {
         console.log("Skills: ", response);
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
@@ -63,8 +63,63 @@ export default class GetSkillsModal extends Component {
     } catch (err) {
       toast.error(err.message);
     } 
-    
+  }
+  else{
+    console.log("In update");
+    const dataToSend={
+      signature:signature,
+      title:title,
+      experience:experience,
+      index:index,
+      userAddress:accounts[0]
+    }
+
+    try {
+      await updateSkillApi(dataToSend,tokenId).then((response) => {
+        console.log("Skill: ", response);
+        const transaction = response?.data?.response?.transactionData;
+        transaction.from = accounts[0];
+
+        const receipt = web3.eth.sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(()=>{
+          this.setState({ loading: false });
+          this.props.closeCertificationModal();
+        })
+        console.log("receipt > ", receipt);
+      });
+
+      toast.success("Education updated successfullyy!!");
+    } catch (err) {
+      toast.error(err.message);
+    }
+
+  }
   };
+
+  componentDidUpdate(prevProps) {
+
+    if (prevProps.skill !== this.props.skill) {
+      
+      
+      const {
+        title = "",
+        experience = "",
+        
+      } = this.props.skill || {};
+      
+
+      
+      this.setState({
+        title,
+        experience,
+        editing: true,
+      });
+      
+    }
+  }
 
   handleChange = (e) => {
     e.preventDefault();
@@ -80,12 +135,16 @@ export default class GetSkillsModal extends Component {
         size="tiny"
         className="modal-des"
       >
-        <Header
-          className="modal-heading"
-          icon="pencil"
-          content="Enter Skill Details"
-          as="h2"
-        />
+         <Header
+            className="modal-heading"
+            icon="pencil"
+            content={
+              this.state.editing
+                ? "Edit Skills Details"
+                : "Enter Skills Details"
+            }
+            as="h2"
+          />
         <Modal.Content className="modal-content">
           <Form className="form-inputs">
             <Form.Field className="form-inputs">

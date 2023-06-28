@@ -2,7 +2,10 @@ import React, { Component } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import { addExperienceApi } from "../Apis/EmployeeExperienceApi";
+import {
+  addExperienceApi,
+  updateExperienceApi,
+} from "../Apis/EmployeeExperienceApi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
@@ -10,23 +13,45 @@ import ScanQR from "./ScanQR";
 
 export default class GetWorkExpModal extends Component {
   state = {
-    title:"",
-    employment_type:"",
-    company_name:"",
-    location:"",
-    location_type:"",
-    is_currently:"",
-    start_date:"",
-    end_date:"",
+    title: "",
+    employment_type: "",
+    company_name: "",
+    location: "",
+    location_type: "",
+    is_currently: "",
+    start_date: "",
+    end_date: "",
     description: "",
+    editing: false,
     loading: false,
     scanQR: false,
   };
 
   handleSubmit = async (e) => {
-    const tokenId=this.props.tokenId;
-    const { title,employment_type,company_name,location,location_type,is_currently, start_date, end_date, description } = this.state;
-    if (!title | !employment_type || !company_name || !location || !location_type || !is_currently || !start_date || !end_date || !description) {
+    const tokenId = this.props.tokenId;
+    const index = this.props.index;
+    const {
+      title,
+      employment_type,
+      company_name,
+      location,
+      location_type,
+      is_currently,
+      start_date,
+      end_date,
+      description,
+      editing,
+    } = this.state;
+    if (
+      !title | !employment_type ||
+      !company_name ||
+      !location ||
+      !location_type ||
+      !is_currently ||
+      !start_date ||
+      !end_date ||
+      !description
+    ) {
       toast.error("Please enter all the fields.");
       return;
     }
@@ -42,46 +67,113 @@ export default class GetWorkExpModal extends Component {
       "utf8"
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
-    console.log("field: ", signature);
+    if (!editing) {
+      const dataToSend = {
+        tokenId: tokenId,
+        signature: signature,
+        userAddress: accounts[0],
+        title: title,
+        employment_type: employment_type,
+        company_name: company_name,
+        location: location,
+        location_type: location_type,
+        is_currently: is_currently,
+        start_date: start_date,
+        end_date: end_date,
+        description: description,
+      };
+      try {
+        await addExperienceApi(dataToSend).then((response) => {
+          const transaction = response?.data?.response?.transactionData;
+          transaction.from = accounts[0];
 
-    const dataToSend={
-      tokenId:tokenId,
-      signature:signature,
-      userAddress:accounts[0],
-      title:title,
-      employment_type:employment_type,
-      company_name:company_name,
-      location:location,
-      location_type:location_type,
-      is_currently:is_currently,
-      start_date:start_date,
-      end_date:end_date,
-      description:description
+          const receipt = web3.eth
+            .sendTransaction(transaction)
+            .then((res) => {
+              return new Promise((resolve) => setTimeout(resolve, 7000));
+            })
+            .then(() => {
+              this.setState({ loading: false });
+              this.props.closeCertificationModal();
+            });
+          console.log("receipt > ", receipt);
+        });
+
+        toast.success("Work Experience saved successfullyy!!");
+      } catch (err) {
+        toast.error(err.message);
+      }
+    } else {
+      console.log("in update");
+      const dataToSend = {
+        signature: signature,
+        userAddress: accounts[0],
+        title: title,
+        employment_type: employment_type,
+        company_name: company_name,
+        location: location,
+        location_type: location_type,
+        is_currently: is_currently,
+        start_date: start_date,
+        end_date: end_date,
+        description: description,
+        index: index,
+      };
+
+      try {
+        await updateExperienceApi(dataToSend, tokenId).then((response) => {
+          console.log("Experience: ", response);
+          const transaction = response?.data?.response?.transactionData;
+          transaction.from = accounts[0];
+
+          const receipt = web3.eth
+            .sendTransaction(transaction)
+            .then((res) => {
+              return new Promise((resolve) => setTimeout(resolve, 7000));
+            })
+            .then(() => {
+              this.setState({ loading: false });
+              this.props.closeCertificationModal();
+            });
+          console.log("receipt > ", receipt);
+        });
+
+        toast.success("Experience updated successfullyy!!");
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
-    try {
-      await addExperienceApi(dataToSend).then((response) => {
-        console.log("work experience: ", response);
-        const transaction = response?.data?.response?.transactionData;
-        transaction.from = accounts[0];
-        
-        const receipt = web3.eth.sendTransaction(transaction)
-        .then((res) => {
-          return new Promise((resolve) => setTimeout(resolve, 7000));
-        })
-        .then(()=>{
-          this.setState({ loading: false });
-          this.props.closeCertificationModal();
-        })
-        console.log("receipt > ", receipt);
-      });
-
-      toast.success("Work Experience saved successfullyy!!");
-    } catch (err) {
-      toast.error(err.message);
-    }
-
-    
   };
+
+  componentDidUpdate(prevProps) {
+    
+    if (prevProps.experience !== this.props.experience) {
+      const {
+        title,
+        employment_type,
+        company_name,
+        location,
+        location_type,
+        is_currently,
+        start_date,
+        end_date,
+        description,
+      } = this.props.experience || {};
+
+      this.setState({
+        title,
+        employment_type,
+        company_name,
+        location,
+        location_type,
+        is_currently,
+        start_date,
+        end_date,
+        description,
+        editing: true,
+      });
+    }
+  }
 
   handleChange = (e) => {
     e.preventDefault();
@@ -91,7 +183,7 @@ export default class GetWorkExpModal extends Component {
   handleChangeStartDate = (date) => {
     this.setState({ start_date: date });
   };
-  
+
   handleChangeEndDate = (date) => {
     this.setState({ end_date: date });
   };
@@ -138,14 +230,14 @@ export default class GetWorkExpModal extends Component {
                 />
               </Form.Field>
               <Form.Field className="form-inputs">
-                  <input
-                    id="employment_type"
-                    placeholder="Employment Type"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    value={this.state.employment_type}
-                    onChange={this.handleChange}
-                  />                  
+                <input
+                  id="employment_type"
+                  placeholder="Employment Type"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  value={this.state.employment_type}
+                  onChange={this.handleChange}
+                />
               </Form.Field>
               <Form.Field className="form-inputs">
                 <input
@@ -188,26 +280,26 @@ export default class GetWorkExpModal extends Component {
                 />
               </Form.Field>
               <Form.Field className="form-inputs">
-                  <DatePicker
-                    id="start_date"
-                    placeholderText="Start Date"
-                    autoComplete="off"
-                    selected={this.state.start_date}
-                    onChange={this.handleChangeStartDate} 
-                    className="datepicker-style"
-                    maxDate={this.state.end_date}
-                  />
+                <DatePicker
+                  id="start_date"
+                  placeholderText="Start Date"
+                  autoComplete="off"
+                  selected={this.state.start_date}
+                  onChange={this.handleChangeStartDate}
+                  className="datepicker-style"
+                  maxDate={this.state.end_date}
+                />
 
-                  <DatePicker
-                    id="end_date"
-                    placeholderText="End Date"
-                    autoComplete="off"
-                    selected={this.state.end_date}
-                    onChange={this.handleChangeEndDate} 
-                    className="datepicker-style"
-                    minDate={this.state.start_date}
-                  />
-                </Form.Field>
+                <DatePicker
+                  id="end_date"
+                  placeholderText="End Date"
+                  autoComplete="off"
+                  selected={this.state.end_date}
+                  onChange={this.handleChangeEndDate}
+                  className="datepicker-style"
+                  minDate={this.state.start_date}
+                />
+              </Form.Field>
               <Form.Field className="form-inputs">
                 <input
                   id="description"
@@ -218,7 +310,6 @@ export default class GetWorkExpModal extends Component {
                   onChange={this.handleChange}
                 />
               </Form.Field>
-              
             </Form>
           </Modal.Content>
           <Modal.Actions className="modal-actions">

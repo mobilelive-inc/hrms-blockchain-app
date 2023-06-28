@@ -4,7 +4,8 @@ import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addEducation } from "../Apis/EmployeeEducationApi";
+import { parseISO } from 'date-fns';
+import { addEducation, updateEducation } from "../Apis/EmployeeEducationApi";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
 
@@ -18,6 +19,7 @@ export default class GetEducationModal extends Component {
     grade: "",
     description: "",
     editing: false,
+    
   };
 
   handleSubmit = async (e) => {
@@ -30,6 +32,7 @@ export default class GetEducationModal extends Component {
       description,
       editing,
     } = this.state;
+
     if (
       !school ||
       !degree ||
@@ -53,11 +56,12 @@ export default class GetEducationModal extends Component {
       "utf8"
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
-    console.log("field: ", signature);
 
     const tokenId = this.props.tokenId;
+    const index=this.props.index;
     if (!editing) {
       console.log("In add");
+      console.log("ed: ",editing)
       const dataToSend = {
         tokenId: tokenId,
         signature: signature,
@@ -93,32 +97,83 @@ export default class GetEducationModal extends Component {
     } else {
       //update logic
       console.log("In update");
-      console.log(school, degree, field_of_study);
+      console.log("a",editing)
+      const dataToSend = {
+        signature: signature,
+        school: school,
+        degree: degree,
+        field_of_study: field_of_study,
+        start_date: start_date,
+        end_date: end_date,
+        description: description,
+        index:index
+      };
+      dataToSend.userAddress = accounts[0];
+      try {
+        await updateEducation(dataToSend,tokenId).then((response) => {
+          console.log("education: ", response);
+          const transaction = response?.data?.response?.transactionData;
+          transaction.from = accounts[0];
+
+          const receipt = web3.eth.sendTransaction(transaction)
+          .then((res) => {
+            return new Promise((resolve) => setTimeout(resolve, 7000));
+          })
+          .then(()=>{
+            this.setState({ loading: false });
+            this.props.closeCertificationModal();
+          })
+          console.log("receipt > ", receipt);
+        });
+
+        toast.success("Education updated successfullyy!!");
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
     
   };
 
   componentDidUpdate(prevProps) {
+
     if (prevProps.education !== this.props.education) {
+      
+      
       const {
         school = "",
         degree = "",
         field_of_study = "",
-        start_date = null,
-        end_date = null,
         description = "",
       } = this.props.education || {};
+      let {
+        start_date = "",
+        end_date = "",
+      } =this.props.education || {};
 
+      if (start_date){
+        start_date=parseISO(start_date.toString())
+      }
+      else{
+        start_date=""
+      }
+      if (end_date){
+        end_date=parseISO(end_date.toString())
+      }
+      else{
+        end_date=""
+      }
+      
       this.setState({
         school,
         degree,
         field_of_study,
-        start_date,
-        end_date,
+        start_date:start_date,
+        end_date:end_date,
         description,
         editing: true,
       });
+      
     }
   }
 
@@ -128,10 +183,12 @@ export default class GetEducationModal extends Component {
   };
 
   handleChangeStartDate = (date) => {
+    console.log("start date: ",date)
     this.setState({ start_date: date });
   };
 
   handleChangeEndDate = (date) => {
+    console.log("end date: ",date);
     this.setState({ end_date: date });
   };
 

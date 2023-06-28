@@ -12,7 +12,7 @@ import GetSkillsModal from "../../components/GetSkillsModals";
 import GetFilesModal from "../../components/GetFilesModal";
 import GetEducationModal from "../../components/GetEducationModal";
 import GetEditFieldModal from "../../components/GetEditFieldModal";
-import LoadComp from "../../components/LoadComp";
+//import LoadComp from "../../components/LoadComp";
 import CodeforcesGraph from "../../components/CodeforcesGraph";
 import { getUserApi } from "../../Apis/UsersApi";
 import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
@@ -48,7 +48,11 @@ export default class UpdateProfile extends Component {
     EmployeeContract: {},
     userInfo: null,
     selectedEducation: null,
+    selectedCertification:null,
+    selectedSkill:null,
+    selectedWorkExp:null,
     tokenId: null,
+    index:0
   };
   getUserInfo = async (address) => {
     await getUserApi(address).then((response) => {
@@ -60,14 +64,7 @@ export default class UpdateProfile extends Component {
   getSkills = async () => {
     const id = this.state.tokenId;
     await getSkillsApi(id).then((response) => {
-      console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      // if (Array.isArray(skillsData)) {
-      //   skillsData.forEach((element) => {
-      //     skillsData.push(Object.fromEntries(element));
-      //   });
-      // }
-      console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
   };
@@ -75,10 +72,8 @@ export default class UpdateProfile extends Component {
   getCertifications = async () => {
     const id = this.state.tokenId;
     await getCertificatesApi(id).then((response) => {
-      console.log("certificates: ", response?.data?.response);
       const certificationsData = response?.data?.response?.certifications;
       
-      console.log("certi: ", certificationsData);
       this.setState({
         certifications: certificationsData,
       });
@@ -87,11 +82,8 @@ export default class UpdateProfile extends Component {
   getWorkExp = async () => {
     const id = this.state.tokenId;
     await getWorkExperienceApi(id).then((response) => {
-      
       const workExperienceData = response?.data?.response?.workExperiences;
       
-      
-      console.log("work: ", workExperienceData);
       this.setState({ workExps: workExperienceData });
     });
   };
@@ -101,7 +93,6 @@ export default class UpdateProfile extends Component {
     try {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
-      console.log("education: ", educationData);
 
       if (Array.isArray(educationData)) {
         this.setState({ educations: educationData });
@@ -115,12 +106,39 @@ export default class UpdateProfile extends Component {
     return value ? value : "-------";
   }
 
-  handleEditEducation = (education) => {
+  handleEditEducation = (education,i) => {
+    console.log("handle edu: ",education)
     this.setState({
       educationmodal: true,
       selectedEducation: education,
+      index:i
     });
   };
+  handleEditCertification = (certification,i) => {
+    console.log("handle cert: ",certification)
+    this.setState({
+      certificationModal: true,
+      selectedCertification: certification,
+      index:i
+    });
+  };
+  handleEditWorkExp = (workExp,i) => {
+    console.log("handle: ",workExp)
+    this.setState({
+      workexpModal: true,
+      selectedWorkExp: workExp,
+      index:i
+    });
+  };
+  handleEditSkill = (skill,i) => {
+    console.log("handle: ",skill)
+    this.setState({
+      skillmodal: true,
+      selectedSkill: skill,
+      index:i
+    });
+  };
+
 
   componentDidMount = async () => {
     this.setState({ loadcomp: true });
@@ -169,17 +187,17 @@ export default class UpdateProfile extends Component {
 
 
   closeCertificationModal = () => {
-    this.setState({ certificationModal: false });
+    this.setState({ certificationModal: false, selectedCertification:null });
     this.getCertifications();
   };
 
   closeWorkExpModal = () => {
-    this.setState({ workexpModal: false });
+    this.setState({ workexpModal: false,selectedWorkExp:null });
     this.getWorkExp();
   };
 
   closeSkillModal = () => {
-    this.setState({ skillmodal: false });
+    this.setState({ skillmodal: false, selectedSkill:null });
     this.getSkills();
   };
   closeFileModal = () => {
@@ -255,24 +273,27 @@ export default class UpdateProfile extends Component {
   };
 
   render() {
-    return this.state.loadcomp ? (
-      <LoadComp />
-    ) : (
+    return  (
       <div>
         <GetCertificationModal
           isOpen={this.state.certificationModal}
           closeCertificationModal={this.closeCertificationModal}
           tokenId={this.state.tokenId}
+          certification={this.state.selectedCertification}
         />
         <GetWorkExpModal
           isOpen={this.state.workexpModal}
           closeCertificationModal={this.closeWorkExpModal}
           tokenId={this.state.tokenId}
+          workExp={this.state.selectedWorkExp}
+          index={this.state.index}
         />
         <GetSkillsModal
           isOpen={this.state.skillmodal}
           closeCertificationModal={this.closeSkillModal}
           tokenId={this.state.tokenId}
+          skill={this.state.selectedSkill}
+          index={this.state.index}
         />
         <GetFilesModal
           isOpen={this.state.filemodal}
@@ -283,6 +304,7 @@ export default class UpdateProfile extends Component {
           closeCertificationModal={this.closeEducationModal}
           education={this.state.selectedEducation}
           tokenId={this.state.tokenId}
+          index={this.state.index}
         />
 
         <GetEditFieldModal
@@ -373,10 +395,11 @@ export default class UpdateProfile extends Component {
                                   style={{ position: "relative" }}
                                   name="graduation cap"
                                 />
-                                <p>{this.checkExistence(education?.degree)}</p>
+                                <p>{this.checkExistence(education?.degree)}{"("+this.checkExistence(education?.field_of_study)+")"}</p>
+                                <p></p>
                                 <span
                                   onClick={() =>
-                                    this.handleEditEducation(education)
+                                    this.handleEditEducation(education,index)
                                   }
                                 >
                                   <i
@@ -396,6 +419,10 @@ export default class UpdateProfile extends Component {
                               >
                                 {this.checkExistence(education?.school)}
                               </small>
+                              <br/>
+
+                            <small>{moment(this.checkExistence(education?.start_date)).format("DD-MM-YYYY")}{"-"+(moment(this.checkExistence(education?.end_date)).format("DD-MM-YYYY"))}</small>
+
                             </div>
                           </div>
                         ))
@@ -484,6 +511,21 @@ export default class UpdateProfile extends Component {
                                     </small>
                                   </div>
                                 </Grid.Column>
+                                <Grid.Column>
+                                <span
+                                  onClick={() =>
+                                    this.handleEditCertification(certi,index)
+                                  }
+                                >
+                                  <i
+                                    style={{
+                                      marginLeft: "200%",
+                                      marginRight: "0px",
+                                    }}
+                                    className="fas fa-pencil-alt"
+                                  ></i>
+                                </span>
+                                </Grid.Column>
                               </Grid.Row>
                             );
                           } else {
@@ -522,6 +564,9 @@ export default class UpdateProfile extends Component {
                             <i
                               style={{ marginRight: "0px" }}
                               className="fas fa-pencil-alt"
+                              onClick={() =>
+                                this.handleEditWorkExp(workExp,index)
+                              }
                             ></i>
 
                             <p>{this.checkExistence(workExp?.title)}</p>
@@ -579,7 +624,9 @@ export default class UpdateProfile extends Component {
                         } else if (typeof skill === "object" && skill?.title) {
                           return (
                             <div key={index}>
-                              <i className="fas fa-pencil-alt"></i>
+                              <i className="fas fa-pencil-alt" onClick={() =>
+                                    this.handleEditSkill(skill,index)
+                                  }></i>
                               <SkillCard skill={skill} key={index} update />
                             </div>
                           );
