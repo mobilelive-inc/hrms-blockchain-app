@@ -20,7 +20,6 @@ export default class AllEmployees extends Component {
     if (AdminData) {
       const employees = await getAllUsers();
       let usersData = employees.data.response.usersList;
-      console.log("all users", usersData);
       this.setState({ employees: usersData });
     } else {
       toast.error("The Admin Contract does not exist on this network!");

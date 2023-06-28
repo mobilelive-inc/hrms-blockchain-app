@@ -10,6 +10,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
+import moment from "moment";
+import { parseISO } from 'date-fns';
+
 
 export default class GetWorkExpModal extends Component {
   state = {
@@ -22,6 +25,7 @@ export default class GetWorkExpModal extends Component {
     start_date: "",
     end_date: "",
     description: "",
+    index:0,
     editing: false,
     loading: false,
     scanQR: false,
@@ -38,19 +42,14 @@ export default class GetWorkExpModal extends Component {
       location_type,
       is_currently,
       start_date,
-      end_date,
-      description,
       editing,
     } = this.state;
     if (
-      !title | !employment_type ||
+      !title || !employment_type ||
       !company_name ||
       !location ||
-      !location_type ||
-      !is_currently ||
-      !start_date ||
-      !end_date ||
-      !description
+      !location_type
+      
     ) {
       toast.error("Please enter all the fields.");
       return;
@@ -68,6 +67,7 @@ export default class GetWorkExpModal extends Component {
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     if (!editing) {
+
       const dataToSend = {
         tokenId: tokenId,
         signature: signature,
@@ -78,10 +78,11 @@ export default class GetWorkExpModal extends Component {
         location: location,
         location_type: location_type,
         is_currently: is_currently,
-        start_date: start_date,
-        end_date: end_date,
-        description: description,
+        start_date: moment(start_date).format("DD-MM-YYYY"),
+        //end_date: moment(end_date).format("DD-MM-YYYY"),
+        //description: description,
       };
+      
       try {
         await addExperienceApi(dataToSend).then((response) => {
           const transaction = response?.data?.response?.transactionData;
@@ -104,7 +105,6 @@ export default class GetWorkExpModal extends Component {
         toast.error(err.message);
       }
     } else {
-      console.log("in update");
       const dataToSend = {
         signature: signature,
         userAddress: accounts[0],
@@ -114,15 +114,14 @@ export default class GetWorkExpModal extends Component {
         location: location,
         location_type: location_type,
         is_currently: is_currently,
-        start_date: start_date,
-        end_date: end_date,
-        description: description,
+        start_date: moment(start_date).format("DD-MM-YYYY"),
+        //end_date: end_date,
+        //description: description,
         index: index,
       };
 
       try {
         await updateExperienceApi(dataToSend, tokenId).then((response) => {
-          console.log("Experience: ", response);
           const transaction = response?.data?.response?.transactionData;
           transaction.from = accounts[0];
 
@@ -147,7 +146,7 @@ export default class GetWorkExpModal extends Component {
 
   componentDidUpdate(prevProps) {
     
-    if (prevProps.experience !== this.props.experience) {
+    if (prevProps.workExp !== this.props.workExp) {
       const {
         title,
         employment_type,
@@ -155,11 +154,26 @@ export default class GetWorkExpModal extends Component {
         location,
         location_type,
         is_currently,
-        start_date,
-        end_date,
-        description,
-      } = this.props.experience || {};
+        // description,
+      } = this.props.workExp || {};
 
+      let {
+        start_date = "",
+        //end_date = "",
+      } =this.props.workExp || {};
+
+      if (start_date){
+        start_date=parseISO(start_date.toString())
+      }
+      else{
+        start_date=""
+      }
+      // if (end_date){
+      //   end_date=parseISO(end_date.toString())
+      // }
+      // else{
+      //   end_date=""
+      // }
       this.setState({
         title,
         employment_type,
@@ -168,8 +182,8 @@ export default class GetWorkExpModal extends Component {
         location_type,
         is_currently,
         start_date,
-        end_date,
-        description,
+        // end_date,
+        // description,
         editing: true,
       });
     }

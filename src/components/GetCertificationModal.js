@@ -58,9 +58,7 @@ export default class GetCertificationModal extends Component {
       "utf8"
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
-    console.log("field: ", signature);
  if (!editing){
-  console.log("In add")
     const dataToSend={
       signature:signature,
       title:title,
@@ -74,7 +72,6 @@ export default class GetCertificationModal extends Component {
     }
     try {
       await addCertificationApi(dataToSend,tokenId).then((response) => {
-        console.log("certification: ", response);
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
 
@@ -95,7 +92,6 @@ export default class GetCertificationModal extends Component {
     } 
   } 
   else {
-    console.log("In update");
     const dataToSend={
       signature:signature,
       title:title,
@@ -110,7 +106,6 @@ export default class GetCertificationModal extends Component {
 
     try {
       await updateCertificationApi(dataToSend,tokenId).then((response) => {
-        console.log("certification: ", response);
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
 
@@ -212,7 +207,7 @@ export default class GetCertificationModal extends Component {
           size="tiny"
           className="modal-des"
         >
-         <Header
+        <Header
             className="modal-heading"
             icon="pencil"
             content={

@@ -351,13 +351,7 @@ export default class EmployeePage extends Component {
                     <Grid columns={3}>
                       {this.state.certifications.length > 0 ? (
                         this.state.certifications.map((certi, index) => {
-                          // if (Array.isArray(certi)) {
-                          //   return null;
-                          // } else if (
-                          //   typeof certi === "object" &&
-                          //   certi.title &&
-                          //   certi.issuing_organization
-                          // ) {l
+                          
                             return (
                               <Grid.Row key={index}>
                                 <Grid.Column>
@@ -395,15 +389,13 @@ export default class EmployeePage extends Component {
                                       Credential ID
                                     </p>
                                     <small style={{ fontWeight: "bold" }}>
-                                      {this.checkExistence(certi.credential_id)}
+                                    <a href={certi.credential_url} target="blank">{this.checkExistence(certi.credential_id)}</a>
                                     </small>
                                   </div>
                                 </Grid.Column>
                               </Grid.Row>
                             );
-                          // } else {
-                          //   return null;
-                          // }
+                          
                         })
                       ) : (
                         <p>No certifications to display!</p>
@@ -427,7 +419,7 @@ export default class EmployeePage extends Component {
                           <div style={{ color: "black", fontWeight: "bold" }}>
                             <p>{this.checkExistence(workExp?.title)}</p>
                             <small>
-                              {this.checkExistence(workExp?.organization)}
+                              {this.checkExistence(workExp?.company_name)}
                             </small>
                             <small>
                               {", " + this.checkExistence(workExp?.location)}

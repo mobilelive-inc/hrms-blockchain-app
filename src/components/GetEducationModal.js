@@ -60,8 +60,6 @@ export default class GetEducationModal extends Component {
     const tokenId = this.props.tokenId;
     const index=this.props.index;
     if (!editing) {
-      console.log("In add");
-      console.log("ed: ",editing)
       const dataToSend = {
         tokenId: tokenId,
         signature: signature,
@@ -75,7 +73,6 @@ export default class GetEducationModal extends Component {
       dataToSend.userAddress = accounts[0];
       try {
         await addEducation(dataToSend).then((response) => {
-          console.log("education: ", response);
           const transaction = response?.data?.response?.transactionData;
           transaction.from = accounts[0];
 
@@ -96,8 +93,6 @@ export default class GetEducationModal extends Component {
       }
     } else {
       //update logic
-      console.log("In update");
-      console.log("a",editing)
       const dataToSend = {
         signature: signature,
         school: school,
@@ -111,7 +106,6 @@ export default class GetEducationModal extends Component {
       dataToSend.userAddress = accounts[0];
       try {
         await updateEducation(dataToSend,tokenId).then((response) => {
-          console.log("education: ", response);
           const transaction = response?.data?.response?.transactionData;
           transaction.from = accounts[0];
 
@@ -183,12 +177,10 @@ export default class GetEducationModal extends Component {
   };
 
   handleChangeStartDate = (date) => {
-    console.log("start date: ",date)
     this.setState({ start_date: date });
   };
 
   handleChangeEndDate = (date) => {
-    console.log("end date: ",date);
     this.setState({ end_date: date });
   };
 
