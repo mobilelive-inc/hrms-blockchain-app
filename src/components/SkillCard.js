@@ -40,18 +40,7 @@ export default class SkillCard extends Component {
     const skill = this.props.skill;
     return (
       <div className="skill-des">
-        {this.props.update && (
-          <span
-            className="delete-button-skill"
-            onClick={(e) => this.removeSkill(skill.name)}
-          >
-            {!skill.visible ? (
-              <i class="fas fa-eye-slash"></i>
-            ) : (
-              <i class="fas fa-eye"></i>
-            )}
-          </span>
-        )}
+        
           <div>
             <div>
                   <div key={skill?.title}>

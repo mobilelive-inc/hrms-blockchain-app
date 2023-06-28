@@ -4,7 +4,7 @@ import EmployeeCard from "../../components/EmployeeCard";
 import "./Admin.css";
 import Admin from "../../abis/Admin.json";
 import {getAllUsers} from "../../Apis/Admin"
-import LoadComp from "../../components/LoadComp";
+//import LoadComp from "../../components/LoadComp";
 
 export default class AllEmployees extends Component {
   state = {
@@ -20,7 +20,6 @@ export default class AllEmployees extends Component {
     if (AdminData) {
       const employees = await getAllUsers();
       let usersData = employees.data.response.usersList;
-      console.log("all users", usersData);
       this.setState({ employees: usersData });
     } else {
       toast.error("The Admin Contract does not exist on this network!");
@@ -29,9 +28,7 @@ export default class AllEmployees extends Component {
   };
 
   render() {
-    return this.state.loadcomp ? (
-      <LoadComp />
-    ) : (
+    return  (
       <div className="admin">
         <h2 className="card-heading">All Registered Employees</h2>
         <br />
