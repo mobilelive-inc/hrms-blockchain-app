@@ -9,19 +9,16 @@ import AdminPageCreate from "./pages/Admin/CreateUser";
 import AllEmployees from "./pages/Admin/AllEmployees";
 import EmployeePage from "./pages/Employee/Employee";
 import UpdateProfile from "./pages/Employee/UpdateProfile";
-/* import Organization from "./pages/OrganizationEndorser/Organization";
-import EndorseSkill from "./pages/OrganizationEndorser/EndorseSkill";
-import Endorse from "./pages/OrganizationEndorser/EndorseSection"; */
 import Navbar from "./components/Navbar";
 import GetEmployee from "./pages/GetRoutes/GetEmployee";
 import GetOrg from "./pages/GetRoutes/GetOrg";
 import NoRole from "./pages/NoRole/NoRole";
 import Notifications from "./pages/NoRole/Notifications";
 import NotificationsEmployee from "./pages/Employee/Notifications";
-// import NotificationsOrg from "./pages/OrganizationEndorser/Notifications";
 import LoadComp from "./components/LoadComp";
 import {isAdmin} from "./Apis/Admin";
 import {getUserApi} from "./Apis/UsersApi";
+
 
 function App() {
   const [isMeta, setisMeta] = useState(false);
@@ -32,26 +29,6 @@ function App() {
   const [loadcomp, setloadcomp] = useState(false);
 
   const loadBlockChainData = async () => {
-    /* const web3 = window.web3;
-    const accounts = await web3.eth.getAccounts();
-    if (accounts) {
-      setaccount(accounts[0]);
-    }
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const isEmployee = await admin?.methods?.isEmployee(accounts[0]).call();
-      const isOrganizationEndorser = await admin?.methods
-        ?.isOrganizationEndorser(accounts[0])
-        .call();
-      const owner = await admin?.methods?.owner().call();
-      setisEmployee(isEmployee);
-      setisOrganizationEndorser(isOrganizationEndorser);
-      setisOwner(owner === accounts[0]);
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    } */
     const web3 = await window.web3;
     // console.log(web3);
     const accounts = await web3.eth.getAccounts();
@@ -73,6 +50,11 @@ function App() {
   };
 
   useEffect(() => {
+
+    const handleAccountsChanged = () => {
+      window.location.reload();
+    };
+
     const func = async () => {
       setisMeta(true);
       setloadcomp(true);
@@ -91,8 +73,14 @@ function App() {
       setloadcomp(false);
     };
     func();
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+    }
+  
     return () => {
-      //
+      if (window.ethereum) {
+        window.ethereum.off("accountsChanged", handleAccountsChanged);
+      }
     };
   }, []);
 
