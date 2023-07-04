@@ -61,6 +61,7 @@ export default class GetCertificationModal extends Component {
  if (!editing){
     const dataToSend={
       signature:signature,
+      tokenId:tokenId,
       title:title,
       issuing_organization:issuing_organization,
       issue_date:issue_date,
@@ -68,10 +69,9 @@ export default class GetCertificationModal extends Component {
       credential_id:credential_id,
       credential_url:credential_url,
       userAddress:accounts[0],
-      index:index
     }
     try {
-      await addCertificationApi(dataToSend,tokenId).then((response) => {
+      await addCertificationApi(dataToSend).then((response) => {
         const transaction = response?.data?.response?.transactionData;
         transaction.from = accounts[0];
 
@@ -101,7 +101,7 @@ export default class GetCertificationModal extends Component {
       credential_id:credential_id,
       credential_url:credential_url,
       userAddress:accounts[0],
-      index:1
+      index:index
     }
 
     try {
