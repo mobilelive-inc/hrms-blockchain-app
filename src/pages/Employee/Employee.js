@@ -442,7 +442,9 @@ export default class EmployeePage extends Component {
                               Date of Joining
                             </p>
                             <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(workExp?.start_date)}
+                              {this.checkExistence(moment(workExp.start_date).format(
+                                          "DD-MM-YYYY"
+                                        ))}
                             </small>
                           </div>
                           </Grid.Column>

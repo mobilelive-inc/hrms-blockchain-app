@@ -50,11 +50,10 @@ function App() {
   };
 
   useEffect(() => {
-
     const handleAccountsChanged = () => {
       window.location.reload();
     };
-
+  
     const func = async () => {
       setisMeta(true);
       setloadcomp(true);
@@ -72,18 +71,20 @@ function App() {
       }
       setloadcomp(false);
     };
+  
     func();
+  
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", handleAccountsChanged);
     }
   
     return () => {
       if (window.ethereum) {
-        window.ethereum.off("accountsChanged", handleAccountsChanged);
+        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
       }
     };
   }, []);
-
+  
   const adminRoutes = () => {
     return (
       <Switch>
