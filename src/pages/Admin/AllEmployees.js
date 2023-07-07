@@ -20,6 +20,7 @@ export default class AllEmployees extends Component {
     if (AdminData) {
       const employees = await getAllUsers();
       let usersData = employees.data.response.usersList;
+      usersData=usersData.reverse();
       this.setState({ employees: usersData });
     } else {
       toast.error("The Admin Contract does not exist on this network!");
@@ -32,9 +33,14 @@ export default class AllEmployees extends Component {
       <div className="admin">
         <h2 className="card-heading">All Registered Employees</h2>
         <br />
-        {this.state.employees.reverse()?.map((employee, index) => (
-          <EmployeeCard key={index} employee={employee} />
-        ))}
+        {/* {this.state.employees?.map((employee,index)=>(
+          <EmployeeCard key={index} employee={employee}/>
+        ))} */}
+        {this.state.employees?.map((employee, index) => (
+          employee.first_name&&(
+            <EmployeeCard key={index} employee={employee} />
+          )
+        ))} 
         <br />
       </div>
     );

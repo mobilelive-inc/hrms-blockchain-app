@@ -11,8 +11,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
 import ScanQR from "./ScanQR";
 import moment from "moment";
-import { parseISO } from 'date-fns';
-
+import { parse } from "date-fns";
 
 export default class GetWorkExpModal extends Component {
   state = {
@@ -25,7 +24,7 @@ export default class GetWorkExpModal extends Component {
     start_date: "",
     end_date: "",
     description: "",
-    index:0,
+    index: 0,
     editing: false,
     loading: false,
     scanQR: false,
@@ -42,14 +41,15 @@ export default class GetWorkExpModal extends Component {
       location_type,
       is_currently,
       start_date,
+      //end_date,
       editing,
     } = this.state;
     if (
-      !title || !employment_type ||
+      !title ||
+      !employment_type ||
       !company_name ||
       !location ||
       !location_type
-      
     ) {
       toast.error("Please enter all the fields.");
       return;
@@ -67,7 +67,6 @@ export default class GetWorkExpModal extends Component {
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     if (!editing) {
-
       const dataToSend = {
         tokenId: tokenId,
         signature: signature,
@@ -78,11 +77,11 @@ export default class GetWorkExpModal extends Component {
         location: location,
         location_type: location_type,
         is_currently: is_currently,
-        start_date: moment(start_date).format("DD-MM-YYYY"),
-        //end_date: moment(end_date).format("DD-MM-YYYY"),
+        start_date: start_date,
+        //end_date: end_date,
         //description: description,
       };
-      
+
       try {
         await addExperienceApi(dataToSend).then((response) => {
           const transaction = response?.data?.response?.transactionData;
@@ -114,7 +113,7 @@ export default class GetWorkExpModal extends Component {
         location: location,
         location_type: location_type,
         is_currently: is_currently,
-        start_date: moment(start_date).format("DD-MM-YYYY"),
+        start_date: start_date,
         //end_date: end_date,
         //description: description,
         index: index,
@@ -145,35 +144,28 @@ export default class GetWorkExpModal extends Component {
   };
 
   componentDidUpdate(prevProps) {
-    
     if (prevProps.workExp !== this.props.workExp) {
       const {
-        title,
-        employment_type,
-        company_name,
-        location,
-        location_type,
-        is_currently,
+        title = "",
+        employment_type = "",
+        company_name = "",
+        location = "",
+        location_type = "",
+        is_currently = "",
+        start_date,
+        end_date,
         // description,
       } = this.props.workExp || {};
 
-      let {
-        start_date = "",
-        //end_date = "",
-      } =this.props.workExp || {};
+      let parsedStartDate = null;
+      let parsedEndDate=null;
 
-      if (start_date){
-        start_date=parseISO(start_date.toString())
-      }
-      else{
-        start_date=""
-      }
-      // if (end_date){
-      //   end_date=parseISO(end_date.toString())
-      // }
-      // else{
-      //   end_date=""
-      // }
+      parsedStartDate=moment(start_date).format("DD-MM-YYYY")
+      parsedStartDate = parse(parsedStartDate, "dd-MM-yyyy", new Date());
+      
+      parsedEndDate=moment(end_date).format("DD-MM-YYYY")
+      parsedEndDate = parse(parsedEndDate,"dd-mm-yyyy",new Date());
+
       this.setState({
         title,
         employment_type,
@@ -181,8 +173,8 @@ export default class GetWorkExpModal extends Component {
         location,
         location_type,
         is_currently,
-        start_date,
-        // end_date,
+        start_date: parsedStartDate,
+        end_date:parsedEndDate,
         // description,
         editing: true,
       });
@@ -225,10 +217,14 @@ export default class GetWorkExpModal extends Component {
           size="tiny"
           className="modal-des"
         >
-          <Header
+           <Header
             className="modal-heading"
             icon="pencil"
-            content="Enter Work Experience Details"
+            content={
+              this.state.editing
+                ? "Edit Work Experience Details"
+                : "Enter Work Experience Details"
+            }
             as="h2"
           />
           <Modal.Content className="modal-content">
