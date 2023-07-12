@@ -16,25 +16,28 @@ class EmployeeCard extends Component {
     certifications: [],
     workExps: [],
     educations: [],
+   performance:null,
     colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
     readmore: false,
     loadcomp: false,
   };
 
   componentDidMount = async () => {
-    this.getSkills(this.props.employee.tokenId);
-    this.getCertifications(this.props.employee.tokenId);
-    this.getWorkExp(this.props.employee.tokenId);
-    this.getEducation(this.props.employee.tokenId);
-    
+    this.getSkills(this.props.employee?.tokenId);
+    this.getCertifications(this.props.employee?.tokenId);
+    this.getWorkExp(this.props.employee?.tokenId);
+    this.getEducation(this.props.employee?.tokenId);
     this.setState({ employeedata: this.props.employee });
+    this.setState({performance:this.props.performance})
   };
+  
   
   getSkills = async (tokenId) => {
     await getSkillsApi(tokenId).then((response) => {
       const skillsData = response?.data?.response?.skills;
       this.setState({ skills: skillsData });
     });
+
   };
 
   getCertifications = async (tokenId) => {
@@ -96,7 +99,7 @@ class EmployeeCard extends Component {
               {this.state.employeedata?.description}
             </p>
           </div>
-          <br />
+          <br />  
           <div>
             <em style={{fontWeight:"bold"}}>Skills:</em>
             <div className="skill-holder">
@@ -207,6 +210,21 @@ class EmployeeCard extends Component {
                     </div>
                   ))}
                 </div>
+                <br/>
+                <em style={{fontWeight:"bold"}}>Performance report:</em>
+                <br/>
+                <div>
+                <br/>
+                <h5>Area of expertise: {this.state.performance?.Expertise}</h5>
+                <h5>Tool: {this.state.performance?.Tool}</h5>
+                
+                </div>
+                <br/>
+                <div style={{display:"flex",justifyContent:"space-between"}}>
+                  <div style={{fontWeight:"bold"}}>Score: {this.state.performance?.Score}</div>
+                  <div style={{marginRight:"30px",fontWeight:"bold"}}>Hourly Rate: {this.state.performance?.HourlyRate}</div>
+                </div>
+
               </div>
 
               <div
@@ -230,4 +248,4 @@ class EmployeeCard extends Component {
   }
 }
 
-export default withRouter(EmployeeCard);
+ export default withRouter(EmployeeCard);

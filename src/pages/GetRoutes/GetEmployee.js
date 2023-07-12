@@ -47,9 +47,7 @@ export default class GetEmployee extends Component {
   }
   getSkills = async (tokenId) => {
     await getSkillsApi(tokenId).then((response) => {
-      console.log("skills: ", response?.data?.response?.skills);
       const skillsData = response?.data?.response?.skills;
-      console.log("skil ", skillsData);
       this.setState({ skills: skillsData });
     });
   };

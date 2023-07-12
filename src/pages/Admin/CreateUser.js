@@ -39,6 +39,7 @@ class CreateUser extends Component {
   roleOptions = [
     { key: "employee", text: "Employee", value: "employee" },
     { key: "admin", text: "Admin", value: "admin" },
+    {key:"pm",text:"Project Manager",value:"pm"}
   ];
   
 
