@@ -37,12 +37,13 @@ export default class ViewProjects extends Component {
         <br />
         {this.state.projects.length!==0 ? (
           this.state.projects.map((project, index) => (
-        <Card className="card-display">
+        <Card className="card-display" key={index}>
             <div className="card-content" key={index}>
               <p>Name: {project.name}</p>
               <p>Client: {project.client}</p>
               <p>Description</p>
               <p>{project.description}</p>
+
             </div>
         </Card>
 

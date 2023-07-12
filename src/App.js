@@ -20,6 +20,7 @@ import NotificationsEmployee from "./pages/Employee/Notifications";
 import LoadComp from "./components/LoadComp";
 import {isAdmin} from "./Apis/Admin";
 import {getUserApi} from "./Apis/UsersApi";
+// import AddResources from "./pages/Admin/AddResources";
 
 
 function App() {
@@ -114,6 +115,7 @@ function App() {
       <Switch>
         <Route path="/" exact component={CreateProject}/>
         <Route path="/view-projects" exact component={ViewProjects}/>
+        {/* <Route path="/add-resources" exact component={AddResources}/> */}
         {/* <Route path="/create-project" exact component={CreateProject}/> */}
       </Switch>
     )
