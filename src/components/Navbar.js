@@ -2,8 +2,8 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Menu, Segment, Image, Label } from "semantic-ui-react";
-import {isAdmin} from "../Apis/Admin";
-import {getUserApi} from "../Apis/UsersApi";
+import { isAdmin } from "../Apis/Admin";
+import { getUserApi } from "../Apis/UsersApi";
 
 import { Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
@@ -11,25 +11,33 @@ import GenererateQR from "./GenererateQR";
 import Logo from "./../images/logo.png";
 
 class Navbar extends Component {
-  state = { activeItem: "home", role: "No Role", account: "", showQr: false };
+  state = {
+    activeItem: "home",
+    role: "No Role",
+    account: "",
+    showQr: false,
+  };
 
   componentDidMount = async () => {
     const web3 = await window.web3;
     const accounts = await web3.eth.getAccounts();
     if (accounts) {
-      this.setState({ account: accounts[0] });  
+      this.setState({ account: accounts[0] });
       const checkAdmin = await isAdmin(this.state.account);
-      console.log("admin; ",checkAdmin)
+      console.log("admin; ", checkAdmin);
       const userData = await getUserApi(this.state.account);
       var role = "No Role";
-      if(checkAdmin.data.response.isAdmin){
+      if (checkAdmin.data.response.isAdmin) {
         role = "admin";
-      }else if(!checkAdmin.data.response.isAdmin && userData.data.response.userInfo.tokenId !== 0){
+      } else if (
+        !checkAdmin.data.response.isAdmin &&
+        userData.data.response.userInfo.tokenId !== 0
+      ) {
         role = userData.data.response.userInfo.role;
-      }else{
+      } else {
         toast.error("User not found for given address!");
       }
-      this.setState({ role })
+      this.setState({ role });
     }
   };
 
@@ -42,7 +50,7 @@ class Navbar extends Component {
   render() {
     const { activeItem } = this.state;
     // const roles = ["Admin", "Employee"];
-
+    console.log("role: ", this.state.role);
     return (
       <>
         <GenererateQR
@@ -68,15 +76,14 @@ class Navbar extends Component {
               to="/"
               style={{ marginRight: "25px", padding: "0px" }}
             >
-              <div >
-                <Image style={{height:"35px"}}  src={Logo} />
+              <div>
+                <Image style={{ height: "35px" }} src={Logo} />
               </div>
-              <sup style={{fontWeight: "bold", marginLeft: "5px"}}>HRMS SYSTEM</sup>
+              <sup style={{ fontWeight: "bold", marginLeft: "5px" }}>
+                HRMS SYSTEM
+              </sup>
             </Menu.Item>
-            <Menu.Item
-              style={{ marginRight: "10px", padding: "0px" }}
-             
-            >
+            <Menu.Item style={{ marginRight: "10px", padding: "0px" }}>
               <SearchBar />
             </Menu.Item>
             {this.state.role === "admin" && (
@@ -95,6 +102,45 @@ class Navbar extends Component {
                   active={activeItem === "Create User"}
                   onClick={this.handleItemClick}
                 />
+                <Menu.Item
+                  as={Link}
+                  to="/create-project"
+                  name="Create Project"
+                  active={activeItem === "Create Project"}
+                  onClick={this.handleItemClick}
+                />
+                <Menu.Item
+                  as={Link}
+                  to="/view-projects"
+                  name="View Projects"
+                  active={activeItem === "View Projects"}
+                  onClick={this.handleItemClick}
+                />
+              </>
+            )}
+            {this.state.role === "pm" && (
+              <>
+                <Menu.Item
+                  as={Link}
+                  to="/"
+                  name="Create Project"
+                  active={activeItem === "Create Project"}
+                  onClick={this.handleItemClick}
+                />
+                <Menu.Item
+                  as={Link}
+                  to="/view-projects"
+                  name="View Projects"
+                  active={activeItem === "View Projects"}
+                  onClick={this.handleItemClick}
+                />
+                {/* <Menu.Item
+                  as={Link}
+                  to="/add-resources"
+                  name="Add Resources"
+                  active={activeItem === "Add Resources"}
+                  onClick={this.handleItemClick}
+                /> */}
               </>
             )}
             {this.state.role === "employee" && (
@@ -176,8 +222,14 @@ class Navbar extends Component {
             )}
 
             <Menu.Item position="right">
-              <Label style={{ color: "black", background: "white", textTransform: "capitalize" }}>
-                {this.state.role}
+              <Label
+                style={{
+                  color: "black",
+                  background: "white",
+                  textTransform: "capitalize",
+                }}
+              >
+                {this.state.role !== "pm" ? this.state.role : "Project Manager"}
               </Label>
               &nbsp;&nbsp;&nbsp;
               <div style={{ color: "lightgray" }}>

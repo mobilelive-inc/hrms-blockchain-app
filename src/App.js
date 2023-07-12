@@ -6,6 +6,8 @@ import MetaMaskGuide from "./MetaMaskGuide";
 import { Container } from "semantic-ui-react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import AdminPageCreate from "./pages/Admin/CreateUser";
+import CreateProject from "./pages/Admin/CreateProject";
+import ViewProjects from "./pages/Admin/ViewProjects";
 import AllEmployees from "./pages/Admin/AllEmployees";
 import EmployeePage from "./pages/Employee/Employee";
 import UpdateProfile from "./pages/Employee/UpdateProfile";
@@ -18,6 +20,7 @@ import NotificationsEmployee from "./pages/Employee/Notifications";
 import LoadComp from "./components/LoadComp";
 import {isAdmin} from "./Apis/Admin";
 import {getUserApi} from "./Apis/UsersApi";
+// import AddResources from "./pages/Admin/AddResources";
 
 
 function App() {
@@ -27,6 +30,7 @@ function App() {
   // const [isOrganizationEndorser, setisOrganizationEndorser] = useState(false);
   const [isOwner, setisOwner] = useState(false);
   const [loadcomp, setloadcomp] = useState(false);
+  const [isManager,setisManager] = useState(false);
 
   const loadBlockChainData = async () => {
     const web3 = await window.web3;
@@ -42,6 +46,9 @@ function App() {
         let role = userData.data.response.userInfo.role;
         if(role === 'employee'){
           setisEmployee(true);
+        }
+        else if (role==='pm'){
+          setisManager(true);
         }
       }else{
         toast.error("User not found for given address!");
@@ -95,11 +102,24 @@ function App() {
           component={AllOrganizationEndorser}
         /> */}
         <Route path="/create-user" exact component={AdminPageCreate} />
+        <Route path="/create-project" exact component = {CreateProject}/>
+        <Route path="/view-projects" exact component={ViewProjects}/>
         {/* <Route path="/notifications" exact component={NotificationsAdmin} /> */}
       </Switch>
     );
   };
 
+  const managerRoutes = ()=>{
+    console.log("in")
+    return (
+      <Switch>
+        <Route path="/" exact component={CreateProject}/>
+        <Route path="/view-projects" exact component={ViewProjects}/>
+        {/* <Route path="/add-resources" exact component={AddResources}/> */}
+        {/* <Route path="/create-project" exact component={CreateProject}/> */}
+      </Switch>
+    )
+  }
   const employeeRoutes = () => {
     return (
       <Switch>
@@ -133,6 +153,7 @@ function App() {
   const renderRoutes = () => {
     if (isOwner) return adminRoutes();
     else if (isEmployee) return employeeRoutes();
+    else if (isManager) return managerRoutes();
     // else if (isOrganizationEndorser) return isOrganizationEndorserRoutes();
     else return noRoleRoutes();
   };

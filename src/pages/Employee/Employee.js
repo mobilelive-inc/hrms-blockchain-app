@@ -6,7 +6,7 @@ import Admin from "../../abis/Admin.json";
 import SkillCard from "../../components/SkillCard";
 import moment from "moment";
 import "./Employee.css";
-import CodeforcesGraph from "../../components/CodeforcesGraph";
+//import CodeforcesGraph from "../../components/CodeforcesGraph";
 import LoadComp from "../../components/LoadComp";
 import ModalComponent from "./jiraModal";
 import ModalComponentGit from "./GitModal";
@@ -21,6 +21,7 @@ import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
 import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
 import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
 import { getEducationApi } from "../../Apis/EmployeeEducationApi";
+import { getPerformanceApi } from "../../Apis/EmployeePerformanceApi";
 import { getUserApi } from "../../Apis/UsersApi";
 import { IPFS_Link } from "../../utils/utils";
 
@@ -58,6 +59,8 @@ export default class EmployeePage extends Component {
     orgName: [],
     userInfo: null,
     tokenId: null,
+    performances:null,
+    performance:null
   };
   getJiraTasks = async () => {
     const name = this.state.userInfo?.first_name;
@@ -95,7 +98,8 @@ export default class EmployeePage extends Component {
       this.setState({ isGitLoading: true });
       this.setState({ isGitDisplayButton: false });
       await getGitOrganizationApi().then((response) => {
-        this.setState({ orgName: response?.data[0]?.login });
+        if (response)
+          this.setState({ orgName: response?.data[0]?.login });
       });
       await getGitRepos(this.state?.orgName).then((response) => {
         this.setState({ repoNames: response?.data });
@@ -185,8 +189,8 @@ export default class EmployeePage extends Component {
       this.getEducation();
       this.getGithubCommits();
       this.getFiles(accounts[0]);
-
-    
+      //this.getPerformance(this.state.userInfo?.email);
+      this.getPerformance();
       this.getJiraTasks();
     } else {
       toast.error("The Admin Contract does not exist on this network!");
@@ -200,7 +204,13 @@ export default class EmployeePage extends Component {
       this.setState({ userInfo: response?.data?.response?.userInfo });
     });
   };
-
+  getPerformance = async(email)=>{
+    const performance_info = await getPerformanceApi();
+    this.setState({ performances: performance_info?.data });
+    const performance = this.state.performances?.map((info) => ({ ...info }));
+    this.setState({ performance: performance[2] });
+    console.log("pe: ",performance)
+ }
   getSkills = async () => {
     await getSkillsApi(this.state.tokenId).then((response) => {
       const skillsData = response?.data?.response?.skills;
@@ -334,8 +344,14 @@ export default class EmployeePage extends Component {
 
               <Card className="employee-des">
                 <Card.Content>
-                  <Card.Header>Competetive Platform Ratings</Card.Header>
-                  <CodeforcesGraph />
+                  <Card.Header>Employee Performance</Card.Header>
+                  {this.state.performance&&
+                  <div>
+                    percentage:
+                      {
+                        this.state.performance.Score
+                      }  
+                    </div>}
                 </Card.Content>
               </Card>
             </Grid.Column>
@@ -527,12 +543,14 @@ export default class EmployeePage extends Component {
                   <br />
 
                   <div className="content-list">
-                    {this.state.isGitLoading ? (
+                   {
+                    (this.state.isGitLoading ? (
                       <CircularProgress />
                     ) : (
-                      this.state?.repoNames?.map((n) => (
+                      this.state.repoNames?(
+                      this.state?.repoNames?.map((n,index) => (
                         <p onClick={() => this.handleClick(n.name)}>
-                          <Card className="list-items">
+                          <Card className="list-items" key={index}>
                             <Card.Content className="info-style">
                               {n.name}
                               <Icon
@@ -543,7 +561,16 @@ export default class EmployeePage extends Component {
                           </Card>
                         </p>
                       ))
-                    )}
+                      ):
+                      (
+                        <div>
+                          No repos To display!
+                          </div>
+                      )
+
+                    ))
+                    
+                    }
                   </div>
                 </Card.Content>
               </Card>
@@ -565,7 +592,7 @@ export default class EmployeePage extends Component {
 
                         return (
                           <div>
-                            <Card className="list-items">
+                            <Card className="list-items" key={index}>
                               <Card.Content>
                                 <a
                                   href={IPFS_Link + file}

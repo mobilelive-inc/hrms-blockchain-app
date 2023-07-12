@@ -1,14 +1,16 @@
 import React, { Component } from "react";
-import { toast } from "react-toastify";
 import EmployeeCard from "../../components/EmployeeCard";
 import "./Admin.css";
 import Admin from "../../abis/Admin.json";
-import {getAllUsers} from "../../Apis/Admin"
+import { getAllUsers } from "../../Apis/Admin";
+import { getPerformanceApi } from "../../Apis/EmployeePerformanceApi";
 //import LoadComp from "../../components/LoadComp";
 
 export default class AllEmployees extends Component {
   state = {
     employees: [],
+    performances: null,
+    performance: null,
     loadcomp: false,
   };
 
@@ -17,30 +19,36 @@ export default class AllEmployees extends Component {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
-    if (AdminData) {
-      const employees = await getAllUsers();
-      let usersData = employees.data.response.usersList;
-      usersData=usersData.reverse();
-      this.setState({ employees: usersData });
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    }
+    console.log(AdminData);
+    const employees = await getAllUsers();
+    const performance_info = await getPerformanceApi();
+    this.setState({ performances: performance_info?.data });
+
+    const performance = performance_info?.data.map((info) => ({ ...info }));
+    this.setState({ performance: performance });
+
+    let usersData = employees.data.response.usersList;
+    usersData = usersData.reverse();
+    this.setState({ employees: usersData });
     this.setState({ loadcomp: false });
+    
   };
 
   render() {
-    return  (
+    return (
       <div className="admin">
         <h2 className="card-heading">All Registered Employees</h2>
         <br />
-        {/* {this.state.employees?.map((employee,index)=>(
-          <EmployeeCard key={index} employee={employee}/>
-        ))} */}
-        {this.state.employees?.map((employee, index) => (
-          employee.first_name&&(
-            <EmployeeCard key={index} employee={employee} />
-          )
-        ))} 
+        {this.state.employees?.map(
+          (employee, index) =>
+            employee.first_name && (
+              <EmployeeCard
+                key={index}
+                employee={employee}
+                performance={this.state.performance[index]}
+              />
+            )
+        )}
         <br />
       </div>
     );

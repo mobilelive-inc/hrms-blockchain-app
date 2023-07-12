@@ -9,7 +9,20 @@
   -ms-transform: translate(-50%, -50%);
   margin-top: 40px;
 }
-
+.card-display{
+  background-color: antiquewhite !important;
+  width: 100% !important;
+}
+.card-content{
+  margin: 8px;
+  font-weight: bold;
+}
+.date-style{
+  border-radius: 7px !important;
+  background: #1e2022ea !important;
+  border: 1px solid white !important;
+  color: white !important;
+}
 .card-style {
   background: #1e2022ea !important;
   border-radius: 7px !important;
@@ -21,7 +34,7 @@
 
 .card-heading {
   font-family: "Arvo", serif !important;
-  color: white;
+  color: black !important;
   font-size: 2rem;
   font-weight: 500;
   width: 100%;
