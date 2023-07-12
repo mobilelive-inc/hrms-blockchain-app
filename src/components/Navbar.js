@@ -102,13 +102,13 @@ class Navbar extends Component {
                   active={activeItem === "Create User"}
                   onClick={this.handleItemClick}
                 />
-                {/* <Menu.Item
+                <Menu.Item
                   as={Link}
                   to="/create-project"
                   name="Create Project"
                   active={activeItem === "Create Project"}
                   onClick={this.handleItemClick}
-                /> */}
+                />
                 <Menu.Item
                   as={Link}
                   to="/view-projects"

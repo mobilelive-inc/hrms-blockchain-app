@@ -101,7 +101,7 @@ function App() {
           component={AllOrganizationEndorser}
         /> */}
         <Route path="/create-user" exact component={AdminPageCreate} />
-        {/* <Route path="/create-project" exact component = {CreateProject}/> */}
+        <Route path="/create-project" exact component = {CreateProject}/>
         <Route path="/view-projects" exact component={ViewProjects}/>
         {/* <Route path="/notifications" exact component={NotificationsAdmin} /> */}
       </Switch>
