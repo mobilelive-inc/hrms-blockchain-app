@@ -134,13 +134,13 @@ class Navbar extends Component {
                   active={activeItem === "View Projects"}
                   onClick={this.handleItemClick}
                 />
-                {/* <Menu.Item
+                <Menu.Item
                   as={Link}
                   to="/add-resources"
                   name="Add Resources"
                   active={activeItem === "Add Resources"}
                   onClick={this.handleItemClick}
-                /> */}
+                />
               </>
             )}
             {this.state.role === "employee" && (

@@ -19,3 +19,16 @@ export const getProjects = async (id)=>{
         throw error;
     }
 }
+
+export const addResource = async (data) => {
+    try {
+      const response = await axios.get(
+        "https://d1h99yrv311co6.cloudfront.net/api/registry/project/add/resource",
+        data
+      );
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+  
