@@ -59,7 +59,7 @@ function App() {
 
   useEffect(() => {
     const handleAccountsChanged = () => {
-      window.location.reload();
+      window.location.href = '/'
     };
   
     const func = async () => {

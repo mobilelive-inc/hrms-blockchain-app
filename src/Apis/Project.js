@@ -22,7 +22,7 @@ export const getProjects = async (id)=>{
 
 export const addResource = async (data) => {
     try {
-      const response = await axios.get(
+      const response = await axios.post(
         "https://d1h99yrv311co6.cloudfront.net/api/registry/project/add/resource",
         data
       );

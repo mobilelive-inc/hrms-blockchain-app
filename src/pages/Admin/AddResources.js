@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
-import { Button, Form, Modal, Header } from "semantic-ui-react";
-import Admin from "../../abis/Admin.json";
+import { Button, Form, Modal,Dropdown, Header } from "semantic-ui-react";
+// import Admin from "../../abis/Admin.json";
 // import { toast } from "react-toastify";
 // import { getProjects } from "../../Apis/Project";
 import { getUserApi } from "../../Apis/UsersApi";
@@ -19,10 +19,11 @@ class AddResources extends Component {
     adminAddress: "",
     users: [],
     tokenId: null,
-    projectId: null,
+    projectId: this.props.index,
     userInfo: null,
     scanQR: false,
   };
+
 
   componentDidMount = async () => {
     const web3 = window.web3;
@@ -30,7 +31,6 @@ class AddResources extends Component {
     await this.getUserInfo(accounts[0]);
     this.setState({ adminAddress: accounts[0] });
     const employees = await getAllUsers();
-    console.log("employees: ", employees?.data?.response?.usersList);
     this.setState({ users: employees?.data?.response?.usersList });
     console.log("a: ", this.props.index);
   };
@@ -58,9 +58,6 @@ class AddResources extends Component {
     // }
     this.setState({ loading: true, errorMessage: "" });
     const web3 = window.web3;
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    console.log("adminData: ", AdminData);
     const accounts = await web3.eth.getAccounts();
     const messageToR = `0x${Buffer.from(
       "Please confirm to verify info update",
@@ -71,10 +68,11 @@ class AddResources extends Component {
     const dataToSend = {
       userAddress: adminAddress,
       signature: signature,
-      allocated_by: this.state.tokenId,
+      allocated_by: this.state.tokenId.toString(),
       allocation_type: allocation_type,
       resource_name: resource_name,
       resource_token: resource_token,
+      projectId: this.props.index
     };
     console.log("data: ", dataToSend);
     const response = await addResource(dataToSend);
@@ -90,6 +88,9 @@ class AddResources extends Component {
         data: txData.data,
       };
       const receipt = await web3.eth.sendTransaction(transaction);
+      if(receipt){
+        dataToSend.reset()
+      }
       console.log("receipt: ", receipt);
       this.setState({ loading: false });
     } else {
@@ -113,10 +114,10 @@ class AddResources extends Component {
     const { users } = this.state;
 
     // Create an array of options for the dropdown fields
-    const userOptions = users.map((user) => ({
-      key: user.userAddress,
-      value: user.userAddress,
-      text: user.name,
+    // .filter((obj, index, self) => index === self.findIndex((o) => o.proxyAddress === obj.proxyAddress))
+    const userOptions = users.filter((user) => (user.first_name && user.last_name !== '') && user.role === 'employee').map((user) => ({
+      text: user.first_name +' '+ user.last_name + ' - '+ user.role,
+      value: user.proxyAddress +'-'+user.first_name +' '+ user.last_name,
     }));
 
     return (
@@ -134,31 +135,30 @@ class AddResources extends Component {
           as="h2"
         />
         <Modal.Content className="modal-content">
-          <Form className="form-inputs">
-            <Form.Field className="form-inputs">
-              <Form.Dropdown
-                id="resource_name"
-                placeholder="Resource Name"
-                options={userOptions}
-                value={this.state.resource_name}
-                onChange={(e, data) =>
-                  this.setState({ resource_name: data.value })
-                }
-              />
-            </Form.Field>
-            <Form.Field className="form-inputs">
-              <Form.Dropdown
-                id="allocation_type"
-                placeholder="Allocation Type"
-                autoComplete="off"
-                autoCorrect="off"
-                options={this.allocation_option}
-                onChange={(e, { value }) =>
-                  this.setState({ allocation_type: value })
-                }
-              />
-            </Form.Field>
-          </Form>
+            <input type="hidden" value={this.props.index} />
+            <Dropdown
+              id="resource_name"
+              placeholder="Resource Name"
+              fluid
+              selection
+              options={userOptions}
+              // value={this.state.resource_name}
+              onChange={(e, data) =>
+                this.setState({ resource_token:data.value.split('-')[0], resource_name: data.value.split('-')[1] })
+              }
+            />
+            <Dropdown
+              id="allocation_type"
+              placeholder="Allocation Type"
+              fluid
+              selection
+              autoComplete="off"
+              autoCorrect="off"
+              options={this.allocation_option}
+              onChange={(e, { value }) =>
+                this.setState({ allocation_type: value })
+              }
+            />
         </Modal.Content>
         <Modal.Actions className="modal-actions">
           <Button

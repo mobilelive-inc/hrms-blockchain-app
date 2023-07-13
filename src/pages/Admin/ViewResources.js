@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router-dom";
+import { withRouter, Link } from "react-router-dom";
 import { Button, Modal, Header } from "semantic-ui-react";
 import { getAllResources } from "../../Apis/Project";
 import "./Admin.css";
@@ -7,19 +7,22 @@ import "./Admin.css";
 class ViewResources extends Component {
   state = {
     resources: [],
-    scanQR: false,
   };
 
   componentDidMount() {
+    // Initial API call to fetch resources when the component mounts
+    this.getResources(this.props.index);
   }
 
   componentDidUpdate(prevProps) {
+    // Check if the modal is open and the index prop has changed
     if (this.props.isOpen && this.props.index !== prevProps.index) {
       this.getResources(this.props.index);
     }
   }
 
   getResources = async (index) => {
+    this.setState({ resources: [] });
     const resources = await getAllResources(index);
     this.setState({ resources: resources?.data?.response?.projectResources });
   };
@@ -29,21 +32,32 @@ class ViewResources extends Component {
       <Modal open={this.props.isOpen} size="tiny" className="modal-des">
         <Header className="modal-heading" icon="pencil" content="List of Resources" as="h2" />
         <Modal.Content className="content-css">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Resource Name</th>
+                <th>Resource Address</th>
+              </tr>
+            </thead>
+            <tbody>
           {this.state.resources.length !== 0 ? (
             this.state.resources.map((resource, index) => {
               return (
-                <div key={index}>
-                  <h4>Resource Name</h4>
-                  <p>{resource.resource_name}</p>
-                  <h4>Allocator Id</h4>
-                  <p>{resource.allocated_by}</p>
-                  <br/>
-                </div>
+                <tr key={index}>
+                  <td>
+                    <Link to={`/getemployee/${resource.resource_token}`}>
+                      {resource.resource_name}
+                    </Link>
+                  </td>
+                  <td>{resource.resource_token}</td>
+                </tr>
               );
             })
           ) : (
-            <div>No resources to display!</div>
+            <tr><td>No resources to display!</td></tr>
           )}
+          </tbody>
+          </table>
         </Modal.Content>
         <Modal.Actions className="modal-actions">
           <Button

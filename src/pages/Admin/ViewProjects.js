@@ -6,7 +6,7 @@ import { getProjects } from "../../Apis/Project";
 import { Card } from "semantic-ui-react";
 import { getUserApi } from "../../Apis/UsersApi";
 import { getAllUsers } from "../../Apis/Admin";
-import { getAllResources } from "../../Apis/Project";
+// import { getAllResources } from "../../Apis/Project";
 import AddResources from "./AddResources";
 import ViewResources from "./ViewResources";
 import moment from "moment";
@@ -47,7 +47,7 @@ export default class ViewProjects extends Component {
   }
   closeResourceViewModal=()=>{
     this.setState({resourceViewModal:false});
-    getAllResources(this.state.index);
+    // getAllResources(this.state.index);
   }
 
   render() {
@@ -71,13 +71,14 @@ export default class ViewProjects extends Component {
         <Card className="card-display" key={i}>
 
             <div className="card-content" key={i}>
-              <div>              <p>Name: {project.name}</p>
-              <p>Client: {project.client}</p>
-              <p>Description</p>
-              <p>{project.description}</p>
-              <p>
-              {moment(project.start_date).format("DD-MM-YYYY")} - {moment(project.end_date).format("DD-MM-YYYY")}
-              </p>
+              <div>              
+                <p>Name: {project.name}</p>
+                <p>Client: {project.client}</p>
+                <p>Description</p>
+                <p>{project.description}</p>
+                <p>
+                Started:{moment(project.start_date).format("DD-MM-YYYY")} | Ends: {moment(project.end_date).format("DD-MM-YYYY")}
+                </p>
               </div>
               <div>
               <span
