@@ -1,46 +1,43 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
-import { Button, Form, Modal, Header } from "semantic-ui-react";
-// import { toast } from "react-toastify";
-// import { getProjects } from "../../Apis/Project";
+import { Button, Modal, Header } from "semantic-ui-react";
 import { getAllResources } from "../../Apis/Project";
 import "./Admin.css";
 
 class ViewResources extends Component {
   state = {
-    resources:[],
+    resources: [],
     scanQR: false,
   };
-  componentDidMount = async () => {
-    console.log("index: ",this.props.index)
-    const resources=await getAllResources(this.props.index);
-    this.setState({resources:resources?.data?.response?.projectResources})
-    console.log("resource: ",resources)
+
+  componentDidMount() {
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.isOpen && this.props.index !== prevProps.index) {
+      this.getResources(this.props.index);
+    }
+  }
+
+  getResources = async (index) => {
+    const resources = await getAllResources(index);
+    this.setState({ resources: resources?.data?.response?.projectResources });
   };
-  
+
   render() {
     return (
-      <Modal
-        as={Form}
-        onSubmit={(e) => this.handleSubmit(e)}
-        open={this.props.isOpen}
-        size="tiny"
-        className="modal-des"
-      >
-        <Header
-          className="modal-heading"
-          icon="pencil"
-          content="List of Resources"
-          as="h2"
-        />
-        <Modal.Content className="">
-          {this.state.resources && this.state.resources.length !== 0 ? (
-            this.state.resources.map((resource,index) => {
-              
+      <Modal open={this.props.isOpen} size="tiny" className="modal-des">
+        <Header className="modal-heading" icon="pencil" content="List of Resources" as="h2" />
+        <Modal.Content className="content-css">
+          {this.state.resources.length !== 0 ? (
+            this.state.resources.map((resource, index) => {
               return (
                 <div key={index}>
+                  <h4>Resource Name</h4>
                   <p>{resource.resource_name}</p>
+                  <h4>Allocator Id</h4>
                   <p>{resource.allocated_by}</p>
+                  <br/>
                 </div>
               );
             })
@@ -60,8 +57,6 @@ class ViewResources extends Component {
       </Modal>
     );
   }
-  
-  
 }
 
 export default withRouter(ViewResources);

@@ -12,7 +12,7 @@ import "./Admin.css";
 class AddResources extends Component {
   state = {
     resource_name: "",
-    allocation_type:"",
+    allocation_type: "",
     resource_token: null,
     loading: false,
     errorMessage: "",
@@ -50,7 +50,7 @@ class AddResources extends Component {
   };
   handleSubmit = async (e) => {
     e.preventDefault();
-    const { resource_name, adminAddress, allocation_type,resource_token } =
+    const { resource_name, adminAddress, allocation_type, resource_token } =
       this.state;
     // if (!resource_name) {
     //   toast.error("Please fill in the required fields!!");
@@ -67,15 +67,14 @@ class AddResources extends Component {
       "utf8"
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
-    
 
     const dataToSend = {
       userAddress: adminAddress,
       signature: signature,
       allocated_by: this.state.tokenId,
       allocation_type: allocation_type,
-      resource_name:resource_name,
-      resource_token:resource_token
+      resource_name: resource_name,
+      resource_token: resource_token,
     };
     console.log("data: ", dataToSend);
     const response = await addResource(dataToSend);
@@ -141,15 +140,14 @@ class AddResources extends Component {
                 id="resource_name"
                 placeholder="Resource Name"
                 options={userOptions}
-                // value={resource_name}
-                onChange={(e, { value }) =>
-                  this.setState({ resource_name: value })
+                value={this.state.resource_name}
+                onChange={(e, data) =>
+                  this.setState({ resource_name: data.value })
                 }
-                
               />
             </Form.Field>
             <Form.Field className="form-inputs">
-            <Form.Dropdown
+              <Form.Dropdown
                 id="allocation_type"
                 placeholder="Allocation Type"
                 autoComplete="off"
@@ -160,7 +158,6 @@ class AddResources extends Component {
                 }
               />
             </Form.Field>
-            
           </Form>
         </Modal.Content>
         <Modal.Actions className="modal-actions">
