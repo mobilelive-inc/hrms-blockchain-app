@@ -6,7 +6,9 @@ import { getProjects } from "../../Apis/Project";
 import { Card } from "semantic-ui-react";
 import { getUserApi } from "../../Apis/UsersApi";
 import { getAllUsers } from "../../Apis/Admin";
+import { getAllResources } from "../../Apis/Project";
 import AddResources from "./AddResources";
+import ViewResources from "./ViewResources";
 import moment from "moment";
 
 export default class ViewProjects extends Component {
@@ -17,7 +19,8 @@ export default class ViewProjects extends Component {
     loadcomp: false,
     tokenId:null,
     index:0,
-    resourceModal:false
+    resourceModal:false,
+    resourceViewModal:false
   };
 
   componentDidMount = async () => {
@@ -33,7 +36,7 @@ export default class ViewProjects extends Component {
     const projects=performance_info?.data?.response?.projects
     this.setState({projects:projects})    
     this.setState({ loadcomp: false });
-  console.log("this: ",this.state.index)
+  console.log("this: ",this.state.resourceViewModal)
 
     
   };
@@ -41,6 +44,10 @@ export default class ViewProjects extends Component {
   closeResourceModal=()=>{
     this.setState({resourceModal:false});
     getAllUsers();
+  }
+  closeResourceViewModal=()=>{
+    this.setState({resourceViewModal:false});
+    getAllResources(this.state.index);
   }
 
   render() {
@@ -51,14 +58,19 @@ export default class ViewProjects extends Component {
         closeResourceModal={this.closeResourceModal}
         index={this.state.index}
         />
+        <ViewResources
+        isOpen={this.state.resourceViewModal}
+        closeResourceViewModal={this.closeResourceViewModal}
+        index={this.state.index}
+        />
 
         <h2 className="card-heading">All Projects List</h2>
         <br />
         {this.state.projects.length!==0 ? (
-          this.state.projects.map((project, index) => (
-        <Card className="card-display" key={index}>
+          this.state.projects.map((project, i) => (
+        <Card className="card-display" key={i}>
 
-            <div className="card-content" key={index}>
+            <div className="card-content" key={i}>
               <div>              <p>Name: {project.name}</p>
               <p>Client: {project.client}</p>
               <p>Description</p>
@@ -73,11 +85,22 @@ export default class ViewProjects extends Component {
                     onClick={(e) =>
                       this.setState({
                         resourceModal: !this.state.resourceModal,
-                        index:index
+                        index:i
                       })
                     }
                   >
                     <i className="fas fa-plus"></i>
+                  </span>
+                  <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        resourceViewModal: !this.state.resourceViewModal,
+                        index:i
+                      })
+                    }
+                  >
+                    <i className="fas fa-eye"></i>
                   </span>
               </div>
             </div>

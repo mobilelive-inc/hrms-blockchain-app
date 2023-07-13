@@ -31,4 +31,14 @@ export const addResource = async (data) => {
       throw error;
     }
   };
-  
+
+export const getAllResources = async(id)=>{
+  try {
+    const response = await axios.get(
+      `https://d1h99yrv311co6.cloudfront.net/api/registry/project/resources/${id}`
+    );
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}
