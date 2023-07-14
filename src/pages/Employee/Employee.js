@@ -59,7 +59,7 @@ export default class EmployeePage extends Component {
     orgName: [],
     userInfo: null,
     tokenId: null,
-    performances:null,
+    performances:{},
     performance:null
   };
   getJiraTasks = async () => {
@@ -207,7 +207,7 @@ export default class EmployeePage extends Component {
   getPerformance = async(email)=>{
     const performance_info = await employeePerformanceApi(email);
     console.log("info: ",performance_info)
-    this.setState({ performances: performance_info?.data });
+    this.setState({ performances: performance_info?.data[0] });
     console.log("pe: ",this.state.performances)
  }
   getSkills = async () => {
@@ -348,7 +348,7 @@ export default class EmployeePage extends Component {
                   <div>
                     Percentage Score:
                       {
-                        this.state.performances
+                        this.state.performances.Score
                       }  
                     </div>}
                 </Card.Content>

@@ -11,9 +11,9 @@ export const getPerformanceApi = async ()=>{
 }
 
 export const employeePerformanceApi = async (email)=>{
-    email="josephine@ml.com";    
+    email="Viktor.bilyk@hotmail.com";    
     try{
-        const response = await axios.get((`https://d1h99yrv311co6.cloudfront.net/mlml/v11/getscorebyemail?em=${email}`))
+        const response = await axios.get((`https://d1h99yrv311co6.cloudfront.net/mlml/v11/getScoreByEmail?em=${email}`))
         return response; 
     }
     catch(error){

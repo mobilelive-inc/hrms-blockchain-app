@@ -88,8 +88,14 @@ class AddResources extends Component {
         data: txData.data,
       };
       const receipt = await web3.eth.sendTransaction(transaction);
-      if(receipt){
-        dataToSend.reset()
+      if (receipt) {
+        this.setState({
+          resource_name: "",
+          allocation_type: "",
+          resource_token: null,
+          loading: false,
+          errorMessage: "",
+        });
       }
       console.log("receipt: ", receipt);
       this.setState({ loading: false });
