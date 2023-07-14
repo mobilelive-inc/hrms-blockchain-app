@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { withRouter, Link } from "react-router-dom";
 import { Button, Modal, Header } from "semantic-ui-react";
-import { getAllResources } from "../../Apis/Project";
 import "./Admin.css";
 
 class ViewResources extends Component {
@@ -9,21 +8,17 @@ class ViewResources extends Component {
     resources: [],
   };
 
-  componentDidMount() {
-    this.getResources(this.props.index,this.props.tokenId);
-  }
+  // componentDidMount() {
+  //   this.getResources(this.props.index,this.props.tokenId);
+  // }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.isOpen && this.props.index !== prevProps.index) {
-      this.getResources(this.props.index,this.props.tokenId);
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   if (this.props.isOpen && this.props.index !== prevProps.index) {
+  //     this.getResources(this.props.index,this.props.tokenId);
+  //   }
+  // }
 
-  getResources = async (index,tokenId) => {
-    this.setState({ resources: [] });
-    const resources = await getAllResources(Number(`${index}${tokenId}`));
-    this.setState({ resources: resources?.data?.response?.projectResources });
-  };
+  
 
   render() {
     return (
@@ -38,8 +33,8 @@ class ViewResources extends Component {
               </tr>
             </thead>
             <tbody>
-          {this.state.resources.length !== 0 ? (
-            this.state.resources.map((resource, index) => {
+          {this.props.resources.length !== 0 ? (
+            this.props.resources.map((resource, index) => {
               return (
                 <tr key={index}>
                   <td>

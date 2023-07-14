@@ -16,21 +16,21 @@ import "./Admin.css";
 
 class CreateUser extends Component {
   state = {
-    role:"",
-    first_name:"",
-    last_name:"",
-    industry:"",
-    current_position:"",
-    education:"",
-    country:"",
-    city:"",
-    phone_number:"",
-    dob:"",  
+    role: "",
+    first_name: "",
+    last_name: "",
+    industry: "",
+    current_position: "",
+    education: "",
+    country: "",
+    city: "",
+    phone_number: "",
+    dob: "",
     userAddress: "",
-    email:"",
-    
+    email: "",
+
     description: "",
-    
+
     loading: false,
     errorMessage: "",
     scanQR: false,
@@ -39,9 +39,8 @@ class CreateUser extends Component {
   roleOptions = [
     { key: "employee", text: "Employee", value: "employee" },
     { key: "admin", text: "Admin", value: "admin" },
-    {key:"pm",text:"Project Manager",value:"pm"}
+    { key: "pm", text: "Project Manager", value: "pm" },
   ];
-  
 
   handleDropdownSelect = (e, data) => {
     this.setState({ role: data.value });
@@ -68,9 +67,9 @@ class CreateUser extends Component {
     console.log("adminData: ", AdminData);
     const accounts = await web3.eth.getAccounts();
     const messageToR = `0x${Buffer.from(
-      'Please confirm to verify info update',
-      'utf8'
-    ).toString('hex')}`;
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     const dataToSend = {
       userAddress: userAddress,
@@ -78,10 +77,10 @@ class CreateUser extends Component {
       role: role,
       first_name: first_name,
       last_name: last_name,
-      email: email
+      email: email,
     };
     const response = await createUser(dataToSend);
-    
+
     if (response?.data?.response?.transactionData) {
       const txData = response.data.response.transactionData;
       const transaction = {
@@ -90,16 +89,19 @@ class CreateUser extends Component {
         value: txData.value,
         gas: txData.gas,
         gasPrice: txData.gasPrice,
-        data: txData.data
+        data: txData.data,
       };
       const receipt = await web3.eth.sendTransaction(transaction);
-      console.log("receipt: ",receipt)
-      this.setState({loading:false})
+      if (receipt) {
+        toast.success("User created successfully");
+        console.log("receipt: ", receipt);
+        this.setState({ loading: false });
+      }
     } else {
-      console.error("Transaction data is missing in the response.");
+      toast.error("Transaction data is missing in the response.");
     }
   };
-  
+
   closeScanQRModal = () => {
     this.setState({ scanQR: false });
   };
@@ -168,7 +170,6 @@ class CreateUser extends Component {
                       value={this.state.userAddress}
                       onChange={this.handleChange}
                     />
-                    
                   </Input>
                 </Form.Field>
                 <br />
@@ -194,6 +195,7 @@ class CreateUser extends Component {
                     type="submit"
                     onClick={this.handleSubmit}
                     loading={this.state.loading}
+                    disabled={this.state.loading}
                   >
                     Register
                   </Button>

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { Button, Form, Modal,Dropdown, Header } from "semantic-ui-react";
 // import Admin from "../../abis/Admin.json";
-// import { toast } from "react-toastify";
+import { toast } from "react-toastify";
 // import { getProjects } from "../../Apis/Project";
 import { getUserApi } from "../../Apis/UsersApi";
 import { getAllUsers } from "../../Apis/Admin";
@@ -52,10 +52,10 @@ class AddResources extends Component {
     e.preventDefault();
     const { resource_name, adminAddress, allocation_type, resource_token } =
       this.state;
-    // if (!resource_name) {
-    //   toast.error("Please fill in the required fields!!");
-    //   return;
-    // }
+    if (!resource_name || !allocation_type) {
+      toast.error("Please fill in the required fields!!");
+      return;
+    }
     this.setState({ loading: true, errorMessage: "" });
     const web3 = window.web3;
     const accounts = await web3.eth.getAccounts();
@@ -99,9 +99,12 @@ class AddResources extends Component {
           loading: false,
           errorMessage: "",
         });
-      }
-      console.log("receipt: ", receipt);
+        toast.success("Resource allocated successfully");
+        console.log("receipt: ", receipt);
       this.setState({ loading: false });
+      this.props.closeResourceModal();
+      }
+      
     } else {
       console.error("Transaction data is missing in the response.");
     }
@@ -185,6 +188,7 @@ class AddResources extends Component {
             icon="save"
             content="Save"
             loading={this.state.loading}
+            disabled={this.state.loading}
           />
         </Modal.Actions>
       </Modal>
