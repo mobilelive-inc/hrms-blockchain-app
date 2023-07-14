@@ -21,6 +21,7 @@ import LoadComp from "./components/LoadComp";
 import {isAdmin} from "./Apis/Admin";
 import {getUserApi} from "./Apis/UsersApi";
 // import AddResources from "./pages/Admin/AddResources";
+// import AddResources from "./pages/Admin/AddResources";
 
 
 function App() {
@@ -58,7 +59,7 @@ function App() {
 
   useEffect(() => {
     const handleAccountsChanged = () => {
-      window.location.reload();
+      window.location.href = '/'
     };
   
     const func = async () => {
@@ -115,7 +116,6 @@ function App() {
       <Switch>
         <Route path="/" exact component={CreateProject}/>
         <Route path="/view-projects" exact component={ViewProjects}/>
-        {/* <Route path="/add-resources" exact component={AddResources}/> */}
         {/* <Route path="/create-project" exact component={CreateProject}/> */}
       </Switch>
     )

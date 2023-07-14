@@ -1,9 +1,15 @@
 import React, { Component } from "react";
+//import {toast} from "react-toastify";
 import "./Admin.css";
 import Admin from "../../abis/Admin.json";
 import { getProjects } from "../../Apis/Project";
-import { getUserApi } from "../../Apis/UsersApi";
 import { Card } from "semantic-ui-react";
+import { getUserApi } from "../../Apis/UsersApi";
+import { getAllUsers } from "../../Apis/Admin";
+// import { getAllResources } from "../../Apis/Project";
+import AddResources from "./AddResources";
+import ViewResources from "./ViewResources";
+import moment from "moment";
 
 export default class ViewProjects extends Component {
   state = {
@@ -11,7 +17,10 @@ export default class ViewProjects extends Component {
     performances: null,
     projects: [],
     loadcomp: false,
-    tokenId:null
+    tokenId:null,
+    index:0,
+    resourceModal:false,
+    resourceViewModal:false
   };
 
   componentDidMount = async () => {
@@ -27,23 +36,75 @@ export default class ViewProjects extends Component {
     const projects=performance_info?.data?.response?.projects
     this.setState({projects:projects})    
     this.setState({ loadcomp: false });
+  console.log("this: ",this.state.resourceViewModal)
+
     
   };
+
+  closeResourceModal=()=>{
+    this.setState({resourceModal:false});
+    getAllUsers();
+  }
+  closeResourceViewModal=()=>{
+    this.setState({resourceViewModal:false});
+    // getAllResources(this.state.index);
+  }
 
   render() {
     return (
       <div className="admin">
+        <AddResources
+        isOpen={this.state.resourceModal}
+        closeResourceModal={this.closeResourceModal}
+        index={this.state.index}
+        />
+        <ViewResources
+        isOpen={this.state.resourceViewModal}
+        closeResourceViewModal={this.closeResourceViewModal}
+        index={this.state.index}
+        tokenId={this.state.tokenId}
+        />
+
         <h2 className="card-heading">All Projects List</h2>
         <br />
         {this.state.projects.length!==0 ? (
-          this.state.projects.map((project, index) => (
-        <Card className="card-display" key={index}>
-            <div className="card-content" key={index}>
-              <p>Name: {project.name}</p>
-              <p>Client: {project.client}</p>
-              <p>Description</p>
-              <p>{project.description}</p>
+          this.state.projects.map((project, i) => (
+        <Card className="card-display" key={i}>
 
+            <div className="card-content" key={i}>
+              <div>              
+                <p>Name: {project.name}</p>
+                <p>Client: {project.client}</p>
+                <p>Description</p>
+                <p>{project.description}</p>
+                <p>
+                Started:{moment(project.start_date).format("DD-MM-YYYY")} | Ends: {moment(project.end_date).format("DD-MM-YYYY")}
+                </p>
+              </div>
+              <div>
+              <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        resourceModal: !this.state.resourceModal,
+                        index:i
+                      })
+                    }
+                  >
+                    <i className="fas fa-plus"></i>
+                  </span>
+                  <span
+                    className="add-button"
+                    onClick={(e) =>
+                      this.setState({
+                        resourceViewModal: !this.state.resourceViewModal,
+                        index:i
+                      })
+                    }
+                  >
+                    <i className="fas fa-eye"></i>
+                  </span>
+              </div>
             </div>
         </Card>
 

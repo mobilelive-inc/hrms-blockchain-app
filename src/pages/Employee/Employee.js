@@ -21,7 +21,7 @@ import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
 import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
 import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
 import { getEducationApi } from "../../Apis/EmployeeEducationApi";
-import { getPerformanceApi } from "../../Apis/EmployeePerformanceApi";
+import { employeePerformanceApi } from "../../Apis/EmployeePerformanceApi";
 import { getUserApi } from "../../Apis/UsersApi";
 import { IPFS_Link } from "../../utils/utils";
 
@@ -59,7 +59,7 @@ export default class EmployeePage extends Component {
     orgName: [],
     userInfo: null,
     tokenId: null,
-    performances:null,
+    performances:{},
     performance:null
   };
   getJiraTasks = async () => {
@@ -189,8 +189,8 @@ export default class EmployeePage extends Component {
       this.getEducation();
       this.getGithubCommits();
       this.getFiles(accounts[0]);
-      //this.getPerformance(this.state.userInfo?.email);
-      this.getPerformance();
+      this.getPerformance(this.state.userInfo?.email);
+      //this.getPerformance();
       this.getJiraTasks();
     } else {
       toast.error("The Admin Contract does not exist on this network!");
@@ -205,11 +205,10 @@ export default class EmployeePage extends Component {
     });
   };
   getPerformance = async(email)=>{
-    const performance_info = await getPerformanceApi();
-    this.setState({ performances: performance_info?.data });
-    const performance = this.state.performances?.map((info) => ({ ...info }));
-    this.setState({ performance: performance[2] });
-    console.log("pe: ",performance)
+    const performance_info = await employeePerformanceApi(email);
+    console.log("info: ",performance_info)
+    this.setState({ performances: performance_info?.data[0] });
+    console.log("pe: ",this.state.performances)
  }
   getSkills = async () => {
     await getSkillsApi(this.state.tokenId).then((response) => {
@@ -345,11 +344,11 @@ export default class EmployeePage extends Component {
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Employee Performance</Card.Header>
-                  {this.state.performance&&
+                  {this.state.performances&&
                   <div>
-                    percentage:
+                    Percentage Score:
                       {
-                        this.state.performance.Score
+                        this.state.performances.Score
                       }  
                     </div>}
                 </Card.Content>
@@ -510,15 +509,15 @@ export default class EmployeePage extends Component {
                       <CircularProgress />
                     ) : (
                       this.state.jiraKeys &&
-                      this.state.jiraKeys.map((key, index) => (
+                      this.state.jiraKeys.map((Key, index) => (
                         <p
                           style={{ fontWeight: "bold" }}
                           key={index}
-                          onClick={() => this.openModal(key)}
+                          onClick={() => this.openModal(Key)}
                         >
                           <Card className="list-items" key={index}>
                             <Card.Content className="info-style">
-                              {key}
+                              {Key}
                               <Icon
                                 name="external alternate"
                                 style={{ marginLeft: "8px" }}

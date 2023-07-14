@@ -4,12 +4,13 @@ import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
 import moment from "moment";
 import LoadComp from "../../components/LoadComp";
-import CodeforcesGraph from "../../components/CodeforcesGraph";
+// import CodeforcesGraph from "../../components/CodeforcesGraph";
 import { getUserApi } from "../../Apis/UsersApi";
 import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
 import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
 import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
 import { getEducationApi } from "../../Apis/EmployeeEducationApi";
+import { employeePerformanceApi } from "../../Apis/EmployeePerformanceApi";
 
 export default class GetEmployee extends Component {
   state = {
@@ -36,6 +37,7 @@ export default class GetEmployee extends Component {
     this.getCertifications(token_id);
     this.getWorkExp(token_id);
     this.getEducation(token_id);
+    this.getPerformance(employeeData?.data?.response?.userInfo?.email);
 
     this.setState({
       employeedata: employeedata,
@@ -78,6 +80,13 @@ export default class GetEmployee extends Component {
         console.error("Error retrieving education data:", error);
       }
   };
+
+  getPerformance = async(email)=>{
+    const performance_info = await employeePerformanceApi(email);
+    console.log("info: ",performance_info)
+    this.setState({ performances: performance_info?.data });
+    console.log("pe: ",this.state.performances)
+ }
 
   render() {
     return this.state.loadcomp ? (
@@ -176,8 +185,14 @@ export default class GetEmployee extends Component {
               </Card>
               <Card className="employee-des">
                 <Card.Content>
-                  <Card.Header>Competetive Platform Ratings</Card.Header>
-                  <CodeforcesGraph />
+                  <Card.Header>Employee Performance</Card.Header>
+                  {this.state.performances&&
+                  <div>
+                    Percentage Score:
+                      {
+                        this.state.performances
+                      }  
+                    </div>}
                 </Card.Content>
               </Card>
             </Grid.Column>
