@@ -5,11 +5,11 @@ import Admin from "../../abis/Admin.json";
 import { getProjects } from "../../Apis/Project";
 import { Card } from "semantic-ui-react";
 import { getUserApi } from "../../Apis/UsersApi";
-import { getAllUsers } from "../../Apis/Admin";
-// import { getAllResources } from "../../Apis/Project";
 import AddResources from "./AddResources";
 import ViewResources from "./ViewResources";
 import moment from "moment";
+import { getAllResources } from "../../Apis/Project";
+
 
 export default class ViewProjects extends Component {
   state = {
@@ -18,6 +18,7 @@ export default class ViewProjects extends Component {
     projects: [],
     loadcomp: false,
     tokenId:null,
+    resources:[],
     index:0,
     resourceModal:false,
     resourceViewModal:false
@@ -41,9 +42,14 @@ export default class ViewProjects extends Component {
     
   };
 
+  getResources = async (index,tokenId) => {
+    
+    this.setState({ resources: [],resourceViewModal: !this.state.resourceViewModal });
+    const resources = await getAllResources(Number(`${index}${tokenId}`));
+    this.setState({ resources: resources?.data?.response?.projectResources });
+  };
   closeResourceModal=()=>{
     this.setState({resourceModal:false});
-    getAllUsers();
   }
   closeResourceViewModal=()=>{
     this.setState({resourceViewModal:false});
@@ -61,8 +67,9 @@ export default class ViewProjects extends Component {
         <ViewResources
         isOpen={this.state.resourceViewModal}
         closeResourceViewModal={this.closeResourceViewModal}
-        index={this.state.index}
-        tokenId={this.state.tokenId}
+        resources={this.state.resources}
+        // index={this.state.index}
+        // tokenId={this.state.tokenId}
         />
 
         <h2 className="card-heading">All Projects List</h2>
@@ -89,6 +96,7 @@ export default class ViewProjects extends Component {
                         resourceModal: !this.state.resourceModal,
                         index:i
                       })
+
                     }
                   >
                     <i className="fas fa-plus"></i>
@@ -96,10 +104,7 @@ export default class ViewProjects extends Component {
                   <span
                     className="add-button"
                     onClick={(e) =>
-                      this.setState({
-                        resourceViewModal: !this.state.resourceViewModal,
-                        index:i
-                      })
+                      this.getResources(i,this.state.tokenId)
                     }
                   >
                     <i className="fas fa-eye"></i>

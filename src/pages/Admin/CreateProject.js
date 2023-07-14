@@ -201,8 +201,9 @@ class CreateProject extends Component {
                     type="submit"
                     onClick={this.handleSubmit}
                     loading={this.state.loading}
+                    disabled={this.state.loading}
                   >
-                    Register
+                    Submit
                   </Button>
                 </div>
               </Form>
