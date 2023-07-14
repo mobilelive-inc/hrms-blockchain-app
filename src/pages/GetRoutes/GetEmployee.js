@@ -20,6 +20,7 @@ export default class GetEmployee extends Component {
     certifications: [],
     workExps: [],
     educations: [],
+    performances:[],
     colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
     readmore: false,
     loadcomp: false,
@@ -85,7 +86,7 @@ export default class GetEmployee extends Component {
     const performance_info = await employeePerformanceApi(email);
     console.log("info: ",performance_info)
     this.setState({ performances: performance_info?.data });
-    console.log("pe: ",this.state.performances)
+    console.log("pe: ",this.state.performances[0])
  }
 
   render() {
@@ -186,11 +187,11 @@ export default class GetEmployee extends Component {
               <Card className="employee-des">
                 <Card.Content>
                   <Card.Header>Employee Performance</Card.Header>
-                  {this.state.performances&&
+                  {this.state.performances[0]&&
                   <div>
                     Percentage Score:
                       {
-                        this.state.performances
+                        this.state.performances[0].Score
                       }  
                     </div>}
                 </Card.Content>
