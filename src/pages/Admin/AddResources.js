@@ -65,14 +65,17 @@ class AddResources extends Component {
     ).toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
 
-    const dataToSend = {
+      const projectId=Number(`${this.props.index}${this.state.tokenId}`);
+
+      console.log("id: ",projectId)
+      const dataToSend = {
       userAddress: adminAddress,
       signature: signature,
       allocated_by: this.state.tokenId.toString(),
       allocation_type: allocation_type,
       resource_name: resource_name,
       resource_token: resource_token,
-      projectId: this.props.index
+      projectId: projectId
     };
     console.log("data: ", dataToSend);
     const response = await addResource(dataToSend);

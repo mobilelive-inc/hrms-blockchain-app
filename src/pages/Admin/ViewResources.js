@@ -10,20 +10,18 @@ class ViewResources extends Component {
   };
 
   componentDidMount() {
-    // Initial API call to fetch resources when the component mounts
-    this.getResources(this.props.index);
+    this.getResources(this.props.index,this.props.tokenId);
   }
 
   componentDidUpdate(prevProps) {
-    // Check if the modal is open and the index prop has changed
     if (this.props.isOpen && this.props.index !== prevProps.index) {
-      this.getResources(this.props.index);
+      this.getResources(this.props.index,this.props.tokenId);
     }
   }
 
-  getResources = async (index) => {
+  getResources = async (index,tokenId) => {
     this.setState({ resources: [] });
-    const resources = await getAllResources(index);
+    const resources = await getAllResources(Number(`${index}${tokenId}`));
     this.setState({ resources: resources?.data?.response?.projectResources });
   };
 

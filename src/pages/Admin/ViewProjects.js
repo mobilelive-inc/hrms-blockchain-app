@@ -62,6 +62,7 @@ export default class ViewProjects extends Component {
         isOpen={this.state.resourceViewModal}
         closeResourceViewModal={this.closeResourceViewModal}
         index={this.state.index}
+        tokenId={this.state.tokenId}
         />
 
         <h2 className="card-heading">All Projects List</h2>
