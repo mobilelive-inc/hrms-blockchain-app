@@ -1,167 +1,206 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
-import Employee from "../../abis/Employee.json";
-import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import CodeforcesGraph from "../../components/CodeforcesGraph";
-import LoadComp from "../../components/LoadComp";
-import axios from "axios";
+// import LoadComp from "../../components/LoadComp";
 import ModalComponent from "./jiraModal";
 import ModalComponentGit from "./GitModal";
 import CircularProgress from "@mui/material/CircularProgress";
+// import { saveAs } from "file-saver";
+import getJiraApi from "../../Apis/JiraApi";
+import { getGitOrganizationApi } from "../../Apis/GitApi";
+import { getGitRepos } from "../../Apis/GitApi";
+import { getGitCommits } from "../../Apis/GitApi";
+import { getFilesApi } from "../../Apis/FileApi";
+import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
+import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
+import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
+import { getEducationApi } from "../../Apis/EmployeeEducationApi";
+import { employeePerformanceApi } from "../../Apis/EmployeePerformanceApi";
+import { getUserApi } from "../../Apis/UsersApi";
+import { IPFS_Link } from "../../utils/utils";
 
 const formData = new FormData();
 let accounts = null;
-export default class EmployeePage extends Component {
-  state = {
-    employeedata: {},
-    overallEndorsement: [],
-    skills: [],
-    files: [],
-    assigneeName: [],
-    assigneeImg: [],
-    description: [],
-    key: [],
-    jiraKeys: [],
-    Response: [],
-    repoNames: [],
-    commits: [],
-    names: [],
-    extensions: [],
-    certifications: [],
-    workExps: [],
-    educations: [],
-    colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
-    readmore: false,
-    codeforces_res: [],
-    loadcomp: false,
-    showModal: false,
-    showCommitsModal: false,
-    selectedKey: null,
-    isLoading: false,
-    isDisplayButton: true,
-    isGitDisplayButton: true,
-    isGitLoading: false,
-    orgName: [],
-  };
-  IPFS_Link = "https://ipfs.moralis.io:2053/ipfs/";
 
-  getJiraTasks = async () => {
-    console.log("account: ", accounts[0]);
-    const name = this.state.employeedata?.name;
-    console.log("name: ", this.state.employeedata?.name);
+const EmployeePage = () => {
+  // const [employeedata, setEmployeedata] = useState({});
+  // const [overallEndorsement, setOverallEndorsement] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [files, setFiles] = useState([]);
+  // const [assigneeName, setAssigneeName] = useState([]);
+  // const [assigneeImg, setAssigneeImg] = useState([]);
+  // const [description, setDescription] = useState([]);
+  // const [key, setKey] = useState([]);
+  const [jiraKeys, setJiraKeys] = useState([]);
+  const [Response, setResponse] = useState([]);
+  const [repoNames, setRepoNames] = useState([]);
+  const [commits, setCommits] = useState([]);
+  const [names, setNames] = useState([]);
+  const [extensions, setExtensions] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [workExps, setWorkExps] = useState([]);
+  const [educations, setEducations] = useState([]);
+  // const [colour, setColour] = useState([
+  //   "#b6e498",
+  //   "#61dafb",
+  //   "#764abc",
+  //   "#83cd29",
+  //   "#00d1b2",
+  // ]);
+  // const [readmore, setReadmore] = useState(false);
+  // const [codeforces_res, setCodeforces_res] = useState([]);
+  // const [loadcomp, setLoadcomp] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showCommitsModal, setShowCommitsModal] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  // const [isDisplayButton, setIsDisplayButton] = useState(true);
+  // const [isGitDisplayButton, setIsGitDisplayButton] = useState(true);
+  const [isGitLoading, setIsGitLoading] = useState(false);
+  const [orgName, setOrgName] = useState([]);
+  const [userInfo, setUserInfo] = useState(null);
+  const [tokenId, setTokenId] = useState(null);
+  const [performances, setPerformances] = useState({});
+  // const [performance, setPerformance] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // setLoadcomp(true);
+      const web3 = window.web3;
+      const networkId = await web3.eth.net.getId();
+      const AdminData = await Admin.networks[networkId];
+      console.log(AdminData);
+      accounts = await web3.eth.getAccounts();
+
+      try {
+        await getUserInfo(accounts[0]);
+        // if (tokenId) {
+        //   console.log("token: ",tokenId);
+        //   console.log(userInfo)
+        //   getSkills(tokenId);
+        //   getCertifications(tokenId);
+        //   getWorkExp(tokenId);
+        //   getEducation(tokenId);
+        //   getGithubCommits();
+        //   getFiles(accounts[0]);
+        //   getPerformance(userInfo?.email);
+        //   await getJiraTasks(userInfo?.first_name);
+        // }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+      // finally {
+      //   setLoadcomp(false);
+      // }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenId]);
+
+  const getJiraTasks = async (first_name) => {
+    const name = first_name;
     try {
-      this.setState({ isLoading: true }); 
-      this.setState({ isDisplayButton: false });
-      const response = await axios.get(
-        "http://d1h99yrv311co6.cloudfront.net/api/jira/issues",
-        {
-          params: {
-            userName: name,
-          },
-        }
-      );
-
-      this.setState({ Response: response?.data?.response });
-      const keys = this.state.Response?.issues?.map((issue) => issue.key);
-      this.setState({ jiraKeys: keys });
+      setIsLoading(true);
+      // setIsDisplayButton(false);
+      const response = await getJiraApi(name);
+      setResponse(response?.data?.response);
+      const keys = response?.data?.response?.issues?.map((issue) => issue.key);
+      setJiraKeys(keys);
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isLoading: false }); 
+      setIsLoading(false);
     }
   };
 
-  openModal = (key) => {
-    this.setState({ selectedKey: key, showModal: true });
+  const openModal = (key) => {
+    setSelectedKey(key);
+    setShowModal(true);
   };
 
-  openCommitsModal = (key) => {
-    this.setState({ showCommitsModal: true });
-  };
-  closeCommitsModal = (key) => {
-    this.setState({ showCommitsModal: false });
+  const openCommitsModal = (key) => {
+    setShowCommitsModal(true);
   };
 
-  closeModal = () => {
-    this.setState({ showModal: false });
+  const closeCommitsModal = (key) => {
+    setShowCommitsModal(false);
   };
 
-  getGithubCommits = async () => {
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  const getGithubCommits = async () => {
     try {
-      this.setState({ isGitLoading: true }); 
-      this.setState({ isGitDisplayButton: false });
-      await axios
-        .get(
-          "http://d1h99yrv311co6.cloudfront.net/api/github/user/organizations"
-        )
-        .then((response) => {
-          this.setState({ orgName: response?.data[0]?.login });
-        });
-      await axios
-        .get(
-          `http://d1h99yrv311co6.cloudfront.net/api/github/organization/repos?orgName=${this.state.orgName}`
-        )
-
-        .then((response) => {
-          this.setState({ repoNames: response?.data });
-        });
+      setIsGitLoading(true);
+      // setIsGitDisplayButton(false);
+      const response = await getGitOrganizationApi();
+      setOrgName(response?.data[0]?.login);
+      const repos = await getGitRepos(response?.data[0]?.login);
+      setRepoNames(repos?.data);
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isGitLoading: false });
+      setIsGitLoading(false);
     }
   };
 
-  handleClick = async (name) => {
-    axios
-      .get(
-        `http://d1h99yrv311co6.cloudfront.net/api/github/repo/commits?user=${this.state.orgName}&repoName=${name}`
-      )
-      .then((response) => {
-        this.setState({ commits: response?.data });
-        const commitsByDate = {};
-  
-        this.state.commits.forEach((commit) => {
-          const date = commit.commit.author.date.split('T')[0];
-          if (!commitsByDate[date]) {
-            commitsByDate[date] = [];
-          }
-          commitsByDate[date].push(commit);
-        });
-  
-        const sortedCommits = Object.entries(commitsByDate)
-          .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-          .map(([date, commits]) => ({ date, commits }));
-  
-        this.setState({ commits: sortedCommits });
-        console.log("commits: ", sortedCommits);
-      });
-  
-    this.openCommitsModal();
-  };
-  
+  const handleClick = async (name) => {
+    try {
+      const response = await getGitCommits(orgName, name);
+      const commits = response?.data || [];
 
-  getFiles = async (userAddress) => {
-    formData.append("userAddress", userAddress);
-    axios
-      .post("http://d1h99yrv311co6.cloudfront.net/api/getfiles", formData)
-      .then((response) => {
-        if (response?.data?.userFiles) {
-          this.setState({ files: response?.data?.userFiles[2] });
-          this.setState({ names: response?.data?.userFiles[0] });
-          this.setState({ extensions: response?.data?.userFiles[1] });
-        } else {
-          console.log("error");
+      const commitsByDate = {};
+      commits.forEach((commit) => {
+        const date = commit?.commit?.author?.date.split("T")[0];
+        if (!commitsByDate[date]) {
+          commitsByDate[date] = [];
         }
+        commitsByDate[date].push(commit);
       });
+
+      const sortedCommits = Object.entries(commitsByDate)
+        .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+        .map(([date, commits]) => ({ date, commits }));
+
+      setCommits(sortedCommits);
+      openCommitsModal();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+  
+
+  const getFiles = async (userAddress) => {
+    const myHeaders = {
+      "Content-Type": "application/x-www-form-urlencoded",
+    };
+    const urlencoded = new URLSearchParams();
+    urlencoded.append("userAddress", userAddress);
+
+    const response = await getFilesApi(urlencoded, myHeaders);
+    if (response?.data?.response?.files) {
+      const files = response.data.response.files[2];
+      const names = response.data.response.files[0];
+      const extensions = response.data.response.files[1];
+
+      setFiles(files);
+      setNames(names);
+      setExtensions(extensions);
+    } else {
+      console.log("error");
+    }
   };
 
-  getIcons(extension) {
+  // const handleDownloadClick = (url, name) => {
+  //   saveAs(url, name);
+  // };
+
+  const getIcons = (extension) => {
     switch (extension) {
       case "png":
         return "file image";
@@ -172,490 +211,446 @@ export default class EmployeePage extends Component {
       default:
         return "file";
     }
-  }
+  };
 
-  componentDidMount = async () => {
-    this.setState({ loadcomp: true });
-    const web3 = window.web3;
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
-      this.getSkills(EmployeeContract);
-      this.getCertifications(EmployeeContract);
-      this.getWorkExp(EmployeeContract);
-      this.getEducation(EmployeeContract);
-      this.getGithubCommits();
-      this.getFiles(accounts[0]);
-
-      const employeedata = await EmployeeContract.methods
-        .getEmployeeInfo()
-        .call();
-      const newEmployedata = {
-        ethAddress: employeedata[0],
-        name: employeedata[1],
-        location: employeedata[2],
-        description: employeedata[3],
-        overallEndorsement: employeedata[4],
-        endorsecount: employeedata[5],
-      };
-
-      const endorseCount = newEmployedata.endorsecount;
-      const overallEndorsement = await Promise.all(
-        Array(parseInt(endorseCount))
-          .fill()
-          .map((ele, index) =>
-            EmployeeContract?.methods?.overallEndorsement(index).call()
-          )
-      );
-
-      this.setState({ employeedata: newEmployedata, overallEndorsement });
-      this.getJiraTasks();
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
+  const getUserInfo = async (address) => {
+    try {
+      const response = await getUserApi(address);
+      if (response) {
+        setTokenId(response?.data?.response?.userInfo?.tokenId);
+        setUserInfo(response?.data?.response?.userInfo);
+        getSkills(response?.data?.response?.userInfo?.tokenId);
+        getCertifications(response?.data?.response?.userInfo?.tokenId);
+        getWorkExp(response?.data?.response?.userInfo?.tokenId);
+        getEducation(response?.data?.response?.userInfo?.tokenId);
+        getGithubCommits();
+        getFiles(accounts[0]);
+        getPerformance(response?.data?.response?.userInfo?.email);
+        getJiraTasks(response?.data?.response?.userInfo?.first_name);
+      }
+    } catch (error) {
+      toast.error("Error retrieving user info:", error);
     }
-    this.setState({ loadcomp: false });
   };
 
-  getSkills = async (EmployeeContract) => {
-    const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-    const skills = await Promise.all(
-      Array(parseInt(skillCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getSkillByIndex(index).call()
-        )
-    );
-
-    var newskills = [];
-    skills.forEach((certi) => {
-      newskills.push({
-        name: certi[0],
-        overall_percentage: certi[1],
-        experience: certi[2],
-        endorsed: certi[3],
-        endorser_address: certi[4],
-        review: certi[5],
-        visible: certi[6],
-      });
-      return;
-    });
-
-    this.setState({ skills: newskills });
+  const getPerformance = async (email) => {
+    try {
+      const performance_info = await employeePerformanceApi(email);
+      setPerformances(performance_info?.data[0]);
+    } catch (error) {
+      toast.error(error);
+    }
   };
 
-  getCertifications = async (EmployeeContract) => {
-    const certiCount = await EmployeeContract?.methods
-      ?.getCertificationCount()
-      .call();
-    const certifications = await Promise.all(
-      Array(parseInt(certiCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getCertificationByIndex(index).call()
-        )
-    );
-    var newcertifications = [];
-    certifications.forEach((certi) => {
-      newcertifications.push({
-        name: certi[0],
-        organization: certi[1],
-        score: certi[2],
-        endorsed: certi[3],
-        visible: certi[4],
-      });
-      return;
-    });
-    this.setState({ certifications: newcertifications });
+  const getSkills = async (tokenId) => {
+    try {
+      const response = await getSkillsApi(tokenId);
+      const skillsData = response?.data?.response?.skills;
+      setSkills(skillsData);
+    } catch (error) {
+      toast.error(error);
+    }
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
-      ?.getWorkExpCount()
-      .call();
-    const workExps = await Promise.all(
-      Array(parseInt(workExpCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-        )
-    );
-
-    var newworkExps = [];
-    workExps.forEach((work) => {
-      newworkExps.push({
-        role: work[0],
-        organization: work[1],
-        startdate: work[2],
-        enddate: work[3],
-        endorsed: work[4],
-        description: work[5],
-        visible: work[6],
-      });
-      return;
-    });
-
-    this.setState({ workExps: newworkExps });
+  const getCertifications = async (tokenId) => {
+    try {
+      const response = await getCertificatesApi(tokenId);
+      const certificationsData = response?.data?.response?.certifications;
+      setCertifications(certificationsData);
+    } catch (error) {
+      toast.error(error);
+    }
   };
 
-  getEducation = async (EmployeeContract) => {
-    const educationCount = await EmployeeContract?.methods
-      ?.getEducationCount()
-      .call();
-    const educations = await Promise.all(
-      Array(parseInt(educationCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getEducationByIndex(index).call()
-        )
-    );
-    var neweducation = [];
-    educations.forEach((certi) => {
-      neweducation.push({
-        institute: certi[0],
-        startdate: certi[1],
-        enddate: certi[2],
-        endorsed: certi[3],
-        description: certi[4],
-      });
-      return;
-    });
-    this.setState({ educations: neweducation });
+  const getWorkExp = async (tokenId) => {
+    try {
+      const response = await getWorkExperienceApi(tokenId);
+      const workExperienceData = response?.data?.response?.workExperiences;
+      if (Array.isArray(workExperienceData)) {
+        setWorkExps(workExperienceData);
+      }
+    } catch (error) {
+      toast.error(error);
+    }
   };
 
-  render() {
-    return this.state.loadcomp ? (
-      <LoadComp />
-    ) : (
-      <div>
-        <Grid>
-          <Grid.Row>
-            <Grid.Column width={6}>
-              <Card className="personal-info">
-                <Card.Content>
-                  <Card.Header>
-                    {this.state.employeedata?.name}
-                    <small style={{ wordBreak: "break-word", color: "black" }}>
-                      {this.state.employeedata?.ethAddress}
-                    </small>
+  const getEducation = async (tokenId) => {
+    try {
+      const response = await getEducationApi(tokenId);
+      const educationData = response?.data?.response?.education;
+
+      if (Array.isArray(educationData)) {
+        setEducations(educationData);
+      }
+    } catch (error) {
+      toast.error("Error retrieving education data:", error);
+    }
+  };
+
+  const checkExistence = (value) => {
+    return value ? value : "N/A";
+  };
+
+  return (
+    <div>
+      <Grid>
+        <Grid.Row>
+          <Grid.Column width={6}>
+            <Card className="personal-info">
+              <Card.Content>
+                <Card.Header>About</Card.Header>
+                {userInfo ? (
+                  <div>
+                    <br />
+                    <span style={{ fontWeight: "bold" }}>
+                      {checkExistence(userInfo?.first_name) +
+                        " " +
+                        checkExistence(userInfo?.last_name)}
+                    </span>
+
+                    <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                      <span>{checkExistence(userInfo?.email)}</span>
+                    </div>
+                    <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                      <span style={{ fontWeight: "bold" }}>
+                        {checkExistence(userInfo?.current_position)}
+                      </span>
+                    </div>
+                    <div>
+                      <p>
+                        <em>Location: </em>
+                        <span style={{ color: "black" }}>
+                          {checkExistence(userInfo?.city) + ","}
+                          {checkExistence(userInfo?.country)}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>No Information available!</div>
+                )}
+                <br />
+              </Card.Content>
+            </Card>
+
+            <Card className="employee-des">
+              <Card.Content>
+                <div>
+                  <Card.Header style={{ fontSize: "19px", fontWeight: "600" }}>
+                    Education:
                   </Card.Header>
                   <br />
-                  <div>
-                    <p>
-                      <em>Location: </em>
-                      <span style={{ color: "black" }}>
-                        {this.state.employeedata?.location}
-                      </span>
-                    </p>
-                  </div>
-                  <br />
-                  <div>
-                    <p>
-                      <em>Overall Endorsement Rating:</em>
-                    </p>
-                    <LineChart
-                      overallEndorsement={this.state.overallEndorsement}
-                    />
-                  </div>
-                </Card.Content>
-              </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>About:</Card.Header>
-                  <div>
-                    <p style={{ color: "#c5c6c7" }}>
-                      {this.state.employeedata?.description}
-                    </p>
-                  </div>
-                  <br />
-                  <div>
-                    <Card.Header
-                      style={{ fontSize: "19px", fontWeight: "600" }}
-                    >
-                      Education:
-                    </Card.Header>
-                    <br />
+                  {educations.length > 0 ? (
                     <div className="education">
-                      {this.state.educations?.map((education, index) => (
+                      {educations?.map((education, index) => (
                         <div className="education-design" key={index}>
                           <div
                             style={{ paddingRight: "50px", color: "#c5c6c7" }}
                           >
-                            <p>{education.description}</p>
+                            <div style={{ display: "flex" }}>
+                              <Icon
+                                style={{ position: "relative" }}
+                                name="graduation cap"
+                              />
+                              <p>
+                                {checkExistence(education?.degree) +
+                                  "(" +
+                                  checkExistence(education?.field_of_study) +
+                                  ")"}
+                              </p>
+                            </div>
                             <small
                               style={{
                                 wordBreak: "break-word",
                                 fontSize: "10px",
                               }}
                             >
-                              {education.institute}
+                              {checkExistence(education?.school)}
                             </small>
-                          </div>
-                          <div>
-                            <small style={{ color: "#c5c6c7" }}>
-                              <em>
-                                {education.startdate} - {education.enddate}
-                              </em>
+                            <br />
+
+                            <small>
+                              {moment(
+                                checkExistence(education?.start_date)
+                              ).format("DD-MM-YYYY")}
+                              {"-" +
+                                moment(
+                                  checkExistence(education?.end_date)
+                                ).format("DD-MM-YYYY")}
                             </small>
-                            <p
-                              style={{
-                                color: education.endorsed
-                                  ? "#00d1b2"
-                                  : "yellow",
-                                opacity: "0.7",
-                              }}
-                            >
-                              {education.endorsed
-                                ? "Endorsed"
-                                : "Not Yet Endorsed"}
-                            </p>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                </Card.Content>
-              </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Competetive Platform Ratings</Card.Header>
-                  <CodeforcesGraph />
-                </Card.Content>
-              </Card>
-            </Grid.Column>
-            <Grid.Column width={10}>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Certifications</Card.Header>
-                  <br />
-                  <div>
-                    {this.state.certifications?.map(
-                      (certi, index) =>
-                        certi.visible && (
-                          <div key={index} className="certification-container">
-                            <div style={{ color: "#c5c6c7" }}>
-                              <p>{certi.name}</p>
-                              <small style={{ wordBreak: "break-word" }}>
-                                {certi.organization}
-                              </small>
-                              <p
+                  ) : (
+                    <div>No Education available to display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Employee Performance</Card.Header>
+                {performances && (
+                  <div>Percentage Score: {performances.Score}</div>
+                )}
+              </Card.Content>
+            </Card>
+          </Grid.Column>
+
+          <Grid.Column width={10}>
+            <Card className="employee-des">
+              <Card.Content className="content">
+                <Card.Header style={{ display: "flex" }}>
+                  Certifications
+                </Card.Header>
+                <br />
+                <div className="education">
+                  <Grid columns={3}>
+                    {certifications.length !== 0 ? (
+                      certifications.map((certi, index) => {
+                        return (
+                          <Grid.Row key={index}>
+                            <Grid.Column>
+                              <div
                                 style={{
-                                  color: certi.endorsed ? "#00d1b2" : "yellow",
-                                  opacity: "0.7",
+                                  color: "black",
+                                  fontWeight: "bold",
                                 }}
                               >
-                                {certi.endorsed
-                                  ? "Endorsed"
-                                  : "Not Yet Endorsed"}
-                              </p>
-                            </div>
-                            <div>
-                              <div style={{ width: "100px" }}>
-                                <CircularProgressbar
-                                  value={certi.score}
-                                  text={`Score - ${certi.score}%`}
-                                  strokeWidth="5"
-                                  styles={buildStyles({
-                                    strokeLinecap: "round",
-                                    textSize: "12px",
-                                    pathTransitionDuration: 1,
-                                    pathColor: `rgba(255,255,255, ${
-                                      certi.score / 100
-                                    })`,
-                                    textColor: "#c5c6c7",
-                                    trailColor: "#393b3fa6",
-                                    backgroundColor: "#c5c6c7",
-                                  })}
-                                />
+                                <p>{checkExistence(certi.title)}</p>
+                                <small>
+                                  {checkExistence(certi.issuing_organization)}
+                                </small>
                               </div>
-                            </div>
-                          </div>
-                        )
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>Issue Date</p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  {moment(
+                                    checkExistence(certi.issue_date)
+                                  ).format("DD-MM-YYYY")}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>
+                                  Credential ID
+                                </p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  <a href={certi.credential_url} target="blank">
+                                    {checkExistence(certi.credential_id)}
+                                  </a>
+                                </small>
+                              </div>
+                            </Grid.Column>
+                          </Grid.Row>
+                        );
+                      })
+                    ) : (
+                      <p>No certifications to display!</p>
                     )}
-                  </div>
-                </Card.Content>
-              </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Work Experiences</Card.Header>
-                  <br />
-                  <div className="education">
-                    {this.state.workExps?.map(
-                      (workExp, index) =>
-                        workExp.visible && (
-                          <div className="education-design" key={index}>
-                            <div style={{ color: "#c5c6c7" }}>
-                              <p>{workExp.role}</p>
-                              <small style={{ wordBreak: "break-word" }}>
-                                {workExp.organization}
-                              </small>
-                            </div>
-                            <div>
-                              <small>
-                                <em>
-                                  {workExp.startdate} - {workExp.enddate}
-                                </em>
-                              </small>
-                              <p
+                  </Grid>
+                </div>
+              </Card.Content>
+            </Card>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Work Experiences</Card.Header>
+                <br />
+                <div className="education">
+                  <Grid columns={3}>
+                    {workExps.length > 0 ? (
+                      workExps.map((workExp, index) => {
+                        return (
+                          <Grid.Row key={index}>
+                            <Grid.Column>
+                              <div
                                 style={{
-                                  color: workExp.endorsed
-                                    ? "#00d1b2"
-                                    : "yellow",
-                                  opacity: "0.7",
+                                  color: "black",
+                                  fontWeight: "bold",
                                 }}
                               >
-                                {workExp.endorsed
-                                  ? "Endorsed"
-                                  : "Not Yet Endorsed"}
-                              </p>
-                            </div>
+                                <p>{checkExistence(workExp?.title)}</p>
+                                <small>
+                                  {checkExistence(workExp?.company_name)}
+                                </small>
+                                <small>
+                                  {", " + checkExistence(workExp?.location)}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>
+                                  Employment Type
+                                </p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  {checkExistence(workExp?.employment_type)}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>
+                                  Date of Joining
+                                </p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  {moment(workExp.start_date).format(
+                                    "DD-MM-YYYY"
+                                  )}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                          </Grid.Row>
+                        );
+                      })
+                    ) : (
+                      <p>No work experiences found!</p>
+                    )}
+                  </Grid>
+                </div>
+              </Card.Content>
+            </Card>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Skills</Card.Header>
+                <br />
+                <div className="education">
+                  {skills.length > 0 ? (
+                    skills.map((skill, index) => {
+                      if (Array.isArray(skill)) {
+                        return null;
+                      } else if (typeof skill === "object" && skill?.title) {
+                        return (
+                          <div key={index}>
+                            <SkillCard skill={skill} key={index} />
                           </div>
-                        )
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
+                        );
+                      } else {
+                        return null;
+                      }
+                    })
+                  ) : (
+                    <p>No skills to display!</p>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>JIRA Tasks</Card.Header>
+                <br />
+                <div className="content-list">
+                  {isLoading ? (
+                    <CircularProgress />
+                  ) : jiraKeys.length > 0 ? (
+                    jiraKeys.map((Key, index) => (
+                      <p
+                        style={{ fontWeight: "bold" }}
+                        key={index}
+                        onClick={() => openModal(Key)}
+                      >
+                        <Card className="list-items" key={index}>
+                          <Card.Content className="info-style">
+                            {Key}
+                            <Icon
+                              name="external alternate"
+                              style={{ marginLeft: "8px" }}
+                            />
+                          </Card.Content>
+                        </Card>
+                      </p>
+                    ))
+                  ) : (
+                    <div>No JIRA Tasks to display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+            <ModalComponent
+              showModal={showModal}
+              selectedKey={selectedKey}
+              onClose={closeModal}
+              Response={Response}
+            />
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Github Repos</Card.Header>
+                <br />
 
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Skills</Card.Header>
-                  <br />
-                  <div className="skill-height-container">
-                    {this.state.skills?.map((skill, index) =>
-                      skill.visible ? (
-                        <div>
-                          <SkillCard skill={skill} key={index} />
-                        </div>
-                      ) : (
-                        <></>
-                      )
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
-
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>
-                    JIRA Tasks for {this.state.employeedata?.name}
-                  </Card.Header>
-                  <br />
-                  <div className="content-list">
-                    {this.state.isLoading ? (
-                      <CircularProgress />
-                    ) : (
-                      this.state.jiraKeys &&
-                      this.state.jiraKeys.map((key) => (
-                        <p
-                          style={{ fontWeight: "bold" }}
-                          key={key}
-                          onClick={() => this.openModal(key)}
-                        >
-                          <Card className="list-items">
-                            <Card.Content className="info-style">
-                              {key}
-                              <Icon
-                                name="external alternate"
-                                style={{ marginLeft: "8px" }}
-                              />
-                            </Card.Content>
-                          </Card>
-                        </p>
-                      ))
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
-
-              <ModalComponent
-                showModal={this.state.showModal}
-                selectedKey={this.state.selectedKey}
-                onClose={this.closeModal}
-                Response={this.state.Response}
-              />
-
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Github Commits</Card.Header>
-                  <br />
-                  
-                  <div className="content-list">
-                    {this.state.isGitLoading ? (
-                      <CircularProgress />
-                    ) : (
-                      this.state?.repoNames?.map((n) => (
-                        <p onClick={() => this.handleClick(n.name)}>
-                          <Card className="list-items">
-                            <Card.Content className="info-style">
-                              {n.name}
-                              <Icon
-                                name="external alternate"
-                                style={{ marginLeft: "8px" }}
-                              />
-                            </Card.Content>
-                          </Card>
-                        </p>
-                      ))
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
-
-              <ModalComponentGit
-                showModal={this.state.showCommitsModal}
-                commits={this.state.commits}
-                onClose={this.closeCommitsModal}
-              />
-
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Files</Card.Header>
-                  <br />
-                  {this.state?.files?.length &&
-                    (this.state?.files || []).map((file, index) => {
-                      var extension = this.getIcons(
-                        this.state?.extensions[index]
-                      );
+                <div className="content-list">
+                  {isGitLoading ? (
+                    <CircularProgress />
+                  ) : repoNames ? (
+                    repoNames?.map((n, index) => (
+                      <p onClick={() => handleClick(n.name)}>
+                        <Card className="list-items" key={index}>
+                          <Card.Content className="info-style">
+                            {n.name}
+                            <Icon
+                              name="external alternate"
+                              style={{ marginLeft: "8px" }}
+                            />
+                          </Card.Content>
+                        </Card>
+                      </p>
+                    ))
+                  ) : (
+                    <div>No repos To display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+            <ModalComponentGit
+              showModal={showCommitsModal}
+              commits={commits}
+              onClose={closeCommitsModal}
+            />
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Files</Card.Header>
+                <br />
+                <div className="content-list">
+                  {files?.length > 0 ? (
+                    (files || []).map((file, index) => {
+                      const extension = getIcons(extensions[index]);
 
                       return (
-                        <>
-                          <Card
-                            style={{
-                              display: "flex",
-                              flexDirection: "row",
-                              margin: "0 !important",
-                            }}
-                            className="list-items"
-                          >
+                        <div key={index}>
+                          <Card className="list-items">
                             <Card.Content>
                               <a
-                                href={this.IPFS_Link + file}
+                                href={IPFS_Link + file}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                style={{
+                                  color: "black",
+                                  fontWeight: "bold",
+                                }}
                               >
-                                {this.state?.names[index]}
+                                {names[index]}
                               </a>
                               <Icon name={extension} />
                             </Card.Content>
                           </Card>
-                          <br />
-                        </>
+                        </div>
                       );
-                    })}
-                </Card.Content>
-              </Card>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </div>
-    );
-  }
-}
+                    })
+                  ) : (
+                    <div>No files to display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    </div>
+  );
+};
+
+export default EmployeePage;

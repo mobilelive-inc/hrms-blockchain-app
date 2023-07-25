@@ -1,320 +1,236 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { withRouter } from "react-router-dom";
 import { Card } from "semantic-ui-react";
 import Employee from "../abis/Employee.json";
 import "./EmployeeCard.css";
-import LoadComp from "./LoadComp";
+// import LoadComp from "./LoadComp";
 
-class EmployeeCard extends Component {
-  state = {
-    employeedata: {},
-    skills: [],
-    certifications: [],
-    workExps: [],
-    educations: [],
-    colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
-    readmore: false,
-    loadcomp: false,
-  };
+const EmployeeCard = (props) => {
+  const [employeedata, setEmployeedata] = useState({});
+  const [skills, setSkills] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [workExps, setWorkExps] = useState([]);
+  const [educations, setEducations] = useState([]);
+  const [performance, setPerformance] = useState(null);
+  const [colour] = useState(["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"]);
+  const [readmore, setReadmore] = useState(false);
+  // const [loadcomp, setLoadcomp] = useState(false);
 
-  componentDidMount = async () => {
-    const web3 = window.web3;
-    const EmployeeContract = await new web3.eth.Contract(
-      Employee.abi,
-      this.props.employeeContractAddress
-    );
-    this.getSkills(EmployeeContract);
-    this.getCertifications(EmployeeContract);
-    this.getWorkExp(EmployeeContract);
-    this.getEducation(EmployeeContract);
-    const employeedata = await EmployeeContract.methods
-      .getEmployeeInfo()
-      .call();
-    const newEmployedata = {
-      ethAddress: employeedata[0],
-      name: employeedata[1],
-      location: employeedata[2],
-      description: employeedata[3],
-      overallEndorsement: employeedata[4],
-      endorsecount: employeedata[5],
+  useEffect(() => {
+    const fetchData = async () => {
+      await getSkills(props.employee?.tokenId).then((response) => {
+        const skillsData = response?.data?.response?.skills;
+        setSkills(skillsData);
+      });
+
+      await getCertificates(props.employee?.tokenId).then((response) => {
+        const certificationsData = response?.data?.response?.certifications;
+        setCertifications(certificationsData);
+      });
+
+      await getWorkExp(props.employee?.tokenId).then((response) => {
+        const workExperienceData = response?.data?.response?.workExperiences;
+        setWorkExps(workExperienceData);
+      });
+
+      await getEducation(props.employee?.tokenId).then((response) => {
+        const educationData = response?.data?.response?.education;
+        setEducations(educationData);
+      });
+
+      setEmployeedata(props.employee);
+      setPerformance(props.performance);
     };
-    this.setState({ employeedata: newEmployedata });
+
+    fetchData();
+  }, [props.employee, props.performance]);
+
+  const getSkills = async (tokenId) => {
+    return getSkillsApi(tokenId);
   };
 
-  getSkills = async (EmployeeContract) => {
-    const skillCount = await EmployeeContract?.methods?.getSkillCount().call();
-    const skills = await Promise.all(
-      Array(parseInt(skillCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getSkillByIndex(index).call()
-        )
-    );
-
-    var newskills = [];
-    skills.forEach((certi) => {
-      newskills.push({
-        name: certi[0],
-        overall_percentage: certi[1],
-        experience: certi[2],
-        endorsed: certi[3],
-        endorser_address: certi[4],
-        review: certi[5],
-      });
-      return;
-    });
-
-    this.setState({ skills: newskills });
+  const getCertificates = async (tokenId) => {
+    return getCertificatesApi(tokenId);
   };
 
-  getCertifications = async (EmployeeContract) => {
-    const certiCount = await EmployeeContract?.methods
-      ?.getCertificationCount()
-      .call();
-    const certifications = await Promise.all(
-      Array(parseInt(certiCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getCertificationByIndex(index).call()
-        )
-    );
-    var newcertifications = [];
-    certifications.forEach((certi) => {
-      newcertifications.push({
-        name: certi[0],
-        organization: certi[1],
-        score: certi[2],
-        endorsed: certi[3],
-      });
-      return;
-    });
-    this.setState({ certifications: newcertifications });
+  const getWorkExp = async (tokenId) => {
+    return getWorkExperienceApi(tokenId);
   };
 
-  getWorkExp = async (EmployeeContract) => {
-    const workExpCount = await EmployeeContract?.methods
-      ?.getWorkExpCount()
-      .call();
-    const workExps = await Promise.all(
-      Array(parseInt(workExpCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getWorkExpByIndex(index).call()
-        )
-    );
-
-    var newworkExps = [];
-    workExps.forEach((work) => {
-      newworkExps.push({
-        role: work[0],
-        organization: work[1],
-        startdate: work[2],
-        enddate: work[3],
-        endorsed: work[4],
-        description: work[5],
-      });
-      return;
-    });
-
-    this.setState({ workExps: newworkExps });
+  const getEducation = async (tokenId) => {
+    try {
+      const response = await getEducationApi(tokenId);
+      return response;
+    } catch (error) {
+      console.error("Error retrieving education data:", error);
+    }
   };
 
-  getEducation = async (EmployeeContract) => {
-    const educationCount = await EmployeeContract?.methods
-      ?.getEducationCount()
-      .call();
-    const educations = await Promise.all(
-      Array(parseInt(educationCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.getEducationByIndex(index).call()
-        )
-    );
-    var neweducation = [];
-    educations.forEach((certi) => {
-      neweducation.push({
-        institute: certi[0],
-        startdate: certi[1],
-        enddate: certi[2],
-        endorsed: certi[3],
-        description: certi[4],
-      });
-      return;
-    });
-    this.setState({ educations: neweducation });
+  const toEmployee = () => {
+    props.history.push(`/getemployee/${props.employee.proxyAddress}`);
   };
 
-  toEmployee = () => {
-    this.props.history.push(
-      `/getemployee/${this.props.employeeContractAddress}`
-    );
-  };
-
-  render() {
-    return this.state.loadcomp ? (
-      <LoadComp />
-    ) : (
-      <Card className="employee-card">
-        <Card.Content>
-          <Card.Header onClick={this.toEmployee} style={{ cursor: "pointer" }}>
-            <span>{this.state.employeedata?.name}</span>
-            <small>{this.state.employeedata.ethAddress}</small>
-          </Card.Header>
-          <br></br>
-          <div>
-            <p>
-              <em>Location : </em>
-              <span style={{ color: "black" }}>
-                {this.state.employeedata?.location}
-              </span>
-            </p>
-          </div>
-          <br />
-          <div>
-            <em>Description :</em>
-            <p style={{ color: "#c5c6c7" }}>
-              {this.state.employeedata?.description}
-            </p>
-          </div>
-          <br />
-          <div>
-            <em>Skills:</em>
-            <div className="skill-holder">
-              {this.state.skills?.map((skill, index) => (
-                <div
-                  className="skill-design"
-                  style={{
-                    color: "#c5c6c7",
-                    border: `1px solid ${this.state.colour[index % 5]}`,
-                  }}
-                >
-                  <p>{skill.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <br />
-          {this.state.readmore ? (
-            <div>
-              <div>
-                <em>Education:</em>
-                <div className="education">
-                  {this.state.educations?.map((education, index) => (
-                    <div
-                      className="education-design"
-                      style={{ color: "#c5c6c7" }}
-                    >
-                      <div>
-                        <p>{education.description}</p>
-                        <small>{education.institute}</small>
-                      </div>
-                      <div>
-                        <small>
-                          <em>
-                            {education.startdate} - {education.enddate}
-                          </em>
-                        </small>
-                        <p
-                          style={{
-                            color: education.endorsed ? "#00d1b2" : "yellow",
-                            opacity: "0.7",
-                          }}
-                        >
-                          {education.endorsed ? "Endorsed" : "Not Yet Endorsed"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <br />
-              <div>
-                <em>Certifications:</em>
-                <div className="certifications">
-                  {this.state.certifications?.map((certification, index) => (
-                    <div
-                      className="certification-design"
-                      style={{ color: "#c5c6c7" }}
-                    >
-                      <div>
-                        <p>{certification.name}</p>
-                        <small>{certification.organization}</small>
-                      </div>
-                      <div>
-                        <p>
-                          <em>Score: {certification.score}</em>
-                        </p>
-                        <p
-                          style={{
-                            color: certification.endorsed
-                              ? "#00d1b2"
-                              : "yellow",
-                            opacity: "0.7",
-                          }}
-                        >
-                          {certification.endorsed
-                            ? "Endorsed"
-                            : "Not Yet Endorsed"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <br />
-              <div>
-                <em>Work Experience:</em>
-                <div className="workexp">
-                  {this.state.workExps?.map((work, index) => (
-                    <div
-                      className="workexp-design"
-                      style={{ color: "#c5c6c7" }}
-                    >
-                      <div>
-                        <p>{work.role}</p>
-                        <small>{work.organization}</small>
-                      </div>
-                      <div>
-                        <p>
-                          <em>
-                            <small>
-                              {work.startdate} - {work.enddate}
-                            </small>
-                          </em>
-                        </p>
-                        <p
-                          style={{
-                            color: work.endorsed ? "#00d1b2" : "yellow",
-                            opacity: "0.7",
-                          }}
-                        >
-                          {work.endorsed ? "Endorsed" : "Not Yet Endorsed"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
+  return  (
+    <Card className="employee-card">
+      <Card.Content>
+        <Card.Header onClick={toEmployee} style={{ cursor: "pointer" }}>
+          <span>{`${employeedata?.first_name} ${employeedata?.last_name} `}</span>
+          <small>{employeedata.proxyAddress}</small>
+        </Card.Header>
+        <br></br>
+        <div>
+          <p>
+            <em style={{ fontWeight: "bold" }}>Location : </em>
+            <span style={{ color: "black" }}>{`${employeedata?.city}`}</span>
+          </p>
+        </div>
+        <br />
+        <div>
+          <em style={{ fontWeight: "bold" }}>Description :</em>
+          <p style={{ color: "black" }}>{employeedata?.description}</p>
+        </div>
+        <br />
+        <div>
+          <em style={{ fontWeight: "bold" }}>Skills:</em>
+          <div className="skill-holder">
+            {skills?.map((skill, index) => (
               <div
-                className="readopenclose"
-                onClick={() => this.setState({ readmore: false })}
+                className="skill-design"
+                style={{
+                  color: "black",
+                  border: `1px solid ${colour[index % 5]}`,
+                }}
               >
-                <p>Hide</p>
+                <p>{skill.title}</p>
+                <small>{skill.experience}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+        <br />
+        {readmore ? (
+          <div>
+            <div>
+              <em style={{ fontWeight: "bold" }}>Education:</em>
+              <div className="education">
+                {educations?.map((education, index) => (
+                  <div className="education-design" style={{ color: "black" }} key={index}>
+                    <div>
+                      <p>{education.degree} ({education.field_of_study})</p>
+                      <small>{education.school}</small>
+                    </div>
+                    <div>
+                      <small>
+                        <em>
+                          {moment(education.start_date).format("DD-MM-YYYY")} -{" "}
+                          {moment(education.end_date).format("DD-MM-YYYY")}
+                        </em>
+                      </small>
+                      <p
+                        style={{
+                          opacity: "0.7",
+                        }}
+                      >
+                        {education.grade}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ) : (
+            <br />
+            <div>
+              <em style={{ fontWeight: "bold" }}>Certifications:</em>
+              <div className="certifications">
+                {certifications?.map((certification, index) => (
+                  <div
+                    className="certification-design"
+                    style={{ color: "black" }}
+                    key={index}
+                  >
+                    <div>
+                      <p>{certification.title}</p>
+                      <small>{certification.issuing_organization}</small>
+                    </div>
+                    <div>
+                      <small>
+                        <em>
+                          {certification.start_date} - {certification.end_date}
+                        </em>
+                      </small>
+                      <a
+                        href="{education.credential_url}"
+                        target="_blank"
+                      >
+                        {certification.credential_id}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <br />
+            <div>
+              <em style={{ fontWeight: "bold" }}>Work Experience:</em>
+              <div className="workexp">
+                {workExps?.map((work, index) => (
+                  <div className="workexp-design" style={{ color: "black" }} key={index}>
+                    <div>
+                      <p>{work.title}</p>
+                      <small>{work.company_name}</small>
+                    </div>
+                    <div>
+                      <p>
+                        <em>
+                          <small>
+                            {work.start_date} - {work.end_date}
+                          </small>
+                        </em>
+                      </p>
+                      <p
+                        style={{
+                          opacity: "0.7",
+                        }}
+                      >
+                        {work.employement_type}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <br />
+              <em style={{ fontWeight: "bold" }}>Performance report:</em>
+              <br />
+              <div>
+                <br />
+                <h5>Area of expertise: {performance?.Expertise}</h5>
+                <h5>Tool: {performance?.Tool}</h5>
+              </div>
+              <br />
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ fontWeight: "bold" }}>Score: {performance?.Score}</div>
+                <div style={{ marginRight: "30px", fontWeight: "bold" }}>Hourly Rate: {performance?.HourlyRate}</div>
+              </div>
+            </div>
+
             <div
               className="readopenclose"
-              onClick={() => this.setState({ readmore: true })}
+              onClick={() => setReadmore(false)}
             >
-              <p>...Read More</p>
+              <p>Hide</p>
             </div>
-          )}
-        </Card.Content>
-      </Card>
-    );
-  }
-}
+          </div>
+        ) : (
+          <div
+            className="readopenclose"
+            onClick={() => setReadmore(true)}
+          >
+            <p>...Read More</p>
+          </div>
+        )}
+      </Card.Content>
+    </Card>
+  );
+};
 
 export default withRouter(EmployeeCard);

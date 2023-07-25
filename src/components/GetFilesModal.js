@@ -1,124 +1,150 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import axios from "axios";
 import Web3 from "web3";
 import "./Modals.css";
-const formData = new FormData();
-export default class GetFilesModal extends Component {
-  state = {
-    selectedFile: null,
-    extension: null,
-    fileName: null,
-    loading: false,
-  };
+import { postFileApi } from "../Apis/FileApi";
 
-  handleFileChange = (event) => {
+let accounts = null;
+
+const GetFilesModal = (props) => {
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const acceptedFileTypes = [".pdf", ".doc", ".docx", ".png", ".jpeg"];
+  const minFileNameLength = 3;
+  const maxFileNameLength = 15;
+  const [fileError, setFileError] = useState("");
+  const [fileNameError, setFileNameError] = useState("");
+
+  const handleFileChange = (event) => {
     const file = event.target.files[0];
-    //console.log("file: ",file);
-    formData.append("file", event.target.files[0], "graph.png");
-    const extension = file.name.match(/\.[0-9a-z]+$/i)[0];
-    //file.name.match(/\.[0-9a-z]+$/i)[0]; // get extension from file name
-    console.log("extension: ", extension);
-    this.setState({ extension });
-    this.setState({ selectedFile: event.target.files[0] });
+    setFile(file);
+    setFileError("");
   };
-  handleFileNameChange = (event) => {
+
+  const handleFileNameChange = (event) => {
     const fileName = event.target.value;
-    formData.set("fileName", event.target.value);
-    console.log("fileName: ",fileName);
-    this.setState({ fileName });
+    setFileName(fileName);
+    setFileNameError("");
   };
-  handleSubmit = async (event) => {
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    const web3 = window.web3;
 
-    formData.append("extension", this.state.extension);
-
-    console.log("Files: ", this.state.selectedFile);
-    if (window.ethereum) {
-      const web3 = new Web3(window.ethereum);
-      try {
-
-        await window.ethereum.enable();
-        const accounts = await web3.eth.getAccounts();
-        console.log("User account:", accounts[0]);
-        formData.append("userAddress", accounts[0]);
-        console.log("formData: ", formData);
-
-      } catch (error) {
-
-        console.error(error);
-
-      }
-    } else {
-      console.log("Please install MetaMask!");
+    if (!file) {
+      setFileError("Please select a file to upload.");
+      setLoading(false);
+      return;
     }
 
-    this.setState({ loading: true });
-    console.log(formData.getAll(this.selectedFile));
-    axios
-      .post(
-        "https://dahoi8vjqm9s9.cloudfront.net/api/upload",formData
-      )
-      .then((response) => {
-        console.log("response: ", response);
-        if (response) {
-          toast.success("File uploaded successfully!");
-        } else {
-          toast.error("Error uploading file.");
-        }
-        this.setState({ loading: false });
-        this.props.closeCertificationModal();
-      })
-      .catch((error) => {
-        console.log("error in catch: ", error);
-        toast.error("Error uploading file in catch.");
-        this.setState({ loading: false });
-      });
+    if (
+      !fileName ||
+      fileName.length < minFileNameLength ||
+      fileName.length > maxFileNameLength
+    ) {
+      setFileNameError(
+        `Filename should be between ${minFileNameLength} and ${maxFileNameLength} characters.`
+      );
+      setLoading(false);
+      return;
+    }
+
+    const fileExtension = file.name
+      .substring(file.name.lastIndexOf("."))
+      .toLowerCase();
+    if (!acceptedFileTypes.includes(fileExtension)) {
+      setFileError("Only PDF, DOC, PNG, DOCX and JPEG files are accepted.");
+      setLoading(false);
+      return;
+    }
+
+    accounts = await web3.eth.getAccounts();
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("fileName", fileName);
+    formData.append("userAddress", accounts[0]);
+    const messageToR = `0x${Buffer.from(
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    formData.append("signature", signature);
+
+    const response = await postFileApi(formData);
+
+    if (response && response.data && response.data.transactionData) {
+      console.log(response);
+      const transaction = response?.data?.transactionData;
+      console.log("this", transaction);
+
+      transaction.from = accounts[0];
+      const receipt = web3.eth
+        .sendTransaction(transaction)
+        .then((res) => {
+          return new Promise((resolve) => setTimeout(resolve, 7000));
+        })
+        .then(() => {
+          setLoading(false);
+          props.closeCertificationModal();
+        });
+      console.log(receipt);
+      toast.success("File uploaded successfully!");
+    } else {
+      toast.error("Error uploading file.");
+      setLoading(false);
+      props.closeCertificationModal();
+    }
+
+    
   };
 
-  render() {
-    return (
-      <Modal
-        as={Form}
-        onSubmit={this.handleSubmit}
-        open={this.props.isOpen}
-        size="tiny"
-        className="modal-des"
-      >
-        <Header
-          className="modal-heading"
-          icon="pencil"
-          content="Upload Files"
-          as="h2"
+  return (
+    <Modal
+      as={Form}
+      onSubmit={handleSubmit}
+      open={props.isOpen}
+      size="tiny"
+      className="modal-des"
+    >
+      <Header
+        className="modal-heading"
+        icon="pencil"
+        content="Upload Files"
+        as="h2"
+      />
+      <Modal.Content className="modal-content">
+        <input
+          type="text"
+          placeholder="File Name"
+          onChange={handleFileNameChange}
         />
-        <Modal.Content className="modal-content">
-          <input
-            type="text"
-            placeholder="File Name"
-            onChange={this.handleFileNameChange}
-          />
-          <input type="file" onChange={this.handleFileChange} />
-        </Modal.Content>
-        <Modal.Actions className="modal-actions">
-          <Button
-            className="close-button"
-            type="button"
-            color="red"
-            icon="times"
-            content="Close"
-            onClick={() => this.props.closeCertificationModal()}
-          />
-          <Button
-            className="button-css"
-            type="submit"
-            color="green"
-            icon="save"
-            content="Save"
-            loading={this.state.loading}
-          />
-        </Modal.Actions>
-      </Modal>
-    );
-  }
-}
+        {fileNameError && <div className="error-message">{fileNameError}</div>}
+        <input type="file" onChange={handleFileChange} />
+        {fileError && <div className="error-message">{fileError}</div>}
+      </Modal.Content>
+      <Modal.Actions className="modal-actions">
+        <Button
+          className="close-button"
+          type="button"
+          color="red"
+          content="Close"
+          onClick={() => props.closeCertificationModal()}
+        />
+        <Button
+          className="button-css"
+          type="submit"
+          color="green"
+          content="Save"
+          loading={loading}
+          disabled={loading}
+        />
+      </Modal.Actions>
+    </Modal>
+  );
+};
+
+export default GetFilesModal;
