@@ -94,5 +94,8 @@
   box-shadow: 1.05px 1.05px orange !important;
 }
 .loader-container{
-  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
 }

@@ -10,12 +10,12 @@ import "./EmployeeCard.css";
 // import LoadComp from "./LoadComp";
 
 const EmployeeCard = (props) => {
-  const [employeedata, setEmployeedata] = useState({});
+  const [employeedata, setEmployeedata] = useState(props.employee);
   const [skills, setSkills] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [workExps, setWorkExps] = useState([]);
   const [educations, setEducations] = useState([]);
-  const [performance, setPerformance] = useState(null);
+  const [performance, setPerformance] = useState(props.performance);
   const [colour] = useState(["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"]);
   const [readmore, setReadmore] = useState(false);
   // const [loadcomp, setLoadcomp] = useState(false);

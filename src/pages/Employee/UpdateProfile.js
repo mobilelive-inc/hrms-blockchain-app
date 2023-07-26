@@ -19,7 +19,7 @@ import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
 import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
 import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
 import { getEducationApi } from "../../Apis/EmployeeEducationApi";
-
+import CircularProgress from "@mui/material/CircularProgress";
 // import {
 //   reqCertiEndorsementFunc,
 //   reqEducationEndorsementFunc,
@@ -28,31 +28,25 @@ import { getEducationApi } from "../../Apis/EmployeeEducationApi";
 import moment from "moment/moment";
 
 const UpdateProfile = () => {
-  // const [employeedata, setEmployeedata] = useState({});
-  // const [overallEndorsement, setOverallEndorsement] = useState([]);
   const [skills, setSkills] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [workExps, setWorkExps] = useState([]);
   const [educations, setEducations] = useState([]);
-  // const [readmore, setReadmore] = useState(false);
   const [certificationModal, setCertificationModal] = useState(false);
   const [workexpModal, setWorkexpModal] = useState(false);
   const [skillmodal, setSkillmodal] = useState(false);
   const [filemodal, setFilemodal] = useState(false);
   const [educationmodal, setEducationmodal] = useState(false);
   const [editFieldModal, setEditFieldModal] = useState(false);
-  // const [isDescription, setIsDescription] = useState(false);
-  // const [loadcomp, setLoadcomp] = useState(false);
-  // const [EmployeeContract, setEmployeeContract] = useState({});
+  const [loadcomp, setLoadcomp] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [selectedEducation, setSelectedEducation] = useState(null);
   const [selectedCertification, setSelectedCertification] = useState(null);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [selectedWorkExp, setSelectedWorkExp] = useState(null);
-  // const [selectedUserInfo,setSelectedUserInfo]=useState(null);
   const [tokenId, setTokenId] = useState(null);
   const [index, setIndex] = useState(0);
-  const [editing,setEditing]=useState(false);
+  const [editing, setEditing] = useState(false);
   const [fetchUserInfo, setFetchUserInfo] = useState(true);
 
   const getUserInfo = async (address) => {
@@ -63,7 +57,7 @@ const UpdateProfile = () => {
       getCertifications(response?.data?.response?.userInfo?.tokenId);
       getWorkExp(response?.data?.response?.userInfo?.tokenId);
       getEducation(response?.data?.response?.userInfo?.tokenId);
-      setFetchUserInfo(false);  
+      setFetchUserInfo(false);
     });
   };
 
@@ -111,7 +105,7 @@ const UpdateProfile = () => {
   const handleEditEducation = (education, i) => {
     setSelectedEducation(education);
     setIndex(i);
-    setEducationmodal(true);  
+    setEducationmodal(true);
   };
 
   const handleEditCertification = (certification, i) => {
@@ -134,34 +128,26 @@ const UpdateProfile = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // setLoadcomp(true);
+      setLoadcomp(true);
       const web3 = window.web3;
       const networkId = await web3.eth.net.getId();
       const AdminData = await Admin.networks[networkId];
-      console.log(AdminData)
+      console.log(AdminData);
       const accounts = await web3.eth.getAccounts();
       try {
         if (fetchUserInfo) {
           await getUserInfo(accounts[0]);
-        }  
-        // if (tokenId) {
-        //   getSkills(tokenId);
-        //   getCertifications(tokenId);
-        //   getWorkExp(tokenId);
-        //   getEducation(tokenId);
-          
-        // }
+        }
+        
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoadcomp(false);
       }
-      
     };
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchUserInfo]);
-  
-
-  
 
   const closeCertificationModal = () => {
     setCertificationModal(false);
@@ -194,68 +180,6 @@ const UpdateProfile = () => {
   const closeEditFieldModal = () => {
     setEditFieldModal(false);
   };
-
-  // const certificationVisibility = async (name) => {
-  //   const web3 = window.web3;
-  //   const networkId = await web3.eth.net.getId();
-  //   const AdminData = await Admin.networks[networkId];
-  //   const accounts = await web3.eth.getAccounts();
-  //   if (AdminData) {
-  //     const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-  //     const employeeContractAddress = await admin?.methods
-  //       ?.getEmployeeContractByAddress(accounts[0])
-  //       .call();
-  //     const EmployeeContract = await new web3.eth.Contract(
-  //       Employee.abi,
-  //       employeeContractAddress
-  //     );
-  //     await EmployeeContract?.methods
-  //       ?.deleteCertification(name)
-  //       .send({ from: accounts[0] });
-  //     toast.success("Certification visibility changed successfully!!");
-  //   } else {
-  //     toast.error("The Admin Contract does not exist on this network!");
-  //   }
-  //   getCertifications();
-  // };
-
-  // const workExpVisibility = async (org) => {
-  //   const web3 = window.web3;
-  //   const networkId = await web3.eth.net.getId();
-  //   const AdminData = await Admin.networks[networkId];
-  //   const accounts = await web3.eth.getAccounts();
-  //   if (AdminData) {
-  //     const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-  //     const employeeContractAddress = await admin?.methods
-  //       ?.getEmployeeContractByAddress(accounts[0])
-  //       .call();
-  //     const EmployeeContract = await new web3.eth.Contract(
-  //       Employee.abi,
-  //       employeeContractAddress
-  //     );
-  //     await EmployeeContract?.methods
-  //       ?.deleteWorkExp(org)
-  //       .send({ from: accounts[0] });
-  //     toast.success("Work Exp. visibility changed successfully!!");
-  //   } else {
-  //     toast.error("The Admin Contract does not exist on this network!");
-  //   }
-  //   getWorkExp();
-  // };
-
-  // const reqEducationEndorsement = async (education) => {
-  //   reqEducationEndorsementFunc(education);
-  // };
-
-  // const reqCertiEndorsement = async (certi) => {
-  //   reqCertiEndorsementFunc(certi);
-  // };
-
-  // const reqWorkexpEndorsement = async (workExp) => {
-  //   reqWorkexpEndorsementFunc(workExp);
-  // };
-
-  
 
   return (
     <div>
@@ -305,174 +229,261 @@ const UpdateProfile = () => {
         setFetchUserInfo={setFetchUserInfo}
       />
 
-      <Grid>
-        <Grid.Row>
-          <Grid.Column width={6}>
-            <Card className="personal-info">
-              <Card.Content>
-                <Card.Header>About</Card.Header>
-                {userInfo?(
-                <div>
-                <span style={{ fontWeight: "bold" }}>
-                  {checkExistence(userInfo?.first_name) +
-                    " " +
-                    checkExistence(userInfo?.last_name)}
-                </span>
+      {loadcomp ? (
+        <div className="loader-container">
+          <CircularProgress />
+        </div>
+      ) : (
+        <Grid>
+          <Grid.Row>
+            <Grid.Column width={6}>
+              <Card className="personal-info">
+                <Card.Content>
+                  <Card.Header>About</Card.Header>
+                  {userInfo ? (
+                    <div>
+                      <span style={{ fontWeight: "bold" }}>
+                        {checkExistence(userInfo?.first_name) +
+                          " " +
+                          checkExistence(userInfo?.last_name)}
+                      </span>
 
-                <span
-                  className="add-button"
-                  onClick={(e) => {
-                    setEditFieldModal(!editFieldModal);
+                      <span
+                        className="add-button"
+                        onClick={(e) => {
+                          setEditFieldModal(!editFieldModal);
 
-                    // setIsDescription(false);
-                  }}
-                >
-                  <i className="fas fa-pencil-alt"></i>
-                </span>
-                <div>{checkExistence(userInfo?.email)}</div>
+                          // setIsDescription(false);
+                        }}
+                      >
+                        <i className="fas fa-pencil-alt"></i>
+                      </span>
+                      <div>{checkExistence(userInfo?.email)}</div>
 
-                <div style={{ marginTop: "5px", marginBottom: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>
-                    {checkExistence(userInfo?.current_position)}
-                  </span>
-                </div>
-                <div>
-                  <p>
-                    <em>Location: </em>
-                    <span style={{ color: "black" }}>
-                      {checkExistence(userInfo?.city) + ","}
-                      {checkExistence(userInfo?.country)}
-                    </span>
-                  </p>
-                </div>
-
-                </div>
-                ):(
-                  <div>
-                    No Information available!
-                  </div>
-                )}
-                <br />
-              </Card.Content>
-            </Card>
-            <Card className="employee-des">
-              <Card.Content>
-                <div>
-                  <span
-                    className="add-button"
-                    onClick={(e) => {
-                      setEditing(false);
-                      setEducationmodal(!educationmodal);
-                    }}
-                  >
-                    <i className="fas fa-plus"></i>
-                  </span>
-
-                  <Card.Header
-                    style={{ fontSize: "19px", fontWeight: "600" }}
-                  >
-                    Education
-                  </Card.Header>
+                      <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                        <span style={{ fontWeight: "bold" }}>
+                          {checkExistence(userInfo?.current_position)}
+                        </span>
+                      </div>
+                      <div>
+                        <p>
+                          <em>Location: </em>
+                          <span style={{ color: "black" }}>
+                            {checkExistence(userInfo?.city) + ","}
+                            {checkExistence(userInfo?.country)}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>No Information available!</div>
+                  )}
                   <br />
-                  <div className="education-module">
-                    {educations?.length > 0 ? (
-                      educations.map((education, index) => (
-                        <div className="education-design" key={index}>
-                          <div
-                            style={{
-                              paddingRight: "50px",
-                              color: "black",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            <div style={{ display: "flex" }}>
-                              <Icon
-                                style={{ position: "relative" }}
-                                name="graduation cap"
-                              />
-                              <p>
-                                {checkExistence(education?.degree)}
-                                {"(" +
-                                  checkExistence(education?.field_of_study) +
-                                  ")"}
-                              </p>
-                              <p></p>
-                              <span
-                                onClick={() =>{
-                                  setEditing(true);
-                                  handleEditEducation(education, index)
-                                }
-                                }
-                              >
-                                <i
-                                  style={{
-                                    marginLeft: "200%",
-                                    marginRight: "0px",
-                                  }}
-                                  className="fas fa-pencil-alt"
-                                ></i>
-                              </span>
-                            </div>
-                            <small
+                </Card.Content>
+              </Card>
+              <Card className="employee-des">
+                <Card.Content>
+                  <div>
+                    <span
+                      className="add-button"
+                      onClick={(e) => {
+                        setEditing(false);
+                        setEducationmodal(!educationmodal);
+                      }}
+                    >
+                      <i className="fas fa-plus"></i>
+                    </span>
+
+                    <Card.Header
+                      style={{ fontSize: "19px", fontWeight: "600" }}
+                    >
+                      Education
+                    </Card.Header>
+                    <br />
+                    <div className="education-module">
+                      {educations?.length > 0 ? (
+                        educations.map((education, index) => (
+                          <div className="education-design" key={index}>
+                            <div
                               style={{
-                                wordBreak: "break-word",
-                                fontSize: "10px",
+                                paddingRight: "50px",
+                                color: "black",
+                                fontWeight: "bold",
                               }}
                             >
-                              {checkExistence(education?.school)}
-                            </small>
-                            <br />
+                              <div style={{ display: "flex" }}>
+                                <Icon
+                                  style={{ position: "relative" }}
+                                  name="graduation cap"
+                                />
+                                <p>
+                                  {checkExistence(education?.degree)}
+                                  {"(" +
+                                    checkExistence(education?.field_of_study) +
+                                    ")"}
+                                </p>
+                                <p></p>
+                                <span
+                                  onClick={() => {
+                                    setEditing(true);
+                                    handleEditEducation(education, index);
+                                  }}
+                                >
+                                  <i
+                                    style={{
+                                      marginLeft: "200%",
+                                      marginRight: "0px",
+                                    }}
+                                    className="fas fa-pencil-alt"
+                                  ></i>
+                                </span>
+                              </div>
+                              <small
+                                style={{
+                                  wordBreak: "break-word",
+                                  fontSize: "10px",
+                                }}
+                              >
+                                {checkExistence(education?.school)}
+                              </small>
+                              <br />
 
-                            <small>
-                              {moment(
-                                checkExistence(education?.start_date)
-                              ).format("DD-MM-YYYY")}
-                              {"-" +
-                                moment(
-                                  checkExistence(education?.end_date)
+                              <small>
+                                {moment(
+                                  checkExistence(education?.start_date)
                                 ).format("DD-MM-YYYY")}
-                            </small>
+                                {"-" +
+                                  moment(
+                                    checkExistence(education?.end_date)
+                                  ).format("DD-MM-YYYY")}
+                              </small>
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No education information available.</p>
-                    )}
+                        ))
+                      ) : (
+                        <p>No education information available.</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Card.Content>
-            </Card>
-            
-          </Grid.Column>
-          <Grid.Column width={10}>
-            <Card className="employee-des">
-              <Card.Content className="content">
-                <Card.Header style={{ display: "flex" }}>
-                  Certifications
-                  <span
-                    className="add-button"
-                    onClick={(e) =>{ 
-                      setEditing(false);
-                      setCertificationModal(!certificationModal);
-                    }
-                    }
-                  >
-                    <i className="fas fa-plus"></i>
-                  </span>
-                </Card.Header>
-                <br />
+                </Card.Content>
+              </Card>
+            </Grid.Column>
+            <Grid.Column width={10}>
+              <Card className="employee-des">
+                <Card.Content className="content">
+                  <Card.Header style={{ display: "flex" }}>
+                    Certifications
+                    <span
+                      className="add-button"
+                      onClick={(e) => {
+                        setEditing(false);
+                        setCertificationModal(!certificationModal);
+                      }}
+                    >
+                      <i className="fas fa-plus"></i>
+                    </span>
+                  </Card.Header>
+                  <br />
 
-                <div className="education">
-                  <Grid columns={4}>
-                    {certifications.length > 0 ? (
-                      certifications.map((certi, index) => {
-                        if (Array.isArray(certi)) {
-                          return null;
-                        } else if (
-                          typeof certi === "object" &&
-                          certi.title &&
-                          certi.issuing_organization
-                        ) {
+                  <div className="education">
+                    <Grid columns={4}>
+                      {certifications.length > 0 ? (
+                        certifications.map((certi, index) => {
+                          if (Array.isArray(certi)) {
+                            return null;
+                          } else if (
+                            typeof certi === "object" &&
+                            certi.title &&
+                            certi.issuing_organization
+                          ) {
+                            return (
+                              <Grid.Row key={index}>
+                                <Grid.Column>
+                                  <div
+                                    style={{
+                                      color: "black",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    <p>{checkExistence(certi.title)}</p>
+                                    <small>
+                                      {checkExistence(
+                                        certi.issuing_organization
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Issue Date
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      {checkExistence(
+                                        moment(certi.issue_date).format(
+                                          "DD-MM-YYYY"
+                                        )
+                                      )}
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <div>
+                                    <p style={{ fontWeight: "bold" }}>
+                                      Credential ID
+                                    </p>
+                                    <small style={{ fontWeight: "bold" }}>
+                                      <a
+                                        href={certi.credential_url}
+                                        target="blank"
+                                      >
+                                        {checkExistence(certi.credential_id)}
+                                      </a>
+                                    </small>
+                                  </div>
+                                </Grid.Column>
+                                <Grid.Column>
+                                  <span
+                                    onClick={() => {
+                                      setEditing(true);
+                                      handleEditCertification(certi, index);
+                                    }}
+                                  >
+                                    <i className="fas fa-pencil-alt"></i>
+                                  </span>
+                                </Grid.Column>
+                              </Grid.Row>
+                            );
+                          } else {
+                            return null;
+                          }
+                        })
+                      ) : (
+                        <p>No certifications to display!</p>
+                      )}
+                    </Grid>
+                  </div>
+                </Card.Content>
+              </Card>
+              <Card className="employee-des">
+                <Card.Content>
+                  <Card.Header>
+                    Work Experiences
+                    <span
+                      className="add-button"
+                      onClick={(e) => {
+                        setEditing(false);
+                        setWorkexpModal(!workexpModal);
+                      }}
+                    >
+                      <i className="fas fa-plus"></i>
+                    </span>
+                  </Card.Header>
+                  <br />
+                  <div className="education">
+                    <Grid columns={4}>
+                      {workExps?.length > 0 ? (
+                        workExps.map((workExp, index) => {
                           return (
                             <Grid.Row key={index}>
                               <Grid.Column>
@@ -482,205 +493,119 @@ const UpdateProfile = () => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  <p>{checkExistence(certi.title)}</p>
+                                  <p>{checkExistence(workExp?.title)}</p>
                                   <small>
-                                    {checkExistence(
-                                      certi.issuing_organization
-                                    )}
+                                    {checkExistence(workExp?.company_name)}
+                                  </small>
+                                  <small>
+                                    {", " + checkExistence(workExp?.location)}
                                   </small>
                                 </div>
                               </Grid.Column>
                               <Grid.Column>
                                 <div>
                                   <p style={{ fontWeight: "bold" }}>
-                                    Issue Date
+                                    Employment Type
                                   </p>
                                   <small style={{ fontWeight: "bold" }}>
-                                    {checkExistence(
-                                      moment(certi.issue_date).format(
-                                        "DD-MM-YYYY"
-                                      )
-                                    )}
+                                    {checkExistence(workExp?.employment_type)}
                                   </small>
                                 </div>
                               </Grid.Column>
                               <Grid.Column>
                                 <div>
                                   <p style={{ fontWeight: "bold" }}>
-                                    Credential ID
+                                    Date of Joining
                                   </p>
                                   <small style={{ fontWeight: "bold" }}>
-                                    <a
-                                      href={certi.credential_url}
-                                      target="blank"
-                                    >
-                                      {checkExistence(certi.credential_id)}
-                                    </a>
+                                    {moment(workExp.start_date).format(
+                                      "DD-MM-YYYY"
+                                    )}
                                   </small>
                                 </div>
                               </Grid.Column>
                               <Grid.Column>
                                 <span
-                                  onClick={() =>{
+                                  onClick={() => {
                                     setEditing(true);
-                                    handleEditCertification(certi, index)
-                                  }
-                                  }
+                                    handleEditWorkExp(workExp, index);
+                                  }}
                                 >
                                   <i className="fas fa-pencil-alt"></i>
                                 </span>
                               </Grid.Column>
                             </Grid.Row>
                           );
+                        })
+                      ) : (
+                        <p>No work experiences found!</p>
+                      )}
+                    </Grid>
+                  </div>
+                </Card.Content>
+              </Card>
+              <Card className="employee-des">
+                <Card.Content>
+                  <span
+                    className="add-button"
+                    onClick={(e) => {
+                      setEditing(false);
+                      setSkillmodal(!skillmodal);
+                    }}
+                  >
+                    <i className="fas fa-plus"></i>
+                  </span>
+                  <Card.Header>Skills</Card.Header>
+                  <br />
+                  <br />
+                  <div className="education">
+                    {skills?.length > 0 ? (
+                      skills.map((skill, index) => {
+                        if (Array.isArray(skill)) {
+                          return null;
+                        } else if (typeof skill === "object" && skill?.title) {
+                          return (
+                            <div
+                              key={index}
+                              style={{ display: "flex",position:"relative", gap:"20px" }}
+                            >
+                              <SkillCard skill={skill} key={index} update />
+                              <i
+                                style={{ position: "relative", top: "10px" }}
+                                className="fas fa-pencil-alt"
+                                onClick={() => {
+                                  setEditing(true);
+                                  handleEditSkill(skill, index);
+                                }}
+                              ></i>
+                            </div>
+                          );
                         } else {
                           return null;
                         }
                       })
                     ) : (
-                      <p>No certifications to display!</p>
+                      <p>No skills to display!</p>
                     )}
-                  </Grid>
-                </div>
-              </Card.Content>
-            </Card>
-            <Card className="employee-des">
-              <Card.Content>
-                <Card.Header>
-                  Work Experiences
+                  </div>
+                </Card.Content>
+              </Card>
+
+              <Card className="employee-des">
+                <Card.Content>
                   <span
                     className="add-button"
-                    onClick={(e) =>{
-                      setEditing(false)
-                       setWorkexpModal(!workexpModal)}
-                    }
+                    onClick={(e) => setFilemodal(!filemodal)}
                   >
                     <i className="fas fa-plus"></i>
                   </span>
-                </Card.Header>
-                <br />
-                <div className="education">
-                  <Grid columns={4}>
-                    {workExps?.length > 0 ? (
-                      workExps.map((workExp, index) => {
-                        return (
-                          <Grid.Row key={index}>
-                            <Grid.Column>
-                              <div
-                                style={{
-                                  color: "black",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                <p>{checkExistence(workExp?.title)}</p>
-                                <small>
-                                  {checkExistence(workExp?.company_name)}
-                                </small>
-                                <small>
-                                  {", " +
-                                    checkExistence(workExp?.location)}
-                                </small>
-                              </div>
-                            </Grid.Column>
-                            <Grid.Column>
-                              <div>
-                                <p style={{ fontWeight: "bold" }}>
-                                  Employment Type
-                                </p>
-                                <small style={{ fontWeight: "bold" }}>
-                                  {checkExistence(workExp?.employment_type)}
-                                </small>
-                              </div>
-                            </Grid.Column>
-                            <Grid.Column>
-                              <div>
-                                <p style={{ fontWeight: "bold" }}>
-                                  Date of Joining
-                                </p>
-                                <small style={{ fontWeight: "bold" }}>
-                                  {moment(workExp.start_date).format(
-                                    "DD-MM-YYYY"
-                                  )}
-                                </small>
-                              </div>
-                            </Grid.Column>
-                            <Grid.Column>
-                              <span
-                                onClick={() =>{
-                                  setEditing(true)
-                                  handleEditWorkExp(workExp, index)
-                                }
-                                }
-                              >
-                                <i className="fas fa-pencil-alt"></i>
-                              </span>
-                            </Grid.Column>
-                          </Grid.Row>
-                        );
-                      })
-                    ) : (
-                      <p>No work experiences found!</p>
-                    )}
-                  </Grid>
-                </div>
-              </Card.Content>
-            </Card>
-            <Card className="employee-des">
-              <Card.Content>
-                <span
-                  className="add-button"
-                  onClick={(e) =>{
-                    setEditing(false)
-                     setSkillmodal(!skillmodal)       
-                  }}
-                >
-                  <i className="fas fa-plus"></i>
-                </span>
-                <Card.Header>Skills</Card.Header>
-                <br />
-                <br />
-                <div className="education">
-                  {skills?.length > 0 ? (
-                    skills.map((skill, index) => {
-                      if (Array.isArray(skill)) {
-                        return null;
-                      } else if (typeof skill === "object" && skill?.title) {
-                        return (
-                          <div key={index}>
-                            <i
-                              className="fas fa-pencil-alt"
-                              onClick={() =>{
-                                setEditing(true)
-                                 handleEditSkill(skill, index)}
-                              }
-                            ></i>
-                            <SkillCard skill={skill} key={index} update />
-                          </div>
-                        );
-                      } else {
-                        return null;
-                      }
-                    })
-                  ) : (
-                    <p>No skills to display!</p>
-                  )}
-                </div>
-              </Card.Content>
-            </Card>
-
-            <Card className="employee-des">
-              <Card.Content>
-                <span
-                  className="add-button"
-                  onClick={(e) => setFilemodal(!filemodal)}
-                >
-                  <i className="fas fa-plus"></i>
-                </span>
-                <Card.Header>Files</Card.Header>
-              </Card.Content>
-            </Card>
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>
+                  <Card.Header>Files</Card.Header>
+                </Card.Content>
+              </Card>
+            </Grid.Column>
+          </Grid.Row>
+        </Grid>
+      )}
     </div>
   );
 };

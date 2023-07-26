@@ -26,8 +26,7 @@ import { IPFS_Link } from "../../utils/utils";
 let accounts = null;
 
 const EmployeePage = () => {
-  // const [employeedata, setEmployeedata] = useState({});
-  // const [overallEndorsement, setOverallEndorsement] = useState([]);
+ 
   const [skills, setSkills] = useState([]);
   const [files, setFiles] = useState([]);
   const [jiraKeys, setJiraKeys] = useState([]);
@@ -40,22 +39,12 @@ const EmployeePage = () => {
   const [workExps, setWorkExps] = useState([]);
   const [educations, setEducations] = useState([]);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
-  // const [colour, setColour] = useState([
-  //   "#b6e498",
-  //   "#61dafb",
-  //   "#764abc",
-  //   "#83cd29",
-  //   "#00d1b2",
-  // ]);
-  // const [readmore, setReadmore] = useState(false);
-  // const [codeforces_res, setCodeforces_res] = useState([]);
+  
   // const [loadcomp, setLoadcomp] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showCommitsModal, setShowCommitsModal] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  // const [isDisplayButton, setIsDisplayButton] = useState(true);
-  // const [isGitDisplayButton, setIsGitDisplayButton] = useState(true);
   const [isGitLoading, setIsGitLoading] = useState(false);
   const [orgName, setOrgName] = useState([]);
   const [userInfo, setUserInfo] = useState(null);

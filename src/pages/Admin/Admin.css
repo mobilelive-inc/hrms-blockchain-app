@@ -48,6 +48,13 @@
   width: 100%;
   text-align: center;
 }
+.loader-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+}
+
 
 .horizontal-line {
   border: none;

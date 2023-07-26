@@ -8,6 +8,8 @@ import AddResources from "./AddResources";
 import ViewResources from "./ViewResources";
 import moment from "moment";
 import { getAllResources } from "../../Apis/Project";
+import { toast } from "react-toastify";
+import { CircularProgress } from "@mui/material";
 
 function ViewProjects(props) {
   const [projects, setProjects] = useState([]);
@@ -16,24 +18,33 @@ function ViewProjects(props) {
   const [index, setIndex] = useState(0);
   const [resourceModal, setResourceModal] = useState(false);
   const [resourceViewModal, setResourceViewModal] = useState(false);
+  const [loadcomp, setLoadcomp] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const web3 = window.web3;
-      const networkId = await web3.eth.net.getId();
-      const accounts = await web3.eth.getAccounts();
-      const AdminData = await Admin.networks[networkId];
-      console.log(AdminData);
-      const response = await getUserApi(accounts[0]);
-      setTokenId(response?.data?.response?.userInfo.tokenId);
-      const performance_info = await getProjects(response?.data?.response?.userInfo.tokenId);
-      const projects = performance_info?.data?.response?.projects;
-      setProjects(projects);
+      try {
+        setLoadcomp(true);
+        const web3 = window.web3;
+        const networkId = await web3.eth.net.getId();
+        const accounts = await web3.eth.getAccounts();
+        const AdminData = await Admin.networks[networkId];
+        console.log(AdminData);
+        const response = await getUserApi(accounts[0]);
+        setTokenId(response?.data?.response?.userInfo.tokenId);
+        const performance_info = await getProjects(
+          response?.data?.response?.userInfo.tokenId
+        );
+        const projects = performance_info?.data?.response?.projects;
+        setProjects(projects);
+      } catch (error) {
+        toast.error(error);
+      } finally {
+        setLoadcomp(false);
+      }
     };
 
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
+  }, []);
 
   const getResources = async (index, tokenId) => {
     setIndex(index);
@@ -44,7 +55,6 @@ function ViewProjects(props) {
     setResources(resources);
   };
 
-  
   const closeResourceModal = () => {
     setResourceModal(false);
   };
@@ -67,44 +77,53 @@ function ViewProjects(props) {
         index={index}
       />
 
-      <h2 className="card-heading">All Projects List</h2>
-      <br />
-      {projects.length !== 0 ? (
-        projects.map((project, i) => (
-          <Card className="card-display" key={i}>
-            <div className="card-content" key={i}>
-              <div>
-                <p>Name: {project.name}</p>
-                <p>Client: {project.client}</p>
-                <p>Description</p>
-                <p>{project.description}</p>
-                <p>
-                  Started: {moment(project.start_date).format("DD-MM-YYYY")} | Ends: {moment(project.end_date).format("DD-MM-YYYY")}
-                </p>
-              </div>
-              <div>
-                <button
-                  className="add-button"
-                  onClick={(e) => {
-                    setResourceModal(!resourceModal);
-                    setIndex(i);
-                  }}
-                >
-                  <i className="fas fa-plus"></i>
-                </button>
-                <button
-                  className="add-button"
-                  onClick={(e) => getResources(i, tokenId)}
-                >
-                  <i className="fas fa-eye"></i>
-                </button>
-                
-              </div>
-            </div>
-          </Card>
-        ))
+      {loadcomp ? (
+        <div>
+          <CircularProgress />
+        </div>
       ) : (
-        <div>No projects to display!</div>
+        <div>
+          <h2 className="card-heading">All Projects List</h2>
+          <br />
+          {projects.length !== 0 ? (
+            projects.map((project, i) => (
+              <Card className="card-display" key={i}>
+                <div className="card-content" key={i}>
+                  <div>
+                    <p>Name: {project.name}</p>
+                    <p>Client: {project.client}</p>
+                    <p>Description</p>
+                    <p>{project.description}</p>
+                    <p>
+                      Started:{" "}
+                      {moment(project.start_date).format("DD-MM-YYYY")} | Ends:{" "}
+                      {moment(project.end_date).format("DD-MM-YYYY")}
+                    </p>
+                  </div>
+                  <div>
+                    <button
+                      className="add-button"
+                      onClick={(e) => {
+                        setResourceModal(!resourceModal);
+                        setIndex(i);
+                      }}
+                    >
+                      <i className="fas fa-plus"></i>
+                    </button>
+                    <button
+                      className="add-button"
+                      onClick={(e) => getResources(i, tokenId)}
+                    >
+                      <i className="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <div>No projects to display!</div>
+          )}
+        </div>
       )}
       <br />
     </div>

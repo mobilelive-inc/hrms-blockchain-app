@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Button, Form, Header, Modal } from 'semantic-ui-react';
 import Admin from '../abis/Admin.json';
@@ -7,7 +7,7 @@ import './Modals.css';
 
 const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal,info,setFetchUserInfo }) => {
   const [formData, setFormData] = useState({
-    firstname1: info?.first_name,
+    firstname1: info?.first_name || '',
     lastname1: info?.last_name || '',
     city1: info?.city || '',
     country1: info?.country || '',
@@ -15,6 +15,21 @@ const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal,info,setFetchU
     current_position1: info?.current_position || '',
     loading: false,
   });
+  useEffect(() => {
+    setFormData(
+      {
+        firstname1: info?.first_name || '',
+        lastname1: info?.last_name || '',
+        city1: info?.city || '',
+        country1: info?.country || '',
+        email1: info?.email || '',
+        current_position1: info?.current_position || '',
+        loading: false,
+      }
+    )
+  },[info])
+  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,17 +43,21 @@ const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal,info,setFetchU
       current_position1,
     } = formData;
 
-    if (
-      !firstname1 &&
-      !lastname1 &&
-      !city1 &&
-      !country1 &&
-      !email1 &&
-      !current_position1
-    ) {
-      toast.error('Please enter a field.');
+    if (!formData.firstname1 || !formData.lastname1) {
+      toast.error('Please enter First Name and Last Name.');
       return;
     }
+
+    if (!formData.city1 || !formData.country1) {
+      toast.error('Please enter City and Country.');
+      return;
+    }
+
+    if (formData.email1 && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/g.test(formData.email1)) {
+      toast.error('Please enter a valid Email address.');
+      return;
+    }
+
 
     setFormData({ ...formData, loading: true });
 
@@ -203,6 +222,7 @@ const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal,info,setFetchU
           icon="save"
           content="Save"
           loading={formData.loading}
+          disabled={formData.loading}
         />
       </Modal.Actions>
     </Modal>
