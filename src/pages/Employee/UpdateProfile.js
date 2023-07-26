@@ -1,8 +1,8 @@
-import React, { Component } from "react";
-import { toast } from "react-toastify";
+import React, { useState, useEffect } from "react";
+// import { toast } from "react-toastify";
 import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
-import Employee from "../../abis/Employee.json";
+// import Employee from "../../abis/Employee.json";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
 import "./UpdateProfile.css";
@@ -13,342 +13,271 @@ import GetFilesModal from "../../components/GetFilesModal";
 import GetEducationModal from "../../components/GetEducationModal";
 import GetEditFieldModal from "../../components/GetEditFieldModal";
 //import LoadComp from "../../components/LoadComp";
-import CodeforcesGraph from "../../components/CodeforcesGraph";
+// import CodeforcesGraph from "../../components/CodeforcesGraph";
 import { getUserApi } from "../../Apis/UsersApi";
 import { getSkillsApi } from "../../Apis/EmployeeSkillsApi";
 import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
 import { getWorkExperienceApi } from "../../Apis/EmployeeExperienceApi";
 import { getEducationApi } from "../../Apis/EmployeeEducationApi";
-
-import {
-  reqCertiEndorsementFunc,
-  reqEducationEndorsementFunc,
-  reqWorkexpEndorsementFunc,
-} from "../../firebase/api";
+import CircularProgress from "@mui/material/CircularProgress";
+// import {
+//   reqCertiEndorsementFunc,
+//   reqEducationEndorsementFunc,
+//   reqWorkexpEndorsementFunc,
+// } from "../../firebase/api";
 import moment from "moment/moment";
 
-export default class UpdateProfile extends Component {
-  state = {
-    employeedata: {},
-    overallEndorsement: [],
-    skills: [],
-    certifications: [],
-    workExps: [],
-    educations: [],
-    colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
-    readmore: false,
-    certificationModal: false,
-    workexpModal: false,
-    skillmodal: false,
-    filemodal: false,
-    educationmodal: false,
-    editFieldModal: false,
-    isDescription: false,
-    loadcomp: false,
-    EmployeeContract: {},
-    userInfo: null,
-    selectedEducation: null,
-    selectedCertification: null,
-    selectedSkill: null,
-    selectedWorkExp: null,
-    tokenId: null,
-    index: 0,
-  };
-  getUserInfo = async (address) => {
+const UpdateProfile = () => {
+  const [skills, setSkills] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [workExps, setWorkExps] = useState([]);
+  const [educations, setEducations] = useState([]);
+  const [certificationModal, setCertificationModal] = useState(false);
+  const [workexpModal, setWorkexpModal] = useState(false);
+  const [skillmodal, setSkillmodal] = useState(false);
+  const [filemodal, setFilemodal] = useState(false);
+  const [educationmodal, setEducationmodal] = useState(false);
+  const [editFieldModal, setEditFieldModal] = useState(false);
+  const [loadcomp, setLoadcomp] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [selectedEducation, setSelectedEducation] = useState(null);
+  const [selectedCertification, setSelectedCertification] = useState(null);
+  const [selectedSkill, setSelectedSkill] = useState(null);
+  const [selectedWorkExp, setSelectedWorkExp] = useState(null);
+  const [tokenId, setTokenId] = useState(null);
+  const [index, setIndex] = useState(0);
+  const [editing, setEditing] = useState(false);
+  const [fetchUserInfo, setFetchUserInfo] = useState(true);
+
+  const getUserInfo = async (address) => {
     await getUserApi(address).then((response) => {
-      this.setState({ tokenId: response?.data?.response?.userInfo?.tokenId });
-      this.setState({ userInfo: response?.data?.response?.userInfo });
+      setTokenId(response?.data?.response?.userInfo?.tokenId);
+      setUserInfo(response?.data?.response?.userInfo);
+      getSkills(response?.data?.response?.userInfo?.tokenId);
+      getCertifications(response?.data?.response?.userInfo?.tokenId);
+      getWorkExp(response?.data?.response?.userInfo?.tokenId);
+      getEducation(response?.data?.response?.userInfo?.tokenId);
+      setFetchUserInfo(false);
     });
   };
 
-  getSkills = async () => {
-    const id = this.state.tokenId;
+  const getSkills = async (tokenId) => {
+    const id = tokenId;
     await getSkillsApi(id).then((response) => {
       const skillsData = response?.data?.response?.skills;
-      this.setState({ skills: skillsData });
+      setSkills(skillsData);
     });
   };
 
-  getCertifications = async () => {
-    const id = this.state.tokenId;
+  const getCertifications = async (tokenId) => {
+    const id = tokenId;
     await getCertificatesApi(id).then((response) => {
       const certificationsData = response?.data?.response?.certifications;
-
-      this.setState({
-        certifications: certificationsData,
-      });
+      setCertifications(certificationsData);
     });
   };
-  getWorkExp = async () => {
-    const id = this.state.tokenId;
+
+  const getWorkExp = async (tokenId) => {
+    const id = tokenId;
     await getWorkExperienceApi(id).then((response) => {
       const workExperienceData = response?.data?.response?.workExperiences;
-      this.setState({ workExps: workExperienceData });
+      setWorkExps(workExperienceData);
     });
   };
 
-  getEducation = async () => {
-    const id = this.state.tokenId;
+  const getEducation = async (tokenId) => {
+    const id = tokenId;
     try {
       const response = await getEducationApi(id);
       const educationData = response?.data?.response?.education;
-
       if (Array.isArray(educationData)) {
-        this.setState({ educations: educationData });
+        setEducations(educationData);
       }
     } catch (error) {
       console.error("Error retrieving education data:", error);
     }
   };
 
-  checkExistence(value) {
+  const checkExistence = (value) => {
     return value ? value : "-------";
-  }
-
-  handleEditEducation = (education, i) => {
-    this.setState({
-      educationmodal: true,
-      selectedEducation: education,
-      index: i,
-    });
-  };
-  handleEditCertification = (certification, i) => {
-    this.setState({
-      certificationModal: true,
-      selectedCertification: certification,
-      index: i,
-    });
-  };
-  handleEditWorkExp = (workExp, i) => {
-    this.setState({
-      workexpModal: true,
-      selectedWorkExp: workExp,
-      index: i,
-    });
-  };
-  handleEditSkill = (skill, i) => {
-    this.setState({
-      skillmodal: true,
-      selectedSkill: skill,
-      index: i,
-    });
   };
 
-  componentDidMount = async () => {
-    this.setState({ loadcomp: true });
-    const web3 = window.web3;
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    const accounts = await web3.eth.getAccounts();
-    const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-    const employeeContractAddress = await admin?.methods
-      ?.getEmployeeContractByAddress(accounts[0])
-      .call();
-    const EmployeeContract = await new web3.eth.Contract(
-      Employee.abi,
-      employeeContractAddress
-    );
-    this.setState({ EmployeeContract });
-    await this.getUserInfo(accounts[0]);
-    this.getSkills();
-    this.getCertifications();
-    this.getWorkExp();
-    this.getEducation();
-    const employeedata = await EmployeeContract.methods
-      .getEmployeeInfo()
-      .call();
-    const newEmployedata = {
-      ethAddress: employeedata[0],
-      name: employeedata[1],
-      location: employeedata[2],
-      description: employeedata[3],
-      overallEndorsement: employeedata[4],
-      endorsecount: employeedata[5],
+  const handleEditEducation = (education, i) => {
+    setSelectedEducation(education);
+    setIndex(i);
+    setEducationmodal(true);
+  };
+
+  const handleEditCertification = (certification, i) => {
+    setSelectedCertification(certification);
+    setIndex(i);
+    setCertificationModal(true);
+  };
+
+  const handleEditWorkExp = (workExp, i) => {
+    setSelectedWorkExp(workExp);
+    setIndex(i);
+    setWorkexpModal(true);
+  };
+
+  const handleEditSkill = (skill, i) => {
+    setSelectedSkill(skill);
+    setIndex(i);
+    setSkillmodal(true);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoadcomp(true);
+      const web3 = window.web3;
+      const networkId = await web3.eth.net.getId();
+      const AdminData = await Admin.networks[networkId];
+      console.log(AdminData);
+      const accounts = await web3.eth.getAccounts();
+      try {
+        if (fetchUserInfo) {
+          await getUserInfo(accounts[0]);
+        }
+        
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoadcomp(false);
+      }
     };
-    const endorseCount = newEmployedata.endorsecount;
-    const overallEndorsement = await Promise.all(
-      Array(parseInt(endorseCount))
-        .fill()
-        .map((ele, index) =>
-          EmployeeContract?.methods?.overallEndorsement(index).call()
-        )
-    );
-    this.setState({ employeedata: newEmployedata, overallEndorsement });
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchUserInfo]);
 
-    this.setState({ loadcomp: false });
+  const closeCertificationModal = () => {
+    setCertificationModal(false);
+    setSelectedCertification(null);
+    getCertifications(tokenId);
   };
 
-  closeCertificationModal = () => {
-    this.setState({ certificationModal: false, selectedCertification: null });
-    this.getCertifications();
+  const closeWorkExpModal = () => {
+    setWorkexpModal(false);
+    setSelectedWorkExp(null);
+    getWorkExp(tokenId);
   };
 
-  closeWorkExpModal = () => {
-    this.setState({ workexpModal: false, selectedWorkExp: null });
-    this.getWorkExp();
+  const closeSkillModal = () => {
+    setSkillmodal(false);
+    setSelectedSkill(null);
+    getSkills(tokenId);
   };
 
-  closeSkillModal = () => {
-    this.setState({ skillmodal: false, selectedSkill: null });
-    this.getSkills();
-  };
-  closeFileModal = () => {
-    this.setState({ filemodal: false });
-  };
-  closeEducationModal = () => {
-    this.setState({ educationmodal: false, selectedEducation: null });
-    this.getEducation();
+  const closeFileModal = () => {
+    setFilemodal(false);
   };
 
-  closeEditFieldModal = () => {
-    this.setState({ editFieldModal: false });
+  const closeEducationModal = () => {
+    setEducationmodal(false);
+    setSelectedEducation(null);
+    getEducation(tokenId);
   };
 
-  certificationVisibility = async (name) => {
-    const web3 = window.web3;
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
-      await EmployeeContract?.methods
-        ?.deleteCertification(name)
-        .send({ from: accounts[0] });
-      toast.success("Certification visibility changed successfully!!");
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    }
-    this.getCertifications(this.state.EmployeeContract);
+  const closeEditFieldModal = () => {
+    setEditFieldModal(false);
   };
 
-  workExpVisibility = async (org) => {
-    const web3 = window.web3;
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    const accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const employeeContractAddress = await admin?.methods
-        ?.getEmployeeContractByAddress(accounts[0])
-        .call();
-      const EmployeeContract = await new web3.eth.Contract(
-        Employee.abi,
-        employeeContractAddress
-      );
-      await EmployeeContract?.methods
-        ?.deleteWorkExp(org)
-        .send({ from: accounts[0] });
-      toast.success("Work Exp. visibility changed successfully!!");
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
-    }
-    this.getWorkExp(this.state.EmployeeContract);
-  };
+  return (
+    <div>
+      <GetCertificationModal
+        isOpen={certificationModal}
+        closeCertificationModal={closeCertificationModal}
+        tokenId={tokenId}
+        certification={selectedCertification}
+        index={index}
+        editing={editing}
+      />
+      <GetWorkExpModal
+        isOpen={workexpModal}
+        closeCertificationModal={closeWorkExpModal}
+        tokenId={tokenId}
+        workExp={selectedWorkExp}
+        index={index}
+        editing={editing}
+      />
+      <GetSkillsModal
+        isOpen={skillmodal}
+        closeCertificationModal={closeSkillModal}
+        tokenId={tokenId}
+        skill={selectedSkill}
+        index={index}
+        editing={editing}
+      />
+      <GetFilesModal
+        isOpen={filemodal}
+        closeCertificationModal={closeFileModal}
+        tokenId={tokenId}
+      />
+      <GetEducationModal
+        isOpen={educationmodal}
+        closeCertificationModal={closeEducationModal}
+        education={selectedEducation}
+        tokenId={tokenId}
+        index={index}
+        editing={editing}
+      />
 
-  reqEducationEndorsement = async (education) => {
-    reqEducationEndorsementFunc(education);
-  };
+      <GetEditFieldModal
+        isOpen={editFieldModal}
+        closeEditFieldModal={closeEditFieldModal}
+        tokenId={tokenId}
+        info={userInfo}
+        setFetchUserInfo={setFetchUserInfo}
+      />
 
-  reqCertiEndorsement = async (certi) => {
-    reqCertiEndorsementFunc(certi);
-  };
-
-  reqWorkexpEndorsement = async (workExp) => {
-    reqWorkexpEndorsementFunc(workExp);
-  };
-
-  render() {
-    return (
-      <div>
-        <GetCertificationModal
-          isOpen={this.state.certificationModal}
-          closeCertificationModal={this.closeCertificationModal}
-          tokenId={this.state.tokenId}
-          certification={this.state.selectedCertification}
-          index={this.state.index}
-        />
-        <GetWorkExpModal
-          isOpen={this.state.workexpModal}
-          closeCertificationModal={this.closeWorkExpModal}
-          tokenId={this.state.tokenId}
-          workExp={this.state.selectedWorkExp}
-          index={this.state.index}
-        />
-        <GetSkillsModal
-          isOpen={this.state.skillmodal}
-          closeCertificationModal={this.closeSkillModal}
-          tokenId={this.state.tokenId}
-          skill={this.state.selectedSkill}
-          index={this.state.index}
-        />
-        <GetFilesModal
-          isOpen={this.state.filemodal}
-          closeCertificationModal={this.closeFileModal}
-        />
-        <GetEducationModal
-          isOpen={this.state.educationmodal}
-          closeCertificationModal={this.closeEducationModal}
-          education={this.state.selectedEducation}
-          tokenId={this.state.tokenId}
-          index={this.state.index}
-        />
-
-        <GetEditFieldModal
-          isOpen={this.state.editFieldModal}
-          closeEditFieldModal={this.closeEditFieldModal}
-          tokenId={this.state.tokenId}
-        />
-
+      {loadcomp ? (
+        <div className="loader-container">
+          <CircularProgress />
+        </div>
+      ) : (
         <Grid>
           <Grid.Row>
             <Grid.Column width={6}>
               <Card className="personal-info">
                 <Card.Content>
                   <Card.Header>About</Card.Header>
-                  <br />
-
-                  <span style={{ fontWeight: "bold" }}>
-                    {this.checkExistence(this.state.userInfo?.first_name) +
-                      " " +
-                      this.checkExistence(this.state.userInfo?.last_name)}
-                  </span>
-
-                  <span
-                    className="add-button"
-                    onClick={(e) =>
-                      this.setState({
-                        editFieldModal: !this.state.editFieldModal,
-                        isDescription: false,
-                      })
-                    }
-                  >
-                    <i className="fas fa-pencil-alt"></i>
-                  </span>
-                  <div>{this.checkExistence(this.state.userInfo?.email)}</div>
-
-                  <div style={{ marginTop: "5px", marginBottom: "5px" }}>
-                    <span style={{ fontWeight: "bold" }}>
-                      {this.checkExistence(
-                        this.state.userInfo?.current_position
-                      )}
-                    </span>
-                  </div>
-                  <div>
-                    <p>
-                      <em>Location: </em>
-                      <span style={{ color: "black" }}>
-                        {this.checkExistence(this.state.userInfo?.city) + ","}
-                        {this.checkExistence(this.state.userInfo?.country)}
+                  {userInfo ? (
+                    <div>
+                      <span style={{ fontWeight: "bold" }}>
+                        {checkExistence(userInfo?.first_name) +
+                          " " +
+                          checkExistence(userInfo?.last_name)}
                       </span>
-                    </p>
-                  </div>
+
+                      <span
+                        className="add-button"
+                        onClick={(e) => {
+                          setEditFieldModal(!editFieldModal);
+
+                          // setIsDescription(false);
+                        }}
+                      >
+                        <i className="fas fa-pencil-alt"></i>
+                      </span>
+                      <div>{checkExistence(userInfo?.email)}</div>
+
+                      <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                        <span style={{ fontWeight: "bold" }}>
+                          {checkExistence(userInfo?.current_position)}
+                        </span>
+                      </div>
+                      <div>
+                        <p>
+                          <em>Location: </em>
+                          <span style={{ color: "black" }}>
+                            {checkExistence(userInfo?.city) + ","}
+                            {checkExistence(userInfo?.country)}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>No Information available!</div>
+                  )}
                   <br />
                 </Card.Content>
               </Card>
@@ -357,11 +286,10 @@ export default class UpdateProfile extends Component {
                   <div>
                     <span
                       className="add-button"
-                      onClick={(e) =>
-                        this.setState({
-                          educationmodal: !this.state.educationmodal,
-                        })
-                      }
+                      onClick={(e) => {
+                        setEditing(false);
+                        setEducationmodal(!educationmodal);
+                      }}
                     >
                       <i className="fas fa-plus"></i>
                     </span>
@@ -372,9 +300,9 @@ export default class UpdateProfile extends Component {
                       Education
                     </Card.Header>
                     <br />
-                    <div className="education">
-                      {this.state.educations?.length > 0 ? (
-                        this.state.educations.map((education, index) => (
+                    <div className="education-module">
+                      {educations?.length > 0 ? (
+                        educations.map((education, index) => (
                           <div className="education-design" key={index}>
                             <div
                               style={{
@@ -389,18 +317,17 @@ export default class UpdateProfile extends Component {
                                   name="graduation cap"
                                 />
                                 <p>
-                                  {this.checkExistence(education?.degree)}
+                                  {checkExistence(education?.degree)}
                                   {"(" +
-                                    this.checkExistence(
-                                      education?.field_of_study
-                                    ) +
+                                    checkExistence(education?.field_of_study) +
                                     ")"}
                                 </p>
                                 <p></p>
                                 <span
-                                  onClick={() =>
-                                    this.handleEditEducation(education, index)
-                                  }
+                                  onClick={() => {
+                                    setEditing(true);
+                                    handleEditEducation(education, index);
+                                  }}
                                 >
                                   <i
                                     style={{
@@ -417,17 +344,17 @@ export default class UpdateProfile extends Component {
                                   fontSize: "10px",
                                 }}
                               >
-                                {this.checkExistence(education?.school)}
+                                {checkExistence(education?.school)}
                               </small>
                               <br />
 
                               <small>
                                 {moment(
-                                  this.checkExistence(education?.start_date)
+                                  checkExistence(education?.start_date)
                                 ).format("DD-MM-YYYY")}
                                 {"-" +
                                   moment(
-                                    this.checkExistence(education?.end_date)
+                                    checkExistence(education?.end_date)
                                   ).format("DD-MM-YYYY")}
                               </small>
                             </div>
@@ -440,12 +367,6 @@ export default class UpdateProfile extends Component {
                   </div>
                 </Card.Content>
               </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Competetive Platform Ratings</Card.Header>
-                  <CodeforcesGraph />
-                </Card.Content>
-              </Card>
             </Grid.Column>
             <Grid.Column width={10}>
               <Card className="employee-des">
@@ -454,11 +375,10 @@ export default class UpdateProfile extends Component {
                     Certifications
                     <span
                       className="add-button"
-                      onClick={(e) =>
-                        this.setState({
-                          certificationModal: !this.state.certificationModal,
-                        })
-                      }
+                      onClick={(e) => {
+                        setEditing(false);
+                        setCertificationModal(!certificationModal);
+                      }}
                     >
                       <i className="fas fa-plus"></i>
                     </span>
@@ -467,8 +387,8 @@ export default class UpdateProfile extends Component {
 
                   <div className="education">
                     <Grid columns={4}>
-                      {this.state.certifications.length > 0 ? (
-                        this.state.certifications.map((certi, index) => {
+                      {certifications.length > 0 ? (
+                        certifications.map((certi, index) => {
                           if (Array.isArray(certi)) {
                             return null;
                           } else if (
@@ -485,9 +405,9 @@ export default class UpdateProfile extends Component {
                                       fontWeight: "bold",
                                     }}
                                   >
-                                    <p>{this.checkExistence(certi.title)}</p>
+                                    <p>{checkExistence(certi.title)}</p>
                                     <small>
-                                      {this.checkExistence(
+                                      {checkExistence(
                                         certi.issuing_organization
                                       )}
                                     </small>
@@ -499,7 +419,7 @@ export default class UpdateProfile extends Component {
                                       Issue Date
                                     </p>
                                     <small style={{ fontWeight: "bold" }}>
-                                      {this.checkExistence(
+                                      {checkExistence(
                                         moment(certi.issue_date).format(
                                           "DD-MM-YYYY"
                                         )
@@ -513,15 +433,21 @@ export default class UpdateProfile extends Component {
                                       Credential ID
                                     </p>
                                     <small style={{ fontWeight: "bold" }}>
-                                      <a href={certi.credential_url} target="blank">{this.checkExistence(certi.credential_id)}</a>
+                                      <a
+                                        href={certi.credential_url}
+                                        target="blank"
+                                      >
+                                        {checkExistence(certi.credential_id)}
+                                      </a>
                                     </small>
                                   </div>
                                 </Grid.Column>
                                 <Grid.Column>
                                   <span
-                                    onClick={() =>
-                                      this.handleEditCertification(certi, index)
-                                    }
+                                    onClick={() => {
+                                      setEditing(true);
+                                      handleEditCertification(certi, index);
+                                    }}
                                   >
                                     <i className="fas fa-pencil-alt"></i>
                                   </span>
@@ -545,11 +471,10 @@ export default class UpdateProfile extends Component {
                     Work Experiences
                     <span
                       className="add-button"
-                      onClick={(e) =>
-                        this.setState({
-                          workexpModal: !this.state.workexpModal,
-                        })
-                      }
+                      onClick={(e) => {
+                        setEditing(false);
+                        setWorkexpModal(!workexpModal);
+                      }}
                     >
                       <i className="fas fa-plus"></i>
                     </span>
@@ -557,21 +482,23 @@ export default class UpdateProfile extends Component {
                   <br />
                   <div className="education">
                     <Grid columns={4}>
-                      {this.state.workExps?.length > 0 ? (
-                        this.state.workExps.map((workExp, index) => {
+                      {workExps?.length > 0 ? (
+                        workExps.map((workExp, index) => {
                           return (
                             <Grid.Row key={index}>
                               <Grid.Column>
                                 <div
-                                  style={{ color: "black", fontWeight: "bold" }}
+                                  style={{
+                                    color: "black",
+                                    fontWeight: "bold",
+                                  }}
                                 >
-                                  <p>{this.checkExistence(workExp?.title)}</p>
+                                  <p>{checkExistence(workExp?.title)}</p>
                                   <small>
-                                    {this.checkExistence(workExp?.company_name)}
+                                    {checkExistence(workExp?.company_name)}
                                   </small>
                                   <small>
-                                    {", " +
-                                      this.checkExistence(workExp?.location)}
+                                    {", " + checkExistence(workExp?.location)}
                                   </small>
                                 </div>
                               </Grid.Column>
@@ -581,9 +508,7 @@ export default class UpdateProfile extends Component {
                                     Employment Type
                                   </p>
                                   <small style={{ fontWeight: "bold" }}>
-                                    {this.checkExistence(
-                                      workExp?.employment_type
-                                    )}
+                                    {checkExistence(workExp?.employment_type)}
                                   </small>
                                 </div>
                               </Grid.Column>
@@ -593,19 +518,18 @@ export default class UpdateProfile extends Component {
                                     Date of Joining
                                   </p>
                                   <small style={{ fontWeight: "bold" }}>
-                                  {this.checkExistence(
-                                        moment(workExp.start_date).format(
-                                          "DD-MM-YYYY"
-                                        )
-                                      )}
+                                    {moment(workExp.start_date).format(
+                                      "DD-MM-YYYY"
+                                    )}
                                   </small>
                                 </div>
                               </Grid.Column>
                               <Grid.Column>
                                 <span
-                                  onClick={() =>
-                                    this.handleEditWorkExp(workExp, index)
-                                  }
+                                  onClick={() => {
+                                    setEditing(true);
+                                    handleEditWorkExp(workExp, index);
+                                  }}
                                 >
                                   <i className="fas fa-pencil-alt"></i>
                                 </span>
@@ -624,11 +548,10 @@ export default class UpdateProfile extends Component {
                 <Card.Content>
                   <span
                     className="add-button"
-                    onClick={(e) =>
-                      this.setState({
-                        skillmodal: !this.state.skillmodal,
-                      })
-                    }
+                    onClick={(e) => {
+                      setEditing(false);
+                      setSkillmodal(!skillmodal);
+                    }}
                   >
                     <i className="fas fa-plus"></i>
                   </span>
@@ -636,20 +559,25 @@ export default class UpdateProfile extends Component {
                   <br />
                   <br />
                   <div className="education">
-                    {this.state.skills?.length > 0 ? (
-                      this.state.skills.map((skill, index) => {
+                    {skills?.length > 0 ? (
+                      skills.map((skill, index) => {
                         if (Array.isArray(skill)) {
                           return null;
                         } else if (typeof skill === "object" && skill?.title) {
                           return (
-                            <div key={index}>
-                              <i
-                                className="fas fa-pencil-alt"
-                                onClick={() =>
-                                  this.handleEditSkill(skill, index)
-                                }
-                              ></i>
+                            <div
+                              key={index}
+                              style={{ display: "flex",position:"relative", gap:"20px" }}
+                            >
                               <SkillCard skill={skill} key={index} update />
+                              <i
+                                style={{ position: "relative", top: "10px" }}
+                                className="fas fa-pencil-alt"
+                                onClick={() => {
+                                  setEditing(true);
+                                  handleEditSkill(skill, index);
+                                }}
+                              ></i>
                             </div>
                           );
                         } else {
@@ -667,11 +595,7 @@ export default class UpdateProfile extends Component {
                 <Card.Content>
                   <span
                     className="add-button"
-                    onClick={(e) =>
-                      this.setState({
-                        filemodal: !this.state.filemodal,
-                      })
-                    }
+                    onClick={(e) => setFilemodal(!filemodal)}
                   >
                     <i className="fas fa-plus"></i>
                   </span>
@@ -681,7 +605,9 @@ export default class UpdateProfile extends Component {
             </Grid.Column>
           </Grid.Row>
         </Grid>
-      </div>
-    );
-  }
-}
+      )}
+    </div>
+  );
+};
+
+export default UpdateProfile;

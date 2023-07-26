@@ -1,17 +1,15 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
-//import LineChart from "../../components/LineChart";
 import SkillCard from "../../components/SkillCard";
 import moment from "moment";
 import "./Employee.css";
-//import CodeforcesGraph from "../../components/CodeforcesGraph";
-import LoadComp from "../../components/LoadComp";
+// import LoadComp from "../../components/LoadComp";
 import ModalComponent from "./jiraModal";
 import ModalComponentGit from "./GitModal";
 import CircularProgress from "@mui/material/CircularProgress";
-import { saveAs } from "file-saver";
+// import { saveAs } from "file-saver";
 import getJiraApi from "../../Apis/JiraApi";
 import { getGitOrganizationApi } from "../../Apis/GitApi";
 import { getGitRepos } from "../../Apis/GitApi";
@@ -26,94 +24,119 @@ import { getUserApi } from "../../Apis/UsersApi";
 import { IPFS_Link } from "../../utils/utils";
 
 let accounts = null;
-export default class EmployeePage extends Component {
-  state = {
-    employeedata: {},
-    overallEndorsement: [],
-    skills: [],
-    files: [],
-    assigneeName: [],
-    assigneeImg: [],
-    description: [],
-    key: [],
-    jiraKeys: [],
-    Response: [],
-    repoNames: [],
-    commits: [],
-    names: [],
-    extensions: [],
-    certifications: [],
-    workExps: [],
-    educations: [],
-    colour: ["#b6e498", "#61dafb", "#764abc", "#83cd29", "#00d1b2"],
-    readmore: false,
-    codeforces_res: [],
-    loadcomp: false,
-    showModal: false,
-    showCommitsModal: false,
-    selectedKey: null,
-    isLoading: false,
-    isDisplayButton: true,
-    isGitDisplayButton: true,
-    isGitLoading: false,
-    orgName: [],
-    userInfo: null,
-    tokenId: null,
-    performances:{},
-    performance:null
-  };
-  getJiraTasks = async () => {
-    const name = this.state.userInfo?.first_name;
+
+const EmployeePage = () => {
+ 
+  const [skills, setSkills] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [jiraKeys, setJiraKeys] = useState([]);
+  const [Response, setResponse] = useState([]);
+  const [repoNames, setRepoNames] = useState([]);
+  const [commits, setCommits] = useState([]);
+  // const [names, setNames] = useState([]);
+  // const [extensions, setExtensions] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [workExps, setWorkExps] = useState([]);
+  const [educations, setEducations] = useState([]);
+  const [isLoadingPage, setIsLoadingPage] = useState(true);
+  
+  // const [loadcomp, setLoadcomp] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showCommitsModal, setShowCommitsModal] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGitLoading, setIsGitLoading] = useState(false);
+  const [orgName, setOrgName] = useState([]);
+  const [userInfo, setUserInfo] = useState(null);
+  const [tokenId, setTokenId] = useState(null);
+  const [performances, setPerformances] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // setLoadcomp(true);
+      const web3 = window.web3;
+      const networkId = await web3.eth.net.getId();
+      const AdminData = await Admin.networks[networkId];
+      console.log(AdminData);
+      accounts = await web3.eth.getAccounts();
+
+      try {
+        await getUserInfo(accounts[0]);
+        // if (tokenId) {
+        //   console.log("token: ",tokenId);
+        //   console.log(userInfo)
+        //   getSkills(tokenId);
+        //   getCertifications(tokenId);
+        //   getWorkExp(tokenId);
+        //   getEducation(tokenId);
+        //   getGithubCommits();
+        //   getFiles(accounts[0]);
+        //   getPerformance(userInfo?.email);
+        //   await getJiraTasks(userInfo?.first_name);
+        // }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+      finally {
+        setIsLoadingPage(false);
+       }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenId]);
+
+  const getJiraTasks = async (first_name) => {
+    const name = first_name;
     try {
-      this.setState({ isLoading: true });
-      this.setState({ isDisplayButton: false });
+      setIsLoading(true);
+      // setIsDisplayButton(false);
       const response = await getJiraApi(name);
-      this.setState({ Response: response?.data?.response });
-      const keys = this.state.Response?.issues?.map((issue) => issue.key);
-      this.setState({ jiraKeys: keys });
+      setResponse(response?.data?.response);
+      const keys = response?.data?.response?.issues?.map((issue) => issue.key);
+      setJiraKeys(keys);
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  openModal = (key) => {
-    this.setState({ selectedKey: key, showModal: true });
+  const openModal = (key) => {
+    setSelectedKey(key);
+    setShowModal(true);
   };
 
-  openCommitsModal = (key) => {
-    this.setState({ showCommitsModal: true });
-  };
-  closeCommitsModal = (key) => {
-    this.setState({ showCommitsModal: false });
+  const openCommitsModal = (key) => {
+    setShowCommitsModal(true);
   };
 
-  closeModal = () => {
-    this.setState({ showModal: false });
+  const closeCommitsModal = (key) => {
+    setShowCommitsModal(false);
   };
 
-  getGithubCommits = async () => {
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  const getGithubCommits = async () => {
     try {
-      this.setState({ isGitLoading: true });
-      this.setState({ isGitDisplayButton: false });
-      await getGitOrganizationApi().then((response) => {
-        if (response)
-          this.setState({ orgName: response?.data[0]?.login });
-      });
-      await getGitRepos(this.state?.orgName).then((response) => {
-        this.setState({ repoNames: response?.data });
-      });
+      setIsGitLoading(true);
+      // setIsGitDisplayButton(false);
+      const response = await getGitOrganizationApi();
+      setOrgName(response?.data[0]?.login);
+      const repos = await getGitRepos(response?.data[0]?.login);
+      setRepoNames(repos?.data);
     } catch (error) {
       throw error;
     } finally {
-      this.setState({ isGitLoading: false });
+      setIsGitLoading(false);
     }
   };
 
-  handleClick = async (name) => {
+  const handleClick = async (name) => {
     try {
-      const response = await getGitCommits(this.state?.orgName, name);
+      const response = await getGitCommits(orgName, name);
       const commits = response?.data || [];
 
       const commitsByDate = {};
@@ -129,183 +152,178 @@ export default class EmployeePage extends Component {
         .sort((a, b) => new Date(b[0]) - new Date(a[0]))
         .map(([date, commits]) => ({ date, commits }));
 
-      this.setState({ commits: sortedCommits });
-      this.openCommitsModal();
+      setCommits(sortedCommits);
+      openCommitsModal();
     } catch (error) {
       console.error("Error:", error);
     }
   };
+  
 
-  getFiles = async (userAddress) => {
+  const getFiles = async (userAddress,tokenId) => {
     const myHeaders = {
       "Content-Type": "application/x-www-form-urlencoded",
     };
     const urlencoded = new URLSearchParams();
     urlencoded.append("userAddress", userAddress);
 
-    await getFilesApi(urlencoded, myHeaders).then((response) => {
-      if (response?.data?.response?.files) {
-        const files = response.data.response.files[2];
-        const names = response.data.response.files[0];
-        const extensions = response.data.response.files[1];
-
-        this.setState({ files: files });
-        this.setState({ names: names });
-        this.setState({ extensions: extensions });
-      } else {
-        console.log("error");
-      }
-    });
-  };
-
-  handleDownloadClick(url, name) {
-    saveAs(url, name);
-  }
-
-  getIcons(extension) {
-    switch (extension) {
-      case "png":
-        return "file image";
-      case "doc":
-        return "file word";
-      case "pdf":
-        return "file pdf";
-      default:
-        return "file";
-    }
-  }
-
-  componentDidMount = async () => {
-    this.setState({ loadcomp: true });
-    const web3 = window.web3;
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    accounts = await web3.eth.getAccounts();
-    if (AdminData) {
-      await this.getUserInfo(accounts[0]);
-      this.getSkills();
-      this.getCertifications();
-      this.getWorkExp();
-      this.getEducation();
-      this.getGithubCommits();
-      this.getFiles(accounts[0]);
-      this.getPerformance(this.state.userInfo?.email);
-      //this.getPerformance();
-      this.getJiraTasks();
+    const response = await getFilesApi(urlencoded, myHeaders,tokenId);
+    if (response?.data?.response?.files) {
+      setFiles(response?.data?.response?.files);
+      console.log(response?.data?.response?.files)   
     } else {
-      toast.error("The Admin Contract does not exist on this network!");
+      toast.error("error");
     }
-    this.setState({ loadcomp: false });
   };
 
-  getUserInfo = async (address) => {
-    await getUserApi(address).then((response) => {
-      this.setState({ tokenId: response?.data?.response?.userInfo?.tokenId });
-      this.setState({ userInfo: response?.data?.response?.userInfo });
-    });
-  };
-  getPerformance = async(email)=>{
-    const performance_info = await employeePerformanceApi(email);
-    console.log("info: ",performance_info)
-    this.setState({ performances: performance_info?.data[0] });
-    console.log("pe: ",this.state.performances)
- }
-  getSkills = async () => {
-    await getSkillsApi(this.state.tokenId).then((response) => {
-      const skillsData = response?.data?.response?.skills;
-      this.setState({ skills: skillsData });
-    });
-  };
+  // const getIcons = (extension) => {
+  //   switch (extension) {
+  //     case "png":
+  //       return "file image";
+  //     case "doc":
+  //       return "file word";
+  //     case "pdf":
+  //       return "file pdf";
+  //     default:
+  //       return "file";
+  //   }
+  // };
 
-  getCertifications = async () => {
-    await getCertificatesApi(this.state.tokenId).then((response) => {
-      const certificationsData = response?.data?.response?.certifications;
-      
-      this.setState({
-        certifications: certificationsData,
-      });
-    });
-  };
-
-  getWorkExp = async () => {
-    await getWorkExperienceApi(this.state.tokenId).then((response) => {
-      
-      const workExperienceData = response?.data?.response?.workExperiences;
-      this.setState({ workExps: workExperienceData });
-    });
-  };
-
-  getEducation = async () => {
+  const getUserInfo = async (address) => {
     try {
-      const response = await getEducationApi(this.state.tokenId);
+      const response = await getUserApi(address);
+      if (response) {
+        setTokenId(response?.data?.response?.userInfo?.tokenId);
+        setUserInfo(response?.data?.response?.userInfo);
+        getSkills(response?.data?.response?.userInfo?.tokenId);
+        getCertifications(response?.data?.response?.userInfo?.tokenId);
+        getWorkExp(response?.data?.response?.userInfo?.tokenId);
+        getEducation(response?.data?.response?.userInfo?.tokenId);
+        getGithubCommits();
+        getFiles(accounts[0],response?.data?.response?.userInfo?.tokenId);
+        getPerformance(response?.data?.response?.userInfo?.email);
+        getJiraTasks(response?.data?.response?.userInfo?.first_name);
+      }
+    } catch (error) {
+      toast.error("Error retrieving user info:", error);
+    }
+  };
+
+  const getPerformance = async (email) => {
+    try {
+      const performance_info = await employeePerformanceApi(email);
+      setPerformances(performance_info?.data[0]);
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+
+  const getSkills = async (tokenId) => {
+    try {
+      const response = await getSkillsApi(tokenId);
+      const skillsData = response?.data?.response?.skills;
+      setSkills(skillsData);
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+
+  const getCertifications = async (tokenId) => {
+    try {
+      const response = await getCertificatesApi(tokenId);
+      const certificationsData = response?.data?.response?.certifications;
+      setCertifications(certificationsData);
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+
+  const getWorkExp = async (tokenId) => {
+    try {
+      const response = await getWorkExperienceApi(tokenId);
+      const workExperienceData = response?.data?.response?.workExperiences;
+      if (Array.isArray(workExperienceData)) {
+        setWorkExps(workExperienceData);
+      }
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+
+  const getEducation = async (tokenId) => {
+    try {
+      const response = await getEducationApi(tokenId);
       const educationData = response?.data?.response?.education;
 
       if (Array.isArray(educationData)) {
-        this.setState({ educations: educationData });
+        setEducations(educationData);
       }
     } catch (error) {
-      console.error("Error retrieving education data:", error);
+      toast.error("Error retrieving education data:", error);
     }
   };
 
-  checkExistence(value) {
+  const checkExistence = (value) => {
     return value ? value : "N/A";
-  }
+  };
 
-  render() {
-    return this.state.loadcomp ? (
-      <LoadComp />
-    ) : (
-      <div>
-        <Grid>
-          <Grid.Row>
-            <Grid.Column width={6}>
-              <Card className="personal-info">
-                <Card.Content>
-                  <Card.Header>About</Card.Header>
-                  <br />
-                  <span style={{ fontWeight: "bold" }}>
-                    {this.checkExistence(this.state.userInfo?.first_name) +
-                      " " +
-                      this.checkExistence(this.state.userInfo?.last_name)}
-                  </span>
-
-                  <div style={{ marginTop: "5px", marginBottom: "5px" }}>
-                    <span>
-                      {this.checkExistence(this.state.userInfo?.email)}
-                    </span>
-                  </div>
-                  <div style={{ marginTop: "5px", marginBottom: "5px" }}>
-                    <span style={{ fontWeight: "bold" }}>
-                      {this.checkExistence(
-                        this.state.userInfo?.current_position
-                      )}
-                    </span>
-                  </div>
+  return (
+    <div>
+      {isLoadingPage ? ( 
+        <div className="loader-container">
+          <CircularProgress /> 
+        </div>
+      ) : (
+      <Grid>
+        <Grid.Row>
+          <Grid.Column width={6}>
+            <Card className="personal-info">
+              <Card.Content>
+                <Card.Header>About</Card.Header>
+                {userInfo ? (
                   <div>
-                    <p>
-                      <em>Location: </em>
-                      <span style={{ color: "black" }}>
-                        {this.checkExistence(this.state.userInfo?.city) + ","}
-                        {this.checkExistence(this.state.userInfo?.country)}
-                      </span>
-                    </p>
-                  </div>
-                  <br />
-                </Card.Content>
-              </Card>
-
-              <Card className="employee-des">
-                <Card.Content>
-                  <div>
-                    <Card.Header
-                      style={{ fontSize: "19px", fontWeight: "600" }}
-                    >
-                      Education:
-                    </Card.Header>
                     <br />
-                    <div className="education">
-                      {this.state.educations?.map((education, index) => (
+                    <span style={{ fontWeight: "bold" }}>
+                      {checkExistence(userInfo?.first_name) +
+                        " " +
+                        checkExistence(userInfo?.last_name)}
+                    </span>
+
+                    <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                      <span>{checkExistence(userInfo?.email)}</span>
+                    </div>
+                    <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+                      <span style={{ fontWeight: "bold" }}>
+                        {checkExistence(userInfo?.current_position)}
+                      </span>
+                    </div>
+                    <div>
+                      <p>
+                        <em>Location: </em>
+                        <span style={{ color: "black" }}>
+                          {checkExistence(userInfo?.city) + ","}
+                          {checkExistence(userInfo?.country)}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>No Information available!</div>
+                )}
+                <br />
+              </Card.Content>
+            </Card>
+
+            <Card className="employee-des">
+              <Card.Content>
+                <div>
+                  <Card.Header style={{ fontSize: "19px", fontWeight: "600" }}>
+                    Education:
+                  </Card.Header>
+                  <br />
+                  {educations.length > 0 ? (
+                    <div className="education-module">
+                      {educations?.map((education, index) => (
                         <div className="education-design" key={index}>
                           <div
                             style={{
@@ -319,7 +337,12 @@ export default class EmployeePage extends Component {
                                 style={{ position: "relative" }}
                                 name="graduation cap"
                               />
-                                <p>{this.checkExistence(education?.degree)}{"("+this.checkExistence(education?.field_of_study)+")"}</p>
+                              <p>
+                                {checkExistence(education?.degree) +
+                                  "(" +
+                                  checkExistence(education?.field_of_study) +
+                                  ")"}
+                              </p>
                             </div>
                             <small
                               style={{
@@ -327,293 +350,293 @@ export default class EmployeePage extends Component {
                                 fontSize: "10px",
                               }}
                             >
-                              {this.checkExistence(education?.school)}
+                              {checkExistence(education?.school)}
                             </small>
-                            <br/>
+                            <br />
 
-                            <small>{moment(this.checkExistence(education?.start_date)).format("DD-MM-YYYY")}{"-"+(moment(this.checkExistence(education?.end_date)).format("DD-MM-YYYY"))}</small>
-
+                            <small>
+                              {moment(
+                                checkExistence(education?.start_date)
+                              ).format("DD-MM-YYYY")}
+                              {"-" +
+                                moment(
+                                  checkExistence(education?.end_date)
+                                ).format("DD-MM-YYYY")}
+                            </small>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                </Card.Content>
-              </Card>
+                  ) : (
+                    <div>No Education available to display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
 
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Employee Performance</Card.Header>
-                  {this.state.performances&&
-                  <div>
-                    Percentage Score:
-                      {
-                        this.state.performances.Score
-                      }  
-                    </div>}
-                </Card.Content>
-              </Card>
-            </Grid.Column>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Employee Performance</Card.Header>
+                {performances && (
+                  <div>Percentage Score: {performances.Score}</div>
+                )}
+              </Card.Content>
+            </Card>
+          </Grid.Column>
 
-            <Grid.Column width={10}>
-              <Card className="employee-des">
-                <Card.Content className="content">
-                  <Card.Header style={{ display: "flex" }}>
-                    Certifications
-                  </Card.Header>
-                  <br />
-                  <div className="education">
-                    <Grid columns={3}>
-                      {this.state.certifications.length > 0 ? (
-                        this.state.certifications.map((certi, index) => {
-                          
-                            return (
-                              <Grid.Row key={index}>
-                                <Grid.Column>
-                                  <div
-                                    style={{
-                                      color: "black",
-                                      fontWeight: "bold",
-                                    }}
-                                  >
-                                    <p>{this.checkExistence(certi.title)}</p>
-                                    <small>
-                                      {this.checkExistence(
-                                        certi.issuing_organization
-                                      )}
-                                    </small>
-                                  </div>
-                                </Grid.Column>
-                                <Grid.Column>
-                                  <div>
-                                    <p style={{ fontWeight: "bold" }}>
-                                      Issue Date
-                                    </p>
-                                    <small style={{ fontWeight: "bold" }}>
-                                      {this.checkExistence(
-                                        moment(certi.issue_date).format(
-                                          "DD-MM-YYYY"
-                                        )
-                                      )}
-                                    </small>
-                                  </div>
-                                </Grid.Column>
-                                <Grid.Column>
-                                  <div>
-                                    <p style={{ fontWeight: "bold" }}>
-                                      Credential ID
-                                    </p>
-                                    <small style={{ fontWeight: "bold" }}>
-                                    <a href={certi.credential_url} target="blank">{this.checkExistence(certi.credential_id)}</a>
-                                    </small>
-                                  </div>
-                                </Grid.Column>
-                              </Grid.Row>
-                            );
-                          
-                        })
-                      ) : (
-                        <p>No certifications to display!</p>
-                      )}
-                    </Grid>
-                  </div>
-                </Card.Content>
-              </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Work Experiences</Card.Header>
-                  <br />
-                  <div className="education">
-                    <Grid columns={3}>
-                    {this.state.workExps?.length > 0 ? (
-                      this.state.workExps.map((workExp, index) => {
-                        
+          <Grid.Column width={10}>
+            <Card className="employee-des">
+              <Card.Content className="content">
+                <Card.Header style={{ display: "flex" }}>
+                  Certifications
+                </Card.Header>
+                <br />
+                <div className="education">
+                  <Grid columns={3}>
+                    {certifications.length !== 0 ? (
+                      certifications.map((certi, index) => {
                         return (
-                        <Grid.Row key={index}>
-                          <Grid.Column>
-                          <div style={{ color: "black", fontWeight: "bold" }}>
-                            <p>{this.checkExistence(workExp?.title)}</p>
-                            <small>
-                              {this.checkExistence(workExp?.company_name)}
-                            </small>
-                            <small>
-                              {", " + this.checkExistence(workExp?.location)}
-                            </small>
-                          </div>
-                          </Grid.Column>
-                          <Grid.Column>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>
-                              Employment Type
-                            </p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(workExp?.employment_type)}
-                            </small>
-                          </div>
-                          </Grid.Column>
-                          <Grid.Column>
-                          <div>
-                            <p style={{ fontWeight: "bold" }}>
-                              Date of Joining
-                            </p>
-                            <small style={{ fontWeight: "bold" }}>
-                              {this.checkExistence(moment(workExp.start_date).format(
-                                          "DD-MM-YYYY"
-                                        ))}
-                            </small>
-                          </div>
-                          </Grid.Column>
-                        </Grid.Row>
+                          <Grid.Row key={index}>
+                            <Grid.Column>
+                              <div
+                                style={{
+                                  color: "black",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                <p>{checkExistence(certi.title)}</p>
+                                <small>
+                                  {checkExistence(certi.issuing_organization)}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>Issue Date</p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  {moment(
+                                    checkExistence(certi.issue_date)
+                                  ).format("DD-MM-YYYY")}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>
+                                  Credential ID
+                                </p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  <a href={certi.credential_url} target="blank">
+                                    {checkExistence(certi.credential_id)}
+                                  </a>
+                                </small>
+                              </div>
+                            </Grid.Column>
+                          </Grid.Row>
                         );
-                        })
+                      })
+                    ) : (
+                      <p>No certifications to display!</p>
+                    )}
+                  </Grid>
+                </div>
+              </Card.Content>
+            </Card>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Work Experiences</Card.Header>
+                <br />
+                <div className="education">
+                  <Grid columns={3}>
+                    {workExps.length > 0 ? (
+                      workExps.map((workExp, index) => {
+                        return (
+                          <Grid.Row key={index}>
+                            <Grid.Column>
+                              <div
+                                style={{
+                                  color: "black",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                <p>{checkExistence(workExp?.title)}</p>
+                                <small>
+                                  {checkExistence(workExp?.company_name)}
+                                </small>
+                                <small>
+                                  {", " + checkExistence(workExp?.location)}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>
+                                  Employment Type
+                                </p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  {checkExistence(workExp?.employment_type)}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                            <Grid.Column>
+                              <div>
+                                <p style={{ fontWeight: "bold" }}>
+                                  Date of Joining
+                                </p>
+                                <small style={{ fontWeight: "bold" }}>
+                                  {moment(workExp.start_date).format(
+                                    "DD-MM-YYYY"
+                                  )}
+                                </small>
+                              </div>
+                            </Grid.Column>
+                          </Grid.Row>
+                        );
+                      })
                     ) : (
                       <p>No work experiences found!</p>
                     )}
-                    </Grid>
-                  </div>
-                </Card.Content>
-              </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Skills</Card.Header>
-                  <br />
-                  <div className="education">
-                    {this.state.skills?.length > 0 ? (
-                      this.state.skills.map((skill, index) => {
-                        if (Array.isArray(skill)) {
-                          return null;
-                        } else if (typeof skill === "object" && skill?.title) {
-                          return (
-                            <div key={index}>
-                              <SkillCard skill={skill} key={index} />
-                            </div>
-                          );
-                        } else {
-                          return null;
-                        }
-                      })
-                    ) : (
-                      <p>No skills to display!</p>
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>
-                    JIRA Tasks
-                  </Card.Header>
-                  <br />
-                  <div className="content-list">
-                    {this.state.isLoading ? (
-                      <CircularProgress />
-                    ) : (
-                      this.state.jiraKeys &&
-                      this.state.jiraKeys.map((Key, index) => (
-                        <p
-                          style={{ fontWeight: "bold" }}
-                          key={index}
-                          onClick={() => this.openModal(Key)}
-                        >
-                          <Card className="list-items" key={index}>
-                            <Card.Content className="info-style">
-                              {Key}
-                              <Icon
-                                name="external alternate"
-                                style={{ marginLeft: "8px" }}
-                              />
-                            </Card.Content>
-                          </Card>
-                        </p>
-                      ))
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
-              <ModalComponent
-                showModal={this.state.showModal}
-                selectedKey={this.state.selectedKey}
-                onClose={this.closeModal}
-                Response={this.state.Response}
-              />
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Github Repos</Card.Header>
-                  <br />
-
-                  <div className="content-list">
-                   {
-                    (this.state.isGitLoading ? (
-                      <CircularProgress />
-                    ) : (
-                      this.state.repoNames?(
-                      this.state?.repoNames?.map((n,index) => (
-                        <p onClick={() => this.handleClick(n.name)}>
-                          <Card className="list-items" key={index}>
-                            <Card.Content className="info-style">
-                              {n.name}
-                              <Icon
-                                name="external alternate"
-                                style={{ marginLeft: "8px" }}
-                              />
-                            </Card.Content>
-                          </Card>
-                        </p>
-                      ))
-                      ):
-                      (
-                        <div>
-                          No repos To display!
-                          </div>
-                      )
-
-                    ))
-                    
-                    }
-                  </div>
-                </Card.Content>
-              </Card>
-              <ModalComponentGit
-                showModal={this.state.showCommitsModal}
-                commits={this.state.commits}
-                onClose={this.closeCommitsModal}
-              />
-              <Card className="employee-des">
-                <Card.Content>
-                  <Card.Header>Files</Card.Header>
-                  <br />
-                  <div className="content-list">
-                    {this.state?.files?.length &&
-                      (this.state?.files || []).map((file, index) => {
-                        var extension = this.getIcons(
-                          this.state?.extensions[index]
-                        );
-
+                  </Grid>
+                </div>
+              </Card.Content>
+            </Card>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Skills</Card.Header>
+                <br />
+                <div className="education">
+                  {skills.length > 0 ? (
+                    skills.map((skill, index) => {
+                      if (Array.isArray(skill)) {
+                        return null;
+                      } else if (typeof skill === "object" && skill?.title) {
                         return (
-                          <div>
-                            <Card className="list-items" key={index}>
-                              <Card.Content>
-                                <a
-                                  href={IPFS_Link + file}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ color: "black", fontWeight: "bold" }}
-                                >
-                                  {this.state?.names[index]}
-                                </a>
-                                <Icon name={extension} />
-                              </Card.Content>
-                            </Card>
+                          <div key={index}>
+                            <SkillCard skill={skill} key={index} />
                           </div>
                         );
-                      })}
-                  </div>
-                </Card.Content>
-              </Card>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </div>
-    );
-  }
-}
+                      } else {
+                        return null;
+                      }
+                    })
+                  ) : (
+                    <p>No skills to display!</p>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>JIRA Tasks</Card.Header>
+                <br />
+                <div className="content-list">
+                  {isLoading ? (
+                    <CircularProgress />
+                  ) : jiraKeys.length > 0 ? (
+                    jiraKeys.map((Key, index) => (
+                      <div
+                        style={{ fontWeight: "bold" }}
+                        key={index}
+                        onClick={() => openModal(Key)}
+                      >
+                        <Card className="list-items" key={index}>
+                          <Card.Content className="info-style">
+                            {Key}
+                            <Icon
+                              name="external alternate"
+                              style={{ marginLeft: "8px" }}
+                            />
+                          </Card.Content>
+                        </Card>
+                      </div>
+                    ))
+                  ) : (
+                    <div>No JIRA Tasks to display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+            <ModalComponent
+              showModal={showModal}
+              selectedKey={selectedKey}
+              onClose={closeModal}
+              Response={Response}
+            />
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Github Repos</Card.Header>
+                <br />
+
+                <div className="content-list">
+                  {isGitLoading ? (
+                    <CircularProgress />
+                  ) : repoNames ? (
+                    repoNames?.map((n, index) => (
+                      <div onClick={() => handleClick(n.name)} key={index}>
+                        <Card className="list-items" key={index}>
+                          <Card.Content className="info-style">
+                            {n.name}
+                            <Icon
+                              name="external alternate"
+                              style={{ marginLeft: "8px" }}
+                            />
+                          </Card.Content>
+                        </Card>
+                      </div>
+                    ))
+                  ) : (
+                    <div>No repos To display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+            <ModalComponentGit
+              showModal={showCommitsModal}
+              commits={commits}
+              onClose={closeCommitsModal}
+            />
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>Files</Card.Header>
+                <br />
+                <div className="content-list">
+                  {files?.length > 0 ? (
+                    (files || []).map((file, index) => {
+                      // const extension = getIcons(extensions[index]);
+
+                      return (
+                        <div key={index}>
+                          <Card className="list-items">
+                            <Card.Content>
+                              <a
+                                href={IPFS_Link+file.ipfsHash}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: "black",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {file.fileName}
+                              </a>
+                              {/* <Icon name={extension} /> */}
+                            </Card.Content>
+                          </Card>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div>No files to display!</div>
+                  )}
+                </div>
+              </Card.Content>
+            </Card>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+      )}
+    </div>
+  );
+};
+
+export default EmployeePage;

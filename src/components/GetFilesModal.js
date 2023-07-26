@@ -1,148 +1,146 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
 import "./Modals.css";
-import contract_abi from "./../abis/UserFileUpload.json";
 import { postFileApi } from "../Apis/FileApi";
-import { IPFS_Link } from "../utils/utils";
 
 let accounts = null;
-export default class GetFilesModal extends Component {
-  state = {
-    selectedFile: null,
-    extension: null,
-    file:null,
-    fileName: null,
-    userAddress:null,
-    loading: false,
-  };
-  formData = new FormData();
-  
-  handleFileChange = (event) => {
+
+const GetFilesModal = (props) => {
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const acceptedFileTypes = [".pdf", ".doc", ".docx", ".png", ".jpeg"];
+  const minFileNameLength = 3;
+  const maxFileNameLength = 15;
+  const [fileError, setFileError] = useState("");
+  const [fileNameError, setFileNameError] = useState("");
+
+  const handleFileChange = (event) => {
     const file = event.target.files[0];
-    this.setState({file:file});
-    this.formData.append("file", file);
-    this.setState({ selectedFile: event.target.files[0] });
+    setFile(file);
+    setFileError("");
   };
-  handleFileNameChange = (event) => {
+
+  const handleFileNameChange = (event) => {
     const fileName = event.target.value;
-    this.setState({ fileName: fileName });
-
+    setFileName(fileName);
+    setFileNameError("");
   };
-  
-  uploadFile = async (walletAccount, fileName, extension, ipfsHash) => {
-    try {
-      const web3 = window.web3;
-      const contractAddress = "0x2A750e6d8f167c65Be6C73935c6ccDAdfd84b83f";
-      const contractABI = contract_abi.abi;
-      const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-      await contract.methods
-        .uploadFile(
-          walletAccount,
-          fileName,
-          extension,
-          ipfsHash.replace(IPFS_Link, "")
-        )
-        .send({ from: accounts[0] })
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const web3 = window.web3;
+
+    if (!file) {
+      setFileError("Please select a file to upload.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      !fileName || 
+      fileName.length < minFileNameLength ||
+      fileName.length > maxFileNameLength
+    ) {
+      setFileNameError(
+        `Filename should be between ${minFileNameLength} and ${maxFileNameLength} characters.`
+      );
+      setLoading(false);
+      return;
+    }
+
+    const fileExtension = file.name
+      .substring(file.name.lastIndexOf("."))
+      .toLowerCase();
+    if (!acceptedFileTypes.includes(fileExtension)) {
+      setFileError("Only PDF, DOC, PNG, DOCX and JPEG files are accepted.");
+      setLoading(false);
+      return;
+    }
+
+    accounts = await web3.eth.getAccounts();
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("fileName", fileName);
+    formData.append("userAddress", accounts[0]);
+    const messageToR = `0x${Buffer.from(
+      "Please confirm to verify info update",
+      "utf8"
+    ).toString("hex")}`;
+    const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
+    formData.append("signature", signature);
+
+    const response = await postFileApi(formData,props.tokenId);
+      console.log(response.response.transactionData)
+
+    if (response){
+      const transaction = response?.response?.transactionData;
+      transaction.from = accounts[0];
+      const receipt = web3.eth
+        .sendTransaction(transaction)
         .then((res) => {
           return new Promise((resolve) => setTimeout(resolve, 7000));
         })
         .then(() => {
-          this.setState({ loading: false });
-          this.props.closeCertificationModal();
+          setLoading(false);
+          props.closeCertificationModal();
         });
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    }
-  };
-
-  handleSubmit = async (event) => {
-    event.preventDefault();
-    if (window.ethereum) {
-      const web3 = window.web3;
-
-      try {
-        accounts = await web3.eth.getAccounts();
-        this.setState({userAddress:accounts[0]});
-        this.formData.append("fileName", this.state.fileName);
-        this.formData.append("userAddress", accounts[0]);
-        console.log("formData: ",this.formData);
-      } catch (error) {
-        console.error(error);
-      }
+      console.log(receipt);
+      toast.success("File uploaded successfully!");
     } else {
-      console.log("Please install MetaMask!");
+      toast.error("Error uploading file.");
+      setLoading(false);
+      props.closeCertificationModal();
     }
+
     
-    this.setState({ loading: true });
-    await postFileApi(this.formData)
-      .then((response) => {
-        if (response) {
-          console.log(response?.response?.userAddress)  
-          this.uploadFile(
-            response?.response?.userAddress,
-            response?.response?.fileName,
-            ".png",
-            response?.response?.filePath[0]?.path
-          );
-          toast.success("File uploaded successfully!");
-        } else {
-          toast.error("Error uploading file.");
-          this.setState({ loading: false });
-          this.props.closeCertificationModal();
-        }
-      })
-      .catch((error) => {
-        toast.error("Error uploading file in catch.", error);
-        console.log("a", error);
-        this.setState({ loading: false });
-      });
   };
 
-  render() {
-    return (
-      <Modal
-        as={Form}
-        onSubmit={this.handleSubmit}
-        open={this.props.isOpen}
-        size="tiny"
-        className="modal-des"
-        //encType="multipart/form-data"
-      >
-        <Header
-          className="modal-heading"
-          icon="pencil"
-          content="Upload Files"
-          as="h2"
+  return (
+    <Modal
+      as={Form}
+      onSubmit={handleSubmit}
+      open={props.isOpen}
+      size="tiny"
+      className="modal-des"
+    >
+      <Header
+        className="modal-heading"
+        icon="pencil"
+        content="Upload Files"
+        as="h2"
+      />
+      <Modal.Content className="modal-content">
+        <input
+          type="text"
+          placeholder="File Name"
+          onChange={handleFileNameChange}
         />
-        <Modal.Content className="modal-content">
-          <input
-            type="text"
-            placeholder="File Name"
-            onChange={this.handleFileNameChange}
-          />
-          <input type="file" onChange={this.handleFileChange} />
-        </Modal.Content>
-        <Modal.Actions className="modal-actions">
-          <Button
-            className="close-button"
-            type="button"
-            color="red"
-            icon="times"
-            content="Close"
-            onClick={() => this.props.closeCertificationModal()}
-          />
-          <Button
-            className="button-css"
-            type="submit"
-            color="green"
-            icon="save"
-            content="Save"
-            loading={this.state.loading}
-          />
-        </Modal.Actions>
-      </Modal>
-    );
-  }
-}
+        {fileNameError && <div className="error-message">{fileNameError}</div>}
+        <input type="file" onChange={handleFileChange} />
+        {fileError && <div className="error-message">{fileError}</div>}
+      </Modal.Content>
+      <Modal.Actions className="modal-actions">
+        <Button
+          className="close-button"
+          type="button"
+          color="red"
+          content="Close"
+          onClick={() => props.closeCertificationModal()}
+        />
+        <Button
+          className="button-css"
+          type="submit"
+          color="green"
+          content="Save"
+          loading={loading}
+          disabled={loading}
+        />
+      </Modal.Actions>
+    </Modal>
+  );
+};
+
+export default GetFilesModal;
