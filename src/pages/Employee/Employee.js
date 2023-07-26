@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { Card, Grid, Icon } from "semantic-ui-react";
 import Admin from "../../abis/Admin.json";
 import SkillCard from "../../components/SkillCard";
+import moment from "moment";
 import "./Employee.css";
 // import LoadComp from "../../components/LoadComp";
 import ModalComponent from "./jiraModal";
@@ -22,7 +23,6 @@ import { employeePerformanceApi } from "../../Apis/EmployeePerformanceApi";
 import { getUserApi } from "../../Apis/UsersApi";
 import { IPFS_Link } from "../../utils/utils";
 
-const formData = new FormData();
 let accounts = null;
 
 const EmployeePage = () => {
@@ -30,19 +30,16 @@ const EmployeePage = () => {
   // const [overallEndorsement, setOverallEndorsement] = useState([]);
   const [skills, setSkills] = useState([]);
   const [files, setFiles] = useState([]);
-  // const [assigneeName, setAssigneeName] = useState([]);
-  // const [assigneeImg, setAssigneeImg] = useState([]);
-  // const [description, setDescription] = useState([]);
-  // const [key, setKey] = useState([]);
   const [jiraKeys, setJiraKeys] = useState([]);
   const [Response, setResponse] = useState([]);
   const [repoNames, setRepoNames] = useState([]);
   const [commits, setCommits] = useState([]);
-  const [names, setNames] = useState([]);
-  const [extensions, setExtensions] = useState([]);
+  // const [names, setNames] = useState([]);
+  // const [extensions, setExtensions] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [workExps, setWorkExps] = useState([]);
   const [educations, setEducations] = useState([]);
+  const [isLoadingPage, setIsLoadingPage] = useState(true);
   // const [colour, setColour] = useState([
   //   "#b6e498",
   //   "#61dafb",
@@ -64,7 +61,6 @@ const EmployeePage = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [tokenId, setTokenId] = useState(null);
   const [performances, setPerformances] = useState({});
-  // const [performance, setPerformance] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,9 +88,9 @@ const EmployeePage = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-      // finally {
-      //   setLoadcomp(false);
-      // }
+      finally {
+        setIsLoadingPage(false);
+       }
     };
 
     fetchData();
@@ -175,43 +171,34 @@ const EmployeePage = () => {
   };
   
 
-  const getFiles = async (userAddress) => {
+  const getFiles = async (userAddress,tokenId) => {
     const myHeaders = {
       "Content-Type": "application/x-www-form-urlencoded",
     };
     const urlencoded = new URLSearchParams();
     urlencoded.append("userAddress", userAddress);
 
-    const response = await getFilesApi(urlencoded, myHeaders);
+    const response = await getFilesApi(urlencoded, myHeaders,tokenId);
     if (response?.data?.response?.files) {
-      const files = response.data.response.files[2];
-      const names = response.data.response.files[0];
-      const extensions = response.data.response.files[1];
-
-      setFiles(files);
-      setNames(names);
-      setExtensions(extensions);
+      setFiles(response?.data?.response?.files);
+      console.log(response?.data?.response?.files)   
     } else {
-      console.log("error");
+      toast.error("error");
     }
   };
 
-  // const handleDownloadClick = (url, name) => {
-  //   saveAs(url, name);
+  // const getIcons = (extension) => {
+  //   switch (extension) {
+  //     case "png":
+  //       return "file image";
+  //     case "doc":
+  //       return "file word";
+  //     case "pdf":
+  //       return "file pdf";
+  //     default:
+  //       return "file";
+  //   }
   // };
-
-  const getIcons = (extension) => {
-    switch (extension) {
-      case "png":
-        return "file image";
-      case "doc":
-        return "file word";
-      case "pdf":
-        return "file pdf";
-      default:
-        return "file";
-    }
-  };
 
   const getUserInfo = async (address) => {
     try {
@@ -224,7 +211,7 @@ const EmployeePage = () => {
         getWorkExp(response?.data?.response?.userInfo?.tokenId);
         getEducation(response?.data?.response?.userInfo?.tokenId);
         getGithubCommits();
-        getFiles(accounts[0]);
+        getFiles(accounts[0],response?.data?.response?.userInfo?.tokenId);
         getPerformance(response?.data?.response?.userInfo?.email);
         getJiraTasks(response?.data?.response?.userInfo?.first_name);
       }
@@ -293,6 +280,11 @@ const EmployeePage = () => {
 
   return (
     <div>
+      {isLoadingPage ? ( 
+        <div className="loader-container">
+          <CircularProgress /> 
+        </div>
+      ) : (
       <Grid>
         <Grid.Row>
           <Grid.Column width={6}>
@@ -341,11 +333,15 @@ const EmployeePage = () => {
                   </Card.Header>
                   <br />
                   {educations.length > 0 ? (
-                    <div className="education">
+                    <div className="education-module">
                       {educations?.map((education, index) => (
                         <div className="education-design" key={index}>
                           <div
-                            style={{ paddingRight: "50px", color: "#c5c6c7" }}
+                            style={{
+                              paddingRight: "50px",
+                              color: "black",
+                              fontWeight: "bold",
+                            }}
                           >
                             <div style={{ display: "flex" }}>
                               <Icon
@@ -549,7 +545,7 @@ const EmployeePage = () => {
                     <CircularProgress />
                   ) : jiraKeys.length > 0 ? (
                     jiraKeys.map((Key, index) => (
-                      <p
+                      <div
                         style={{ fontWeight: "bold" }}
                         key={index}
                         onClick={() => openModal(Key)}
@@ -563,7 +559,7 @@ const EmployeePage = () => {
                             />
                           </Card.Content>
                         </Card>
-                      </p>
+                      </div>
                     ))
                   ) : (
                     <div>No JIRA Tasks to display!</div>
@@ -587,7 +583,7 @@ const EmployeePage = () => {
                     <CircularProgress />
                   ) : repoNames ? (
                     repoNames?.map((n, index) => (
-                      <p onClick={() => handleClick(n.name)}>
+                      <div onClick={() => handleClick(n.name)} key={index}>
                         <Card className="list-items" key={index}>
                           <Card.Content className="info-style">
                             {n.name}
@@ -597,7 +593,7 @@ const EmployeePage = () => {
                             />
                           </Card.Content>
                         </Card>
-                      </p>
+                      </div>
                     ))
                   ) : (
                     <div>No repos To display!</div>
@@ -617,14 +613,14 @@ const EmployeePage = () => {
                 <div className="content-list">
                   {files?.length > 0 ? (
                     (files || []).map((file, index) => {
-                      const extension = getIcons(extensions[index]);
+                      // const extension = getIcons(extensions[index]);
 
                       return (
                         <div key={index}>
                           <Card className="list-items">
                             <Card.Content>
                               <a
-                                href={IPFS_Link + file}
+                                href={IPFS_Link+file.ipfsHash}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
@@ -632,9 +628,9 @@ const EmployeePage = () => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {names[index]}
+                                {file.fileName}
                               </a>
-                              <Icon name={extension} />
+                              {/* <Icon name={extension} /> */}
                             </Card.Content>
                           </Card>
                         </div>
@@ -649,6 +645,7 @@ const EmployeePage = () => {
           </Grid.Column>
         </Grid.Row>
       </Grid>
+      )}
     </div>
   );
 };

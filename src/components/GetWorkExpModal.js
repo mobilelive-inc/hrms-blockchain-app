@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import { Button, Form, Header, Input, Modal } from "semantic-ui-react";
+import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
-import Employee from "../abis/Employee.json";
+import {
+  addExperienceApi,
+  updateExperienceApi,
+} from "../Apis/EmployeeExperienceApi";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import "./Modals.css";
 // import ScanQR from "./ScanQR";
 import moment from "moment";
@@ -163,8 +168,6 @@ const GetWorkExpModal = (props) => {
         toast.error(err.message);
       }
     }
-    this.setState({ loading: false });
-    this.props.closeCertificationModal();
   };
 
   const handleChangeStartDate = (date) => {

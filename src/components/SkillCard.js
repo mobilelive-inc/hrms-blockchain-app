@@ -8,6 +8,7 @@ const SkillCard = (props) => {
   const checkExistence = (value) => {
     return value ? value : "-------";
   };
+  
 
   
   const skill = props.skill;

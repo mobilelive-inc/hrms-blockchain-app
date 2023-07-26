@@ -5,14 +5,14 @@ import Admin from '../abis/Admin.json';
 import { updateUserApi } from '../Apis/UsersApi';
 import './Modals.css';
 
-const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal }) => {
+const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal,info,setFetchUserInfo }) => {
   const [formData, setFormData] = useState({
-    firstname1: '',
-    lastname1: '',
-    city1: '',
-    country1: '',
-    email1: '',
-    current_position1: '',
+    firstname1: info?.first_name,
+    lastname1: info?.last_name || '',
+    city1: info?.city || '',
+    country1: info?.country || '',
+    email1: info?.email || '',
+    current_position1: info?.current_position || '',
     loading: false,
   });
 
@@ -92,6 +92,7 @@ const GetEditFieldModal = ({ isOpen, tokenId, closeEditFieldModal }) => {
           })
           .then(() => {
             setFormData({ ...formData, loading: false });
+            setFetchUserInfo(true);
             closeEditFieldModal();
           });
 

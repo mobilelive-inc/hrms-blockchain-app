@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Menu, Segment, Image, Label, Icon } from "semantic-ui-react";
-import Admin from "../abis/Admin.json";
+import { Menu, Segment, Image, Label } from "semantic-ui-react";
+import { isAdmin } from "../Apis/Admin";
+import { getUserApi } from "../Apis/UsersApi";
+
 import { Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import GenererateQR from "./GenererateQR";

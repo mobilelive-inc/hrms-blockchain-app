@@ -1,8 +1,5 @@
 .personal-info {
   background: #393b3fa6 !important;
-  border-radius: 7px !important;
-  border: 1px solid white !important;
-  box-shadow: 0px 0px 1px 0px white !important;
   color: white !important;
   width: 100% !important;
 }
@@ -20,11 +17,10 @@
   font-style: italic;
 }
 
+.content{
+  background-color: antiquewhite !important;
+}
 .employee-des {
-  background: #393b3fa6 !important;
-  border-radius: 7px !important;
-  border: 1px solid white !important;
-  box-shadow: 0px 0px 1px 0px white !important;
   color: white !important;
   width: 100% !important;
 }
@@ -43,6 +39,7 @@
 }
 
 .certification-container {
+  margin:8px;
   display: flex;
   justify-content: space-between;
   margin-bottom: 18px;
@@ -76,12 +73,18 @@
 }
 
 .list-items{
-  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+  box-shadow: rgba(0, 0, 0, 0.15) 5.95px 4.95px 5.6px !important;
     background-color: #fff6f09c !important;
     margin-bottom: 15px !important;
     border-left: 3px solid orange !important;
-    
+    display: flex;
+    flex-direction: row; 
 }
 .info-style{
   font-weight: bold;
+  background-color: blanchedalmond !important;
+}
+
+.education{
+  box-shadow: 1.05px 1.05px orange !important;
 }

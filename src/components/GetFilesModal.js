@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Button, Form, Header, Modal } from "semantic-ui-react";
-import axios from "axios";
-import Web3 from "web3";
 import "./Modals.css";
 import { postFileApi } from "../Apis/FileApi";
 
@@ -41,7 +39,7 @@ const GetFilesModal = (props) => {
     }
 
     if (
-      !fileName ||
+      !fileName || 
       fileName.length < minFileNameLength ||
       fileName.length > maxFileNameLength
     ) {
@@ -74,13 +72,11 @@ const GetFilesModal = (props) => {
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);
     formData.append("signature", signature);
 
-    const response = await postFileApi(formData);
+    const response = await postFileApi(formData,props.tokenId);
+      console.log(response.response.transactionData)
 
-    if (response && response.data && response.data.transactionData) {
-      console.log(response);
-      const transaction = response?.data?.transactionData;
-      console.log("this", transaction);
-
+    if (response){
+      const transaction = response?.response?.transactionData;
       transaction.from = accounts[0];
       const receipt = web3.eth
         .sendTransaction(transaction)

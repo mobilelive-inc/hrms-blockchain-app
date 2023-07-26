@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import { Button, Form, Header, Input, Modal } from "semantic-ui-react";
+import { Button, Form, Header, Modal } from "semantic-ui-react";
 import Admin from "../abis/Admin.json";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -63,6 +63,7 @@ const GetEducationModal = (props) => {
     const web3 = window.web3;
     const networkId = await web3.eth.net.getId();
     const AdminData = await Admin.networks[networkId];
+    console.log("adminData: ", AdminData);
     const accounts = await web3.eth.getAccounts();
     const messageToR = `0x${Buffer.from("Please confirm to verify info update", "utf8").toString("hex")}`;
     const signature = await web3.eth.personal.sign(messageToR, accounts[0]);

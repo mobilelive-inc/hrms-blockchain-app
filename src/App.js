@@ -1,61 +1,67 @@
 import React, { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import Web3 from "web3";
-import Admin from "./abis/Admin.json";
 import "react-toastify/dist/ReactToastify.css";
 import MetaMaskGuide from "./MetaMaskGuide";
 import { Container } from "semantic-ui-react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import AdminPageCreate from "./pages/Admin/CreateUser";
+import CreateProject from "./pages/Admin/CreateProject";
+import ViewProjects from "./pages/Admin/ViewProjects";
 import AllEmployees from "./pages/Admin/AllEmployees";
-import AllOrganizationEndorser from "./pages/Admin/AllOrganizationEndorser";
 import EmployeePage from "./pages/Employee/Employee";
 import UpdateProfile from "./pages/Employee/UpdateProfile";
-import Organization from "./pages/OrganizationEndorser/Organization";
-import EndorseSkill from "./pages/OrganizationEndorser/EndorseSkill";
-import Endorse from "./pages/OrganizationEndorser/EndorseSection";
 import Navbar from "./components/Navbar";
 import GetEmployee from "./pages/GetRoutes/GetEmployee";
 import GetOrg from "./pages/GetRoutes/GetOrg";
 import NoRole from "./pages/NoRole/NoRole";
 import Notifications from "./pages/NoRole/Notifications";
-import NotificationsAdmin from "./pages/Admin/Notifications";
 import NotificationsEmployee from "./pages/Employee/Notifications";
-import NotificationsOrg from "./pages/OrganizationEndorser/Notifications";
 import LoadComp from "./components/LoadComp";
+import {isAdmin} from "./Apis/Admin";
+import {getUserApi} from "./Apis/UsersApi";
+// import AddResources from "./pages/Admin/AddResources";
+// import AddResources from "./pages/Admin/AddResources";
+
 
 function App() {
   const [isMeta, setisMeta] = useState(false);
   const [isEmployee, setisEmployee] = useState(false);
   const [account, setaccount] = useState("");
-  const [isOrganizationEndorser, setisOrganizationEndorser] = useState(false);
+  // const [isOrganizationEndorser, setisOrganizationEndorser] = useState(false);
   const [isOwner, setisOwner] = useState(false);
   const [loadcomp, setloadcomp] = useState(false);
+  const [isManager,setisManager] = useState(false);
 
   const loadBlockChainData = async () => {
-    const web3 = window.web3;
+    const web3 = await window.web3;
+    // console.log(web3);
     const accounts = await web3.eth.getAccounts();
     if (accounts) {
       setaccount(accounts[0]);
-    }
-    const networkId = await web3.eth.net.getId();
-    const AdminData = await Admin.networks[networkId];
-    if (AdminData) {
-      const admin = await new web3.eth.Contract(Admin.abi, AdminData.address);
-      const isEmployee = await admin?.methods?.isEmployee(accounts[0]).call();
-      const isOrganizationEndorser = await admin?.methods
-        ?.isOrganizationEndorser(accounts[0])
-        .call();
-      const owner = await admin?.methods?.owner().call();
-      setisEmployee(isEmployee);
-      setisOrganizationEndorser(isOrganizationEndorser);
-      setisOwner(owner === accounts[0]);
-    } else {
-      toast.error("The Admin Contract does not exist on this network!");
+      const checkAdmin = await isAdmin(accounts[0]);
+      const userData = await getUserApi(accounts[0]);
+      if(checkAdmin.data.response.isAdmin){
+        setisOwner(true);
+      }else if(!checkAdmin.data.response.isAdmin && userData.data.response.userInfo.tokenId !== 0){
+        let role = userData.data.response.userInfo.role;
+        if(role === 'employee'){
+          setisEmployee(true);
+        }
+        else if (role==='pm'){
+          setisManager(true);
+        }
+      }else{
+        toast.error("User not found for given address!");
+      }
     }
   };
 
   useEffect(() => {
+    const handleAccountsChanged = () => {
+      window.location.href = '/'
+    };
+  
     const func = async () => {
       setisMeta(true);
       setloadcomp(true);
@@ -73,27 +79,47 @@ function App() {
       }
       setloadcomp(false);
     };
+  
     func();
+  
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+    }
+  
     return () => {
-      //
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+      }
     };
   }, []);
-
+  
   const adminRoutes = () => {
     return (
       <Switch>
         <Route path="/" exact component={AllEmployees} />
-        <Route
+        {/* <Route
           path="/all-organization-endorser"
           exact
           component={AllOrganizationEndorser}
-        />
+        /> */}
         <Route path="/create-user" exact component={AdminPageCreate} />
-        <Route path="/notifications" exact component={NotificationsAdmin} />
+        <Route path="/create-project" exact component = {CreateProject}/>
+        <Route path="/view-projects" exact component={ViewProjects}/>
+        {/* <Route path="/notifications" exact component={NotificationsAdmin} /> */}
       </Switch>
     );
   };
 
+  const managerRoutes = ()=>{
+    console.log("in")
+    return (
+      <Switch>
+        <Route path="/" exact component={CreateProject}/>
+        <Route path="/view-projects" exact component={ViewProjects}/>
+        {/* <Route path="/create-project" exact component={CreateProject}/> */}
+      </Switch>
+    )
+  }
   const employeeRoutes = () => {
     return (
       <Switch>
@@ -104,7 +130,7 @@ function App() {
     );
   };
 
-  const isOrganizationEndorserRoutes = () => {
+  /* const isOrganizationEndorserRoutes = () => {
     return (
       <Switch>
         <Route path="/" exact component={Organization} />
@@ -113,7 +139,7 @@ function App() {
         <Route path="/notifications" exact component={NotificationsOrg} />
       </Switch>
     );
-  };
+  }; */
 
   const noRoleRoutes = () => {
     return (
@@ -127,7 +153,8 @@ function App() {
   const renderRoutes = () => {
     if (isOwner) return adminRoutes();
     else if (isEmployee) return employeeRoutes();
-    else if (isOrganizationEndorser) return isOrganizationEndorserRoutes();
+    else if (isManager) return managerRoutes();
+    // else if (isOrganizationEndorser) return isOrganizationEndorserRoutes();
     else return noRoleRoutes();
   };
 

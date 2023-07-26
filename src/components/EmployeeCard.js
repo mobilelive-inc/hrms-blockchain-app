@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { withRouter } from "react-router-dom";
 import { Card } from "semantic-ui-react";
-import Employee from "../abis/Employee.json";
+import { getSkillsApi } from "../Apis/EmployeeSkillsApi";
+import { getWorkExperienceApi } from "../Apis/EmployeeExperienceApi";
+import { getCertificatesApi } from "../Apis/EmployeeCertApi";
+import { getEducationApi } from "../Apis/EmployeeEducationApi";
+import moment from "moment";
 import "./EmployeeCard.css";
 // import LoadComp from "./LoadComp";
 
@@ -233,4 +237,4 @@ const EmployeeCard = (props) => {
   );
 };
 
-export default withRouter(EmployeeCard);
+ export default withRouter(EmployeeCard);

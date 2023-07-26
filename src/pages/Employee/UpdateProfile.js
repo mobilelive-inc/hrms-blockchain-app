@@ -6,7 +6,6 @@ import Admin from "../../abis/Admin.json";
 import SkillCard from "../../components/SkillCard";
 import "./Employee.css";
 import "./UpdateProfile.css";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import GetCertificationModal from "../../components/GetCertificationModal";
 import GetWorkExpModal from "../../components/GetWorkExpModal";
 import GetSkillsModal from "../../components/GetSkillsModals";
@@ -50,9 +49,11 @@ const UpdateProfile = () => {
   const [selectedCertification, setSelectedCertification] = useState(null);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [selectedWorkExp, setSelectedWorkExp] = useState(null);
+  // const [selectedUserInfo,setSelectedUserInfo]=useState(null);
   const [tokenId, setTokenId] = useState(null);
   const [index, setIndex] = useState(0);
   const [editing,setEditing]=useState(false);
+  const [fetchUserInfo, setFetchUserInfo] = useState(true);
 
   const getUserInfo = async (address) => {
     await getUserApi(address).then((response) => {
@@ -62,7 +63,7 @@ const UpdateProfile = () => {
       getCertifications(response?.data?.response?.userInfo?.tokenId);
       getWorkExp(response?.data?.response?.userInfo?.tokenId);
       getEducation(response?.data?.response?.userInfo?.tokenId);
-          
+      setFetchUserInfo(false);  
     });
   };
 
@@ -140,14 +141,16 @@ const UpdateProfile = () => {
       console.log(AdminData)
       const accounts = await web3.eth.getAccounts();
       try {
-        await getUserInfo(accounts[0]);
-        if (tokenId) {
-          getSkills(tokenId);
-          getCertifications(tokenId);
-          getWorkExp(tokenId);
-          getEducation(tokenId);
+        if (fetchUserInfo) {
+          await getUserInfo(accounts[0]);
+        }  
+        // if (tokenId) {
+        //   getSkills(tokenId);
+        //   getCertifications(tokenId);
+        //   getWorkExp(tokenId);
+        //   getEducation(tokenId);
           
-        }
+        // }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -155,7 +158,7 @@ const UpdateProfile = () => {
     };
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenId]);
+  }, [fetchUserInfo]);
   
 
   
@@ -283,6 +286,7 @@ const UpdateProfile = () => {
       <GetFilesModal
         isOpen={filemodal}
         closeCertificationModal={closeFileModal}
+        tokenId={tokenId}
       />
       <GetEducationModal
         isOpen={educationmodal}
@@ -297,6 +301,8 @@ const UpdateProfile = () => {
         isOpen={editFieldModal}
         closeEditFieldModal={closeEditFieldModal}
         tokenId={tokenId}
+        info={userInfo}
+        setFetchUserInfo={setFetchUserInfo}
       />
 
       <Grid>
@@ -317,6 +323,7 @@ const UpdateProfile = () => {
                   className="add-button"
                   onClick={(e) => {
                     setEditFieldModal(!editFieldModal);
+
                     // setIsDescription(false);
                   }}
                 >
@@ -367,7 +374,7 @@ const UpdateProfile = () => {
                     Education
                   </Card.Header>
                   <br />
-                  <div className="education">
+                  <div className="education-module">
                     {educations?.length > 0 ? (
                       educations.map((education, index) => (
                         <div className="education-design" key={index}>
@@ -547,7 +554,7 @@ const UpdateProfile = () => {
                        setWorkexpModal(!workexpModal)}
                     }
                   >
-                    <i class="fas fa-plus"></i>
+                    <i className="fas fa-plus"></i>
                   </span>
                 </Card.Header>
                 <br />
