@@ -87,4 +87,12 @@
 
 .education{
   box-shadow: 1.05px 1.05px orange !important;
+  display: flex;
+  flex-wrap: wrap;
+}
+.education-module{
+  box-shadow: 1.05px 1.05px orange !important;
+}
+.loader-container{
+  width: 100%;
 }

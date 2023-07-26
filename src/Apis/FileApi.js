@@ -1,11 +1,11 @@
 import axios from "axios";
 
-export const getFilesApi =async(urlencoded,myHeaders)=>{
+export const getFilesApi =async(urlencoded,myHeaders,tokenId)=>{
  
   try{
       const response =  axios
-      .post(
-        "https://d1h99yrv311co6.cloudfront.net/api/files/files",
+      .get(
+        `https://d1h99yrv311co6.cloudfront.net/api/files/${tokenId}`,
         urlencoded.toString(),
         { headers: myHeaders }
       )
@@ -16,10 +16,10 @@ export const getFilesApi =async(urlencoded,myHeaders)=>{
     }
 } 
 
-export const postFileApi = async (formData) => {
+export const postFileApi = async (formData,tokenId) => {
   
   try {
-    const response = await axios.post("https://d1h99yrv311co6.cloudfront.net/api/files/upload",formData    
+    const response = await axios.post(`https://d1h99yrv311co6.cloudfront.net/api/files/upload/${tokenId}`,formData    
     );  
     return response.data;
   } catch (error) {
