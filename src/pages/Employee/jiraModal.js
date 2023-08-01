@@ -26,7 +26,7 @@ const ModalComponent = (props) => {
                     <div key={issue?.key}>
                       <div className="ticket-meta">
                         <div className="ticket-meta-left">
-                          <a href={issue?.link} target="_blank" rel="noreferrer" style={{fontSize:"25px",color:"black",fontWeight:"bold"}}>{issue?.title}</a>
+                          <a href={issue?.link} target="_blank" rel="noreferrer" style={{fontSize:"25px",fontWeight:"bold"}}>{issue?.title}</a>
                           <br/>
                           <small className="font-italic">
                             Updated at:{" "}

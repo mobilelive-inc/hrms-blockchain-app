@@ -78,13 +78,14 @@ function ViewProjects(props) {
       />
 
       {loadcomp ? (
-        <div>
+        <div className="loader-container">
           <CircularProgress />
         </div>
       ) : (
         <div>
           <h2 className="card-heading">All Projects List</h2>
           <br />
+          <div className="card-show">
           {projects.length !== 0 ? (
             projects.map((project, i) => (
               <Card className="card-display" key={i}>
@@ -119,10 +120,14 @@ function ViewProjects(props) {
                   </div>
                 </div>
               </Card>
-            ))
+            )
+            
+            )
+            
           ) : (
             <div>No projects to display!</div>
           )}
+          </div>
         </div>
       )}
       <br />

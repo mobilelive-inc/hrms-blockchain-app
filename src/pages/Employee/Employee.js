@@ -5,11 +5,9 @@ import Admin from "../../abis/Admin.json";
 import SkillCard from "../../components/SkillCard";
 import moment from "moment";
 import "./Employee.css";
-// import LoadComp from "../../components/LoadComp";
 import ModalComponent from "./jiraModal";
 import ModalComponentGit from "./GitModal";
 import CircularProgress from "@mui/material/CircularProgress";
-// import { saveAs } from "file-saver";
 import getJiraApi from "../../Apis/JiraApi";
 import { getGitOrganizationApi } from "../../Apis/GitApi";
 import { getGitRepos } from "../../Apis/GitApi";
@@ -21,6 +19,7 @@ import { getCertificatesApi } from "../../Apis/EmployeeCertApi";
 import { getEducationApi } from "../../Apis/EmployeeEducationApi";
 import { employeePerformanceApi } from "../../Apis/EmployeePerformanceApi";
 import { getUserApi } from "../../Apis/UsersApi";
+import { getProjectsList } from "../../Apis/Project";
 import { IPFS_Link } from "../../utils/utils";
 
 let accounts = null;
@@ -33,14 +32,11 @@ const EmployeePage = () => {
   const [Response, setResponse] = useState([]);
   const [repoNames, setRepoNames] = useState([]);
   const [commits, setCommits] = useState([]);
-  // const [names, setNames] = useState([]);
-  // const [extensions, setExtensions] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [workExps, setWorkExps] = useState([]);
   const [educations, setEducations] = useState([]);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   
-  // const [loadcomp, setLoadcomp] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showCommitsModal, setShowCommitsModal] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
@@ -50,10 +46,10 @@ const EmployeePage = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [tokenId, setTokenId] = useState(null);
   const [performances, setPerformances] = useState({});
+  const [projects,setProjects]=useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      // setLoadcomp(true);
       const web3 = window.web3;
       const networkId = await web3.eth.net.getId();
       const AdminData = await Admin.networks[networkId];
@@ -62,18 +58,6 @@ const EmployeePage = () => {
 
       try {
         await getUserInfo(accounts[0]);
-        // if (tokenId) {
-        //   console.log("token: ",tokenId);
-        //   console.log(userInfo)
-        //   getSkills(tokenId);
-        //   getCertifications(tokenId);
-        //   getWorkExp(tokenId);
-        //   getEducation(tokenId);
-        //   getGithubCommits();
-        //   getFiles(accounts[0]);
-        //   getPerformance(userInfo?.email);
-        //   await getJiraTasks(userInfo?.first_name);
-        // }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -90,7 +74,6 @@ const EmployeePage = () => {
     const name = first_name;
     try {
       setIsLoading(true);
-      // setIsDisplayButton(false);
       const response = await getJiraApi(name);
       setResponse(response?.data?.response);
       const keys = response?.data?.response?.issues?.map((issue) => issue.key);
@@ -122,7 +105,6 @@ const EmployeePage = () => {
   const getGithubCommits = async () => {
     try {
       setIsGitLoading(true);
-      // setIsGitDisplayButton(false);
       const response = await getGitOrganizationApi();
       setOrgName(response?.data[0]?.login);
       const repos = await getGitRepos(response?.data[0]?.login);
@@ -170,7 +152,6 @@ const EmployeePage = () => {
     const response = await getFilesApi(urlencoded, myHeaders,tokenId);
     if (response?.data?.response?.files) {
       setFiles(response?.data?.response?.files);
-      console.log(response?.data?.response?.files)   
     } else {
       toast.error("error");
     }
@@ -203,12 +184,21 @@ const EmployeePage = () => {
         getFiles(accounts[0],response?.data?.response?.userInfo?.tokenId);
         getPerformance(response?.data?.response?.userInfo?.email);
         getJiraTasks(response?.data?.response?.userInfo?.first_name);
+        getProjects(response?.data?.response?.userInfo?.tokenId);
       }
     } catch (error) {
       toast.error("Error retrieving user info:", error);
     }
   };
 
+  const getProjects = async (tokenId)=>{
+    try {
+      const projects = await getProjectsList(tokenId);
+      setProjects(projects?.data?.response?.projects);
+    } catch (error) {
+      toast.error(error);
+    }
+  }
   const getPerformance = async (email) => {
     try {
       const performance_info = await employeePerformanceApi(email);
@@ -377,9 +367,34 @@ const EmployeePage = () => {
             <Card className="employee-des">
               <Card.Content>
                 <Card.Header>Employee Performance</Card.Header>
-                {performances && (
-                  <div>Percentage Score: {performances.Score}</div>
+                <br/>
+                {performances ? (
+                  <div style={{fontWeight:"bold"}}>Percentage Score: {performances.Score}</div>
+                ):(
+                  <div>
+                    No Performance to display!
+                  </div>
                 )}
+              </Card.Content>
+            </Card>
+
+            <Card className="employee-des">
+              <Card.Content>
+                <Card.Header>My Projects List</Card.Header>
+                <br/>
+                  {
+                    projects.length > 0 ? (
+                        projects.map((project)=>(
+                          <li style={{fontWeight:"bold"}}>
+                              {project.name}
+                          </li>
+                        ))
+                    ):(
+                      <div>
+                        No Projects to display!
+                      </div>
+                    )
+                  }
               </Card.Content>
             </Card>
           </Grid.Column>
