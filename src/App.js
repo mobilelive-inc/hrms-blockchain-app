@@ -15,8 +15,8 @@ import Navbar from "./components/Navbar";
 import GetEmployee from "./pages/GetRoutes/GetEmployee";
 import GetOrg from "./pages/GetRoutes/GetOrg";
 import NoRole from "./pages/NoRole/NoRole";
-import Notifications from "./pages/NoRole/Notifications";
-import NotificationsEmployee from "./pages/Employee/Notifications";
+// import Notifications from "./pages/NoRole/Notifications";
+// import NotificationsEmployee from "./pages/Employee/Notifications";
 import LoadComp from "./components/LoadComp";
 import {isAdmin} from "./Apis/Admin";
 import {getUserApi} from "./Apis/UsersApi";
@@ -97,15 +97,9 @@ function App() {
     return (
       <Switch>
         <Route path="/" exact component={AllEmployees} />
-        {/* <Route
-          path="/all-organization-endorser"
-          exact
-          component={AllOrganizationEndorser}
-        /> */}
         <Route path="/create-user" exact component={AdminPageCreate} />
         <Route path="/create-project" exact component = {CreateProject}/>
         <Route path="/view-projects" exact component={ViewProjects}/>
-        {/* <Route path="/notifications" exact component={NotificationsAdmin} /> */}
       </Switch>
     );
   };
@@ -116,7 +110,7 @@ function App() {
       <Switch>
         <Route path="/" exact component={CreateProject}/>
         <Route path="/view-projects" exact component={ViewProjects}/>
-        {/* <Route path="/create-project" exact component={CreateProject}/> */}
+        <Route path="/create-project" exact component={CreateProject}/>
       </Switch>
     )
   }
@@ -125,27 +119,15 @@ function App() {
       <Switch>
         <Route path="/" exact component={EmployeePage} />
         <Route path="/update-profile" exact component={UpdateProfile} />
-        <Route path="/notifications" exact component={NotificationsEmployee} />
       </Switch>
     );
   };
 
-  /* const isOrganizationEndorserRoutes = () => {
-    return (
-      <Switch>
-        <Route path="/" exact component={Organization} />
-        <Route path="/endorse-skill" exact component={EndorseSkill} />
-        <Route path="/endorse-section" exact component={Endorse} />
-        <Route path="/notifications" exact component={NotificationsOrg} />
-      </Switch>
-    );
-  }; */
-
+  
   const noRoleRoutes = () => {
     return (
       <Switch>
         <Route path="/" exact component={NoRole} />
-        <Route path="/notifications" exact component={Notifications} />
       </Switch>
     );
   };
@@ -154,7 +136,6 @@ function App() {
     if (isOwner) return adminRoutes();
     else if (isEmployee) return employeeRoutes();
     else if (isManager) return managerRoutes();
-    // else if (isOrganizationEndorser) return isOrganizationEndorserRoutes();
     else return noRoleRoutes();
   };
 
@@ -168,7 +149,7 @@ function App() {
           <Container>
             <ToastContainer />
             <Switch>
-              <Route
+              <Route  
                 path="/getemployee/:employee_address"
                 exact
                 component={GetEmployee}

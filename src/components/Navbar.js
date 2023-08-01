@@ -6,15 +6,12 @@ import { isAdmin } from "../Apis/Admin";
 import { getUserApi } from "../Apis/UsersApi";
 
 import { Link } from "react-router-dom";
-import SearchBar from "./SearchBar";
-import GenererateQR from "./GenererateQR";
 import Logo from "./../images/logo.png";
 
 const Navbar = () => {
   const [activeItem, setActiveItem] = useState("home");
   const [role, setRole] = useState("No Role");
   const [account, setAccount] = useState("");
-  const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,13 +52,9 @@ const Navbar = () => {
 
   const handleItemClick = (e, { name }) => setActiveItem(name);
 
-  const closeQRModal = () => {
-    setShowQr(false);
-  };
-
+  
   return (
     <>
-      <GenererateQR isOpen={showQr} closeQRModal={closeQRModal} />
       <Segment
         inverted
         style={{
@@ -79,18 +72,16 @@ const Navbar = () => {
           <Menu.Item
             as={Link}
             to="/"
-            style={{ marginRight: "25px", padding: "0px" }}
+            style={{ marginRight: "135px", padding: "0px" }}
           >
             <div>
               <Image style={{ height: "35px" }} src={Logo} />
             </div>
-            <sup style={{ fontWeight: "bold", marginLeft: "5px" }}>
+            <div style={{ fontWeight: "bold", marginLeft: "10px" }}>
               HRMS SYSTEM
-            </sup>
+            </div>
           </Menu.Item>
-          <Menu.Item style={{ marginRight: "10px", padding: "0px" }}>
-            <SearchBar />
-          </Menu.Item>
+          
           {role === "admin" && (
             <>
               <Menu.Item
@@ -157,13 +148,7 @@ const Navbar = () => {
                 active={activeItem === "Update Profile"}
                 onClick={handleItemClick}
               />
-              <Menu.Item
-                as={Link}
-                to="/notifications"
-                name="Notifications"
-                active={activeItem === "Notifications"}
-                onClick={handleItemClick}
-              />
+             
             </>
           )}
 
@@ -209,13 +194,7 @@ const Navbar = () => {
                 active={activeItem === "Request Admin For Role"}
                 onClick={handleItemClick}
               />
-              <Menu.Item
-                as={Link}
-                to="/notifications"
-                name="Notifications"
-                active={activeItem === "Notifications"}
-                onClick={handleItemClick}
-              />
+              
             </>
           )}
 
@@ -235,12 +214,7 @@ const Navbar = () => {
                 <small>{account}</small>
               </em>
               &nbsp;&nbsp;&nbsp;
-              {/* <Icon
-                name="qrcode"
-                size="large"
-                style={{ color: "white", cursor: "pointer" }}
-                onClick={() => setShowQr(false)}
-              /> */}
+              
             </div>
           </Menu.Item>
         </Menu>
